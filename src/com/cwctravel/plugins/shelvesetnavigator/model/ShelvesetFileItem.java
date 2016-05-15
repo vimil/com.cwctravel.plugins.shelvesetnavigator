@@ -1,5 +1,8 @@
 package com.cwctravel.plugins.shelvesetnavigator.model;
 
+import java.net.URI;
+
+import com.cwctravel.plugins.shelvesetnavigator.util.TFSUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingChange;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingSet;
 
@@ -25,6 +28,13 @@ public class ShelvesetFileItem extends ShelvesetResourceItem {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public URI getURI() {
+		String path = getPath();
+		String shelvedDownloadURL = pendingChange.getShelvedDownloadURL();
+		URI encodedDownloadURL = TFSUtil.getURI(path, shelvedDownloadURL);
+		return encodedDownloadURL;
 	}
 
 }

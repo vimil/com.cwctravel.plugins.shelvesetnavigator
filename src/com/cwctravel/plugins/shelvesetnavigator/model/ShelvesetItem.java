@@ -74,4 +74,27 @@ public class ShelvesetItem {
 
 		children = ShelvesetUtil.groupShelvesetFileItems(this, shelvesetFileItems);
 	}
+
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + getName().hashCode();
+		result = prime * result + getOwnerName().hashCode();
+
+		return result;
+	}
+
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ShelvesetItem other = (ShelvesetItem) obj;
+		if (other.getName().equals(getName()) && other.getOwnerName().equals(getOwnerName())) {
+			return true;
+		}
+		return false;
+	}
 }

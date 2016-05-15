@@ -9,15 +9,11 @@ public class ShelvesetNavigator extends CommonNavigator {
 	private ShelvesetItemContainer shelvesetItemContainer;
 
 	public ShelvesetNavigator() {
-		shelvesetItemContainer = new ShelvesetItemContainer();
+		shelvesetItemContainer = ShelvesetNavigatorPlugin.getDefault().getShelvesetItemContainer();
 	}
 
 	protected IAdaptable getInitialInput() {
 		return shelvesetItemContainer;
 	}
 
-	public void refresh(boolean updateLabels) {
-		shelvesetItemContainer.refreshShelvesetItems();
-		getCommonViewer().refresh(updateLabels);
-	}
 }

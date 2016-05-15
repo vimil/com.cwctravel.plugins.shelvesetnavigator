@@ -18,7 +18,7 @@ public class ShelvesetFileOpenActionProvider extends CommonActionProvider {
 		if (viewSite instanceof ICommonViewerWorkbenchSite) {
 			ICommonViewerWorkbenchSite workbenchSite = (ICommonViewerWorkbenchSite) viewSite;
 			if ((aSite.getStructuredViewer() instanceof TreeViewer)) {
-				openAction = new ShelvesetFileOpenAction(workbenchSite.getSite(),
+				openAction = new ShelvesetFileOpenAction(workbenchSite.getSite(), workbenchSite.getSelectionProvider(),
 						(TreeViewer) aSite.getStructuredViewer());
 			}
 		}

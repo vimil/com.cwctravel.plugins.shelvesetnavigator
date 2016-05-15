@@ -30,4 +30,14 @@ public class ShelvesetFolderItem extends ShelvesetResourceItem {
 		}
 		return children;
 	}
+
+	@Override
+	public String getPath() {
+		String result = folderName;
+		ShelvesetFolderItem parentFolder = getParentFolder();
+		if (parentFolder != null) {
+			result = parentFolder.getPath() + "/" + result;
+		}
+		return result;
+	}
 }
