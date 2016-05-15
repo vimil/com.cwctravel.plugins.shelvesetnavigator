@@ -33,7 +33,8 @@ public class ShelvesetFileItem extends ShelvesetResourceItem {
 	public URI getURI() {
 		String path = getPath();
 		String shelvedDownloadURL = pendingChange.getShelvedDownloadURL();
-		URI encodedDownloadURL = TFSUtil.getURI(path, shelvedDownloadURL);
+		URI encodedDownloadURL = TFSUtil.encodeURI(path, getShelvesetName(), getShelvesetOwnerName(),
+				shelvedDownloadURL);
 		return encodedDownloadURL;
 	}
 

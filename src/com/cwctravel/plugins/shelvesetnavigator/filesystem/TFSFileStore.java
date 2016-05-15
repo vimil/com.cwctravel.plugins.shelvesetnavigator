@@ -23,19 +23,24 @@ import com.microsoft.tfs.core.clients.versioncontrol.specs.DownloadSpec;
 public class TFSFileStore implements IFileStore {
 	private IFileSystem fileSystem;
 
-	private URI uri;
-	private String path;
-	private String name;
-	private String hash;
-	private String downloadURL;
+	private final URI uri;
+	private final String path;
+	private final String name;
+	private final String hash;
+	private final String shelvesetName;
+	private final String shelvesetOwnerName;
+	private final String downloadURL;
 
 	public TFSFileStore(IFileSystem fileSystem, URI uri) {
 		this.fileSystem = fileSystem;
 		this.uri = uri;
-		String[] pathAndDownloadURL = TFSUtil.getPathAndDownloadURL(uri);
-		path = pathAndDownloadURL[0];
-		downloadURL = pathAndDownloadURL[1];
-		hash = pathAndDownloadURL[2];
+		String[] uriParts = TFSUtil.decodeURI(uri);
+		path = uriParts[0];
+		downloadURL = uriParts[1];
+		hash = uriParts[2];
+		shelvesetName = uriParts[3];
+		shelvesetOwnerName = uriParts[4];
+
 		String[] pathParts = path.split("/");
 		name = pathParts[pathParts.length - 1];
 
@@ -166,9 +171,46 @@ public class TFSFileStore implements IFileStore {
 		return downloadedFile;
 	}
 
+	public String getPath() {
+		return path;
+	}
+
+	public String getShelvesetName() {
+		return shelvesetName;
+	}
+
+	public String getShelvesetOwnerName() {
+		return shelvesetOwnerName;
+	}
+
 	@Override
 	public URI toURI() {
 		return uri;
+	}
+
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + getPath().hashCode();
+		result = prime * result + getShelvesetName().hashCode();
+		result = prime * result + getShelvesetOwnerName().hashCode();
+
+		return result;
+	}
+
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		TFSFileStore other = (TFSFileStore) obj;
+		if (other.getPath().equals(getPath()) && other.getShelvesetName().equals(getShelvesetName())
+				&& other.getShelvesetOwnerName().equals(getShelvesetOwnerName())) {
+			return true;
+		}
+		return false;
 	}
 
 	public String toString() {

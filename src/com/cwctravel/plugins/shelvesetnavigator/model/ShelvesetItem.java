@@ -97,4 +97,32 @@ public class ShelvesetItem {
 		}
 		return false;
 	}
+
+	public ShelvesetFileItem findFile(String path) {
+		ShelvesetFileItem result = null;
+		List<ShelvesetResourceItem> children = getChildren();
+		for (ShelvesetResourceItem child : children) {
+			result = findFileInternal(child, path);
+			if (result != null) {
+				break;
+			}
+		}
+		return result;
+	}
+
+	private ShelvesetFileItem findFileInternal(ShelvesetResourceItem resourceItem, String path) {
+		ShelvesetFileItem result = null;
+		if (resourceItem instanceof ShelvesetFileItem && resourceItem.getPath().equals(path)) {
+			result = (ShelvesetFileItem) resourceItem;
+		} else if (resourceItem instanceof ShelvesetFolderItem) {
+			ShelvesetFolderItem shelvesetFolderItem = (ShelvesetFolderItem) resourceItem;
+			for (ShelvesetResourceItem child : shelvesetFolderItem.getChildren()) {
+				result = findFileInternal(child, path);
+				if (result != null) {
+					break;
+				}
+			}
+		}
+		return result;
+	}
 }

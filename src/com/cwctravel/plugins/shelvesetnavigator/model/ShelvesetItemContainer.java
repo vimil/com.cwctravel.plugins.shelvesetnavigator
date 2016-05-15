@@ -35,4 +35,17 @@ public class ShelvesetItemContainer extends PlatformObject {
 			}
 		}
 	}
+
+	public ShelvesetItem findShelvesetItem(String shelvesetName, String shelvesetOwnerName) {
+		ShelvesetItem result = null;
+
+		for (ShelvesetItem shelvesetItem : shelvesetItems) {
+			if (shelvesetItem.getName().equals(shelvesetName)
+					&& shelvesetItem.getOwnerName().equals(shelvesetOwnerName)) {
+				result = shelvesetItem;
+				break;
+			}
+		}
+		return result;
+	}
 }
