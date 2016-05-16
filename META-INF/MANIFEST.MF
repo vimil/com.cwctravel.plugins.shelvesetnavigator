@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Shelveset Navigator
+Bundle-SymbolicName: com.cwctravel.plugins.shelvesetnavigator;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: com.cwctravel.plugins.shelvesetnavigator.ShelvesetNavigatorPlugin
+Bundle-Vendor: cwctravel
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.ui.navigator,
+ com.microsoft.tfs.client.eclipse,
+ com.microsoft.tfs.client.common,
+ com.microsoft.tfs.client.common.ui,
+ org.eclipse.core.filesystem,
+ org.eclipse.ui.ide
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
