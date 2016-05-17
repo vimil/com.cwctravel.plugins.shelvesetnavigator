@@ -16,6 +16,8 @@ public class ShelvesetItem {
 	private Shelveset shelveset;
 
 	private List<ShelvesetResourceItem> children;
+	private PendingSet[] pendingSets;
+	private boolean hasChildren;
 
 	public ShelvesetItem(ShelvesetItemContainer shelvesetItemContainer, Shelveset shelveset) {
 		this.shelveset = shelveset;
@@ -43,27 +45,64 @@ public class ShelvesetItem {
 	}
 
 	public List<ShelvesetResourceItem> getChildren() {
-		if (children == null) {
+		if(children == null) {
 			refreshShelvesetFileItems();
 		}
 
 		return children;
 	}
 
+	public boolean hasChildren() {
+		boolean result = false;
+		if(children != null) {
+			result = !children.isEmpty();
+		}
+		else {
+			result = hasChildren;
+		}
+		return result;
+	}
+
+	public void updateShelvesetItemStatus() {
+		if(children == null) {
+			if(pendingSets == null) {
+				VersionControlClient vC = TFSUtil.getVersionControlClient();
+				pendingSets = vC.queryShelvedChanges(getName(), getOwnerName(), null, true, null);
+			}
+
+			if(pendingSets != null) {
+				for(PendingSet pendingSet: pendingSets) {
+					PendingChange[] pendingChanges = pendingSet.getPendingChanges();
+					if(pendingChanges != null) {
+						for(PendingChange pendingChange: pendingChanges) {
+							ItemType itemType = pendingChange.getItemType();
+							if(itemType == ItemType.FILE) {
+								hasChildren = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	private void refreshShelvesetFileItems() {
 		List<ShelvesetFileItem> shelvesetFileItems = new ArrayList<ShelvesetFileItem>();
 
-		VersionControlClient vC = TFSUtil.getVersionControlClient();
-		PendingSet[] pendingSets = vC.queryShelvedChanges(getName(), getOwnerName(), null, true, null);
-		if (pendingSets != null) {
-			for (PendingSet pendingSet : pendingSets) {
+		if(pendingSets == null) {
+			VersionControlClient vC = TFSUtil.getVersionControlClient();
+			pendingSets = vC.queryShelvedChanges(getName(), getOwnerName(), null, true, null);
+		}
+
+		if(pendingSets != null) {
+			for(PendingSet pendingSet: pendingSets) {
 				PendingChange[] pendingChanges = pendingSet.getPendingChanges();
-				if (pendingChanges != null) {
-					for (PendingChange pendingChange : pendingChanges) {
+				if(pendingChanges != null) {
+					for(PendingChange pendingChange: pendingChanges) {
 						ItemType itemType = pendingChange.getItemType();
-						if (itemType == ItemType.FILE) {
-							ShelvesetFileItem shelvesetResourceItem = new ShelvesetFileItem(this, pendingSet,
-									pendingChange);
+						if(itemType == ItemType.FILE) {
+							ShelvesetFileItem shelvesetResourceItem = new ShelvesetFileItem(this, pendingSet, pendingChange);
 							shelvesetFileItems.add(shelvesetResourceItem);
 						}
 
@@ -73,6 +112,7 @@ public class ShelvesetItem {
 		}
 
 		children = ShelvesetUtil.groupShelvesetFileItems(this, shelvesetFileItems);
+		pendingSets = null;
 	}
 
 	public int hashCode() {
@@ -85,14 +125,14 @@ public class ShelvesetItem {
 	}
 
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if(this == obj)
 			return true;
-		if (obj == null)
+		if(obj == null)
 			return false;
-		if (getClass() != obj.getClass())
+		if(getClass() != obj.getClass())
 			return false;
-		ShelvesetItem other = (ShelvesetItem) obj;
-		if (other.getName().equals(getName()) && other.getOwnerName().equals(getOwnerName())) {
+		ShelvesetItem other = (ShelvesetItem)obj;
+		if(other.getName().equals(getName()) && other.getOwnerName().equals(getOwnerName())) {
 			return true;
 		}
 		return false;
@@ -101,9 +141,9 @@ public class ShelvesetItem {
 	public ShelvesetFileItem findFile(String path) {
 		ShelvesetFileItem result = null;
 		List<ShelvesetResourceItem> children = getChildren();
-		for (ShelvesetResourceItem child : children) {
+		for(ShelvesetResourceItem child: children) {
 			result = findFileInternal(child, path);
-			if (result != null) {
+			if(result != null) {
 				break;
 			}
 		}
@@ -112,17 +152,19 @@ public class ShelvesetItem {
 
 	private ShelvesetFileItem findFileInternal(ShelvesetResourceItem resourceItem, String path) {
 		ShelvesetFileItem result = null;
-		if (resourceItem instanceof ShelvesetFileItem && resourceItem.getPath().equals(path)) {
-			result = (ShelvesetFileItem) resourceItem;
-		} else if (resourceItem instanceof ShelvesetFolderItem) {
-			ShelvesetFolderItem shelvesetFolderItem = (ShelvesetFolderItem) resourceItem;
-			for (ShelvesetResourceItem child : shelvesetFolderItem.getChildren()) {
+		if(resourceItem instanceof ShelvesetFileItem && resourceItem.getPath().equals(path)) {
+			result = (ShelvesetFileItem)resourceItem;
+		}
+		else if(resourceItem instanceof ShelvesetFolderItem) {
+			ShelvesetFolderItem shelvesetFolderItem = (ShelvesetFolderItem)resourceItem;
+			for(ShelvesetResourceItem child: shelvesetFolderItem.getChildren()) {
 				result = findFileInternal(child, path);
-				if (result != null) {
+				if(result != null) {
 					break;
 				}
 			}
 		}
 		return result;
 	}
+
 }

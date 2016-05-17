@@ -3,6 +3,7 @@ package com.cwctravel.plugins.shelvesetnavigator.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.PlatformObject;
 
 import com.cwctravel.plugins.shelvesetnavigator.util.TFSUtil;
@@ -23,12 +24,11 @@ public class ShelvesetItemContainer extends PlatformObject {
 	public void refreshShelvesetItems() {
 		shelvesetItems.clear();
 		VersionControlClient vC = TFSUtil.getVersionControlClient();
-		if (vC != null) {
-			Shelveset[] shelvesets = vC.queryShelvesets(null, TFSUtil.getCurrentUser(),
-					new String[] { "cwctravel.reviewerIds", "cwctravel.approverIds" });
-			if (shelvesets != null) {
+		if(vC != null) {
+			Shelveset[] shelvesets = vC.queryShelvesets(null, TFSUtil.getCurrentUser(), new String[] {"cwctravel.reviewerIds", "cwctravel.approverIds"});
+			if(shelvesets != null) {
 				shelvesetItems = new ArrayList<ShelvesetItem>();
-				for (Shelveset shelveset : shelvesets) {
+				for(Shelveset shelveset: shelvesets) {
 					ShelvesetItem shelvesetItem = new ShelvesetItem(this, shelveset);
 					shelvesetItems.add(shelvesetItem);
 				}
@@ -39,13 +39,21 @@ public class ShelvesetItemContainer extends PlatformObject {
 	public ShelvesetItem findShelvesetItem(String shelvesetName, String shelvesetOwnerName) {
 		ShelvesetItem result = null;
 
-		for (ShelvesetItem shelvesetItem : shelvesetItems) {
-			if (shelvesetItem.getName().equals(shelvesetName)
-					&& shelvesetItem.getOwnerName().equals(shelvesetOwnerName)) {
+		for(ShelvesetItem shelvesetItem: shelvesetItems) {
+			if(shelvesetItem.getName().equals(shelvesetName) && shelvesetItem.getOwnerName().equals(shelvesetOwnerName)) {
 				result = shelvesetItem;
 				break;
 			}
 		}
 		return result;
+	}
+
+	public void updateShelvesetStatus(IProgressMonitor monitor) {
+		for(ShelvesetItem shelvesetItem: shelvesetItems) {
+			monitor.subTask("Updating " + shelvesetItem.getName());
+			shelvesetItem.updateShelvesetItemStatus();
+			monitor.worked(1);
+		}
+
 	}
 }

@@ -11,7 +11,7 @@ public class TFSFileInfo implements IFileInfo {
 	}
 
 	@Override
-	public int compareTo(IFileInfo o) {
+	public int compareTo(Object o) {
 		return 0;
 	}
 
@@ -28,7 +28,7 @@ public class TFSFileInfo implements IFileInfo {
 
 	@Override
 	public boolean getAttribute(int attribute) {
-		if (EFS.ATTRIBUTE_READ_ONLY == attribute) {
+		if(EFS.ATTRIBUTE_READ_ONLY == attribute) {
 			return true;
 		}
 		return false;
