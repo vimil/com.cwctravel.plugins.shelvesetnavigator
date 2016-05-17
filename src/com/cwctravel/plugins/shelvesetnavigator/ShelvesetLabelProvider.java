@@ -1,7 +1,6 @@
 package com.cwctravel.plugins.shelvesetnavigator;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
@@ -16,11 +15,9 @@ import com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetResourceItem;
 import com.microsoft.tfs.client.common.ui.framework.image.ImageHelper;
 
 public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvider, IDescriptionProvider {
-	private ILabelDecorator fLabelDecorator = null;
 	private final ImageHelper imageHelper;
 
 	public ShelvesetLabelProvider() {
-		fLabelDecorator = new ShelvesetLabelDecorator();
 		imageHelper = new ImageHelper();
 	}
 
@@ -38,13 +35,8 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 			image = getImageForFolder();
 		}
 
-		Image decorated = fLabelDecorator.decorateImage(image, element);
+		result = image;
 
-		if (decorated != null) {
-			result = decorated;
-		} else {
-			result = image;
-		}
 		return result;
 	}
 

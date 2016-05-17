@@ -55,9 +55,6 @@ public class ShelvesetFileOpenAction extends Action implements ISelectionChanged
 		try {
 			IFileStore fileStore = EFS.getStore(shelvesetFileItem.getURI());
 			IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-			// FileStoreEditorInput fileStoreEditorInput = new
-			// FileStoreEditorInput(fileStore);
-			// page.op
 			IDE.openEditorOnFileStore(page, fileStore);
 		} catch (CoreException e) {
 			ShelvesetNavigatorPlugin.log(IStatus.ERROR, e.getMessage(), e);

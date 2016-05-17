@@ -109,24 +109,30 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="test"
-            id="com.cwctravel.plugins.shelvesetnavigator.commands.TestCommand"
-            name="name">
+            description="Compare shelveset version with baseversion"
+            id="com.cwctravel.plugins.shelvesetnavigator.commands.CompareWithBaseCommand"
+            name="With Base">
       </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
       <handler
-            class="com.cwctravel.plugins.shelvesetnavigator.handlers.TestHandler"
-            commandId="com.cwctravel.plugins.shelvesetnavigator.commands.TestCommand">
-         <enabledWhen>
+            class="com.cwctravel.plugins.shelvesetnavigator.handlers.CompareWithBaseHandler"
+            commandId="com.cwctravel.plugins.shelvesetnavigator.commands.CompareWithBaseCommand">
+          <enabledWhen>
             <with
                   variable="selection">
                <iterate
                      ifEmpty="false">
-                  <instanceof
-                        value="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetFileItem">
-                  </instanceof>
+                  <and>
+                     <instanceof
+                           value="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetFileItem">
+                     </instanceof>
+                     <test
+                           property="com.cwctravel.plugins.shelvesetnavigator.canCompare"
+                           value="true">
+                     </test>
+                  </and>
                </iterate>
             </with>
          </enabledWhen>
@@ -138,16 +144,44 @@
             allPopups="false"
             locationURI="popup:com.cwctravel.plugins.shelvesetnavigator#PopupMenu?after=additions">
          <menu
-               label="New">
+               label="Compare">
             <command
-                  commandId="com.cwctravel.plugins.shelvesetnavigator.commands.TestCommand"
+                  commandId="com.cwctravel.plugins.shelvesetnavigator.commands.CompareWithBaseCommand"
                   style="push">
-               <visibleWhen
-                     checkEnabled="true">
-               </visibleWhen>
             </command>
          </menu>
       </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.decorators">
+      <decorator
+            adaptable="true"
+            class="com.cwctravel.plugins.shelvesetnavigator.decorators.ShelvesetLabelDecorator"
+            id="com.cwctravel.plugins.shelvesetnavigator.ShelvesetLabelDecorator"
+            label="Shelveset Label Decorator"
+            lightweight="true"
+            state="true">
+         <enablement>
+            <or>
+               <objectClass
+                     name="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetFileItem">
+               </objectClass>
+               <objectClass
+                     name="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetItem">
+               </objectClass>
+            </or>
+         </enablement>
+      </decorator>
+   </extension>
+   <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            class="com.cwctravel.plugins.shelvesetnavigator.propertytesters.ShelvesetFileItemPropertyTester"
+            id="com.cwctravel.plugins.shelvesetnavigator.propertytesters.ShelvesetFileItemPropertyTester"
+            namespace="com.cwctravel.plugins.shelvesetnavigator"
+            properties="canCompare"
+            type="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetFileItem">
+      </propertyTester>
    </extension>
 
 </plugin>
