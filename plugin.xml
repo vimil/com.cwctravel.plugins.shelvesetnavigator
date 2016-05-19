@@ -156,6 +156,22 @@
                   commandId="com.cwctravel.plugins.shelvesetnavigator.commands.CompareWithBaseCommand"
                   style="push">
             </command>
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="selection">
+                  <iterate>
+                     <and>
+                        <instanceof
+                              value="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetFileItem">
+                        </instanceof>
+                     </and>
+                  </iterate>
+                  <count
+                        value="1">
+                  </count>
+               </with>
+            </visibleWhen>
          </menu>
       </menuContribution>
    </extension>

@@ -95,10 +95,12 @@ public class ShelvesetItem {
 	public ShelvesetFileItem findFile(String path) {
 		ShelvesetFileItem result = null;
 		List<ShelvesetResourceItem> children = getChildren();
-		for (ShelvesetResourceItem child : children) {
-			result = findFileInternal(child, path);
-			if (result != null) {
-				break;
+		if (children != null) {
+			for (ShelvesetResourceItem child : children) {
+				result = findFileInternal(child, path);
+				if (result != null) {
+					break;
+				}
 			}
 		}
 		return result;
