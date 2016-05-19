@@ -20,8 +20,8 @@ import org.eclipse.ui.navigator.ILinkHelper;
 
 import com.cwctravel.plugins.shelvesetnavigator.filesystem.TFSFileStore;
 import com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetFileItem;
+import com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetGroupItemContainer;
 import com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetItem;
-import com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetItemContainer;
 import com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetResourceItem;
 
 public class ShelvesetFileLinkHelper implements ILinkHelper {
@@ -36,11 +36,11 @@ public class ShelvesetFileLinkHelper implements ILinkHelper {
 			if (fileStore instanceof TFSFileStore) {
 				TFSFileStore tfsFileStore = (TFSFileStore) fileStore;
 
-				ShelvesetItemContainer shelvesetItemContainer = ShelvesetNavigatorPlugin.getDefault()
-						.getShelvesetItemContainer();
+				ShelvesetGroupItemContainer shelvesetGroupItemContainer = ShelvesetNavigatorPlugin.getDefault()
+						.getShelvesetGroupItemContainer();
 
-				ShelvesetItem shelvesetItem = shelvesetItemContainer.findShelvesetItem(tfsFileStore.getShelvesetName(),
-						tfsFileStore.getShelvesetOwnerName());
+				ShelvesetItem shelvesetItem = shelvesetGroupItemContainer
+						.findShelvesetItem(tfsFileStore.getShelvesetName(), tfsFileStore.getShelvesetOwnerName());
 				if (shelvesetItem != null) {
 					ShelvesetFileItem shelvesetFileItem = shelvesetItem.findFile(tfsFileStore.getPath());
 					List<Object> treePathSgementsList = new ArrayList<Object>();

@@ -5,6 +5,7 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ILightweightLabelDecorator;
 
 import com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetFileItem;
+import com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetGroupItem;
 import com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetItem;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.ChangeType;
 
@@ -39,7 +40,10 @@ public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
 			}
 		} else if (element instanceof ShelvesetItem) {
 			ShelvesetItem shelvesetItem = (ShelvesetItem) element;
-			decoration.addSuffix("[" + shelvesetItem.getOwnerName() + "]");
+			ShelvesetGroupItem shelvesetGroupItem = shelvesetItem.getParentGroup();
+			if (shelvesetGroupItem.getGroupType() != ShelvesetGroupItem.GROUP_TYPE_USER_SHELVESETS) {
+				decoration.addSuffix("[" + shelvesetItem.getOwnerName() + "]");
+			}
 		}
 	}
 

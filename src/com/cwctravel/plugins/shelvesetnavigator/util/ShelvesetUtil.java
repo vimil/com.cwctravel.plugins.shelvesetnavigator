@@ -11,6 +11,8 @@ import com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetFolderItem;
 import com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetResourceItem;
+import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PropertyValue;
+import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 
 public class ShelvesetUtil {
 	public static List<ShelvesetResourceItem> groupShelvesetFileItems(ShelvesetItem shelvesetItem,
@@ -118,5 +120,38 @@ public class ShelvesetUtil {
 
 		shelvesetFileItem.setName(pathParts[pathParts.length - 1]);
 		current.put(pathParts[pathParts.length - 1], shelvesetFileItem);
+	}
+
+	public static boolean getPropertyAsBoolean(Shelveset shelveset, String propertyName, boolean defaultValue) {
+		boolean result = false;
+		String propertyValue = getProperty(shelveset, propertyName, null);
+		if (propertyValue != null) {
+			result = Boolean.parseBoolean(propertyValue);
+		}
+
+		return result;
+	}
+
+	public static String[] getPropertyAsStringArray(Shelveset shelveset, String propertyName) {
+		String[] result = new String[0];
+		String propertyValue = getProperty(shelveset, propertyName, null);
+		if (propertyValue != null) {
+			result = propertyValue.split(",");
+		}
+		return result;
+	}
+
+	public static String getProperty(Shelveset shelveset, String propertyName, String defaultValue) {
+		String result = defaultValue;
+		PropertyValue[] propertyValues = shelveset.getPropertyValues();
+		if (propertyValues != null) {
+			for (PropertyValue propertyValue : propertyValues) {
+				if (propertyValue.matchesName(propertyName)) {
+					result = (String) propertyValue.getPropertyValue();
+				}
+			}
+		}
+
+		return result;
 	}
 }

@@ -25,9 +25,14 @@ public class TFSUtil {
 		return vC;
 	}
 
-	public static String getCurrentUser() {
+	public static String getCurrentUserDisplayName() {
 		final TeamFoundationIdentity userIdentity = getVersionControlClient().getConnection().getAuthorizedIdentity();
 		return userIdentity.getDisplayName();
+	}
+
+	public static String getCurrentUserId() {
+		final TeamFoundationIdentity userIdentity = getVersionControlClient().getConnection().getAuthorizedIdentity();
+		return userIdentity.getUniqueName();
 	}
 
 	public static URI encodeURI(String path, String shelvesetName, String shelvesetOwnerName, String downloadURL) {

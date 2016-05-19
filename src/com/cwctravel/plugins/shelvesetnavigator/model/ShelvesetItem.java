@@ -1,30 +1,27 @@
 package com.cwctravel.plugins.shelvesetnavigator.model;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import com.cwctravel.plugins.shelvesetnavigator.util.ShelvesetUtil;
-import com.cwctravel.plugins.shelvesetnavigator.util.TFSUtil;
-import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.ItemType;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingChange;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingSet;
+import com.cwctravel.plugins.shelvesetnavigator.jobs.ShelvesetFileItemsRefreshJob;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 
 public class ShelvesetItem {
-	private final ShelvesetItemContainer parent;
+	private final ShelvesetGroupItemContainer parent;
+	private final ShelvesetGroupItem parentGroup;
+
 	private Shelveset shelveset;
 
 	private List<ShelvesetResourceItem> children;
-	private PendingSet[] pendingSets;
-	private boolean hasChildren;
+	private boolean isChildrenRefreshed;
 
-	public ShelvesetItem(ShelvesetItemContainer shelvesetItemContainer, Shelveset shelveset) {
+	public ShelvesetItem(ShelvesetGroupItemContainer shelvesetItemContainer, ShelvesetGroupItem shelvesetGroup,
+			Shelveset shelveset) {
 		this.shelveset = shelveset;
+		this.parentGroup = shelvesetGroup;
 		this.parent = shelvesetItemContainer;
 	}
 
-	public ShelvesetItemContainer getParent() {
+	public ShelvesetGroupItemContainer getParent() {
 		return parent;
 	}
 
@@ -45,74 +42,31 @@ public class ShelvesetItem {
 	}
 
 	public List<ShelvesetResourceItem> getChildren() {
-		if(children == null) {
-			refreshShelvesetFileItems();
-		}
-
 		return children;
 	}
 
+	public ShelvesetGroupItem getParentGroup() {
+		return parentGroup;
+	}
+
 	public boolean hasChildren() {
-		boolean result = false;
-		if(children != null) {
-			result = !children.isEmpty();
-		}
-		else {
-			result = hasChildren;
-		}
-		return result;
+		return true;
 	}
 
-	public void updateShelvesetItemStatus() {
-		if(children == null) {
-			if(pendingSets == null) {
-				VersionControlClient vC = TFSUtil.getVersionControlClient();
-				pendingSets = vC.queryShelvedChanges(getName(), getOwnerName(), null, true, null);
-			}
-
-			if(pendingSets != null) {
-				for(PendingSet pendingSet: pendingSets) {
-					PendingChange[] pendingChanges = pendingSet.getPendingChanges();
-					if(pendingChanges != null) {
-						for(PendingChange pendingChange: pendingChanges) {
-							ItemType itemType = pendingChange.getItemType();
-							if(itemType == ItemType.FILE) {
-								hasChildren = true;
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
+	public boolean isChildrenRefreshed() {
+		return isChildrenRefreshed;
 	}
 
-	private void refreshShelvesetFileItems() {
-		List<ShelvesetFileItem> shelvesetFileItems = new ArrayList<ShelvesetFileItem>();
+	public void setChildren(List<ShelvesetResourceItem> children) {
+		this.children = children;
+	}
 
-		if(pendingSets == null) {
-			VersionControlClient vC = TFSUtil.getVersionControlClient();
-			pendingSets = vC.queryShelvedChanges(getName(), getOwnerName(), null, true, null);
-		}
+	public void setChildrenRefreshed(boolean isChildrenRefreshed) {
+		this.isChildrenRefreshed = isChildrenRefreshed;
+	}
 
-		if(pendingSets != null) {
-			for(PendingSet pendingSet: pendingSets) {
-				PendingChange[] pendingChanges = pendingSet.getPendingChanges();
-				if(pendingChanges != null) {
-					for(PendingChange pendingChange: pendingChanges) {
-						ItemType itemType = pendingChange.getItemType();
-						if(itemType == ItemType.FILE) {
-							ShelvesetFileItem shelvesetResourceItem = new ShelvesetFileItem(this, pendingSet, pendingChange);
-							shelvesetFileItems.add(shelvesetResourceItem);
-						}
-
-					}
-				}
-			}
-		}
-
-		children = ShelvesetUtil.groupShelvesetFileItems(this, shelvesetFileItems);
-		pendingSets = null;
+	public void refreshShelvesetFileItems(boolean expand) {
+		new ShelvesetFileItemsRefreshJob(this, expand).schedule();
 	}
 
 	public int hashCode() {
@@ -125,14 +79,14 @@ public class ShelvesetItem {
 	}
 
 	public boolean equals(Object obj) {
-		if(this == obj)
+		if (this == obj)
 			return true;
-		if(obj == null)
+		if (obj == null)
 			return false;
-		if(getClass() != obj.getClass())
+		if (getClass() != obj.getClass())
 			return false;
-		ShelvesetItem other = (ShelvesetItem)obj;
-		if(other.getName().equals(getName()) && other.getOwnerName().equals(getOwnerName())) {
+		ShelvesetItem other = (ShelvesetItem) obj;
+		if (other.getName().equals(getName()) && other.getOwnerName().equals(getOwnerName())) {
 			return true;
 		}
 		return false;
@@ -141,9 +95,9 @@ public class ShelvesetItem {
 	public ShelvesetFileItem findFile(String path) {
 		ShelvesetFileItem result = null;
 		List<ShelvesetResourceItem> children = getChildren();
-		for(ShelvesetResourceItem child: children) {
+		for (ShelvesetResourceItem child : children) {
 			result = findFileInternal(child, path);
-			if(result != null) {
+			if (result != null) {
 				break;
 			}
 		}
@@ -152,14 +106,13 @@ public class ShelvesetItem {
 
 	private ShelvesetFileItem findFileInternal(ShelvesetResourceItem resourceItem, String path) {
 		ShelvesetFileItem result = null;
-		if(resourceItem instanceof ShelvesetFileItem && resourceItem.getPath().equals(path)) {
-			result = (ShelvesetFileItem)resourceItem;
-		}
-		else if(resourceItem instanceof ShelvesetFolderItem) {
-			ShelvesetFolderItem shelvesetFolderItem = (ShelvesetFolderItem)resourceItem;
-			for(ShelvesetResourceItem child: shelvesetFolderItem.getChildren()) {
+		if (resourceItem instanceof ShelvesetFileItem && resourceItem.getPath().equals(path)) {
+			result = (ShelvesetFileItem) resourceItem;
+		} else if (resourceItem instanceof ShelvesetFolderItem) {
+			ShelvesetFolderItem shelvesetFolderItem = (ShelvesetFolderItem) resourceItem;
+			for (ShelvesetResourceItem child : shelvesetFolderItem.getChildren()) {
 				result = findFileInternal(child, path);
-				if(result != null) {
+				if (result != null) {
 					break;
 				}
 			}
