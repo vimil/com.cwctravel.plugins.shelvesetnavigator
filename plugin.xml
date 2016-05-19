@@ -14,6 +14,9 @@
          <possibleChildren>
             <or>
                <instanceof
+                     value="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetGroupItem">
+               </instanceof>
+               <instanceof
                      value="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetItem">
                </instanceof>
                <instanceof
@@ -24,7 +27,7 @@
          <triggerPoints>
             <or>
                <instanceof
-                     value="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetItemContainer">
+                     value="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetGroupItemContainer">
                </instanceof>
             </or>
          </triggerPoints>
@@ -32,6 +35,10 @@
                class="com.cwctravel.plugins.shelvesetnavigator.actions.ShelvesetFileActionProvider"
                id="com.cwctravel.plugins.shelvesetnavigator.actions.ShelvesetFileActionProvider">
          </actionProvider>
+         <commonSorter
+               class="com.cwctravel.plugins.shelvesetnavigator.ShelvesetViewerSorter"
+               id="com.cwctravel.plugins.shelvesetnavigator.ShelvesetViewerSorter">
+         </commonSorter>
    </navigatorContent>
    </extension>
    <extension
@@ -109,9 +116,9 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="Compare shelveset version with baseversion"
+            description="Compare shelveset version with base version"
             id="com.cwctravel.plugins.shelvesetnavigator.commands.CompareWithBaseCommand"
-            name="With Base">
+            name="Shelveset With Base">
       </command>
    </extension>
    <extension
