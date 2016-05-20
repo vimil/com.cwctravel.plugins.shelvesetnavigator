@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Shelveset Navigator
-Bundle-SymbolicName: com.cwctravel.plugins.shelvesetnavigator;singleton:=true
+Bundle-Name: Shelveset Review
+Bundle-SymbolicName: com.cwctravel.plugins.shelvesetreview;singleton:=true
 Bundle-Version: 1.0.0.qualifier
-Bundle-Activator: com.cwctravel.plugins.shelvesetnavigator.ShelvesetNavigatorPlugin
+Bundle-Activator: com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin
 Bundle-Vendor: cwctravel
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,

@@ -5,48 +5,51 @@
          point="org.eclipse.ui.navigator.navigatorContent">
       <navigatorContent
             activeByDefault="true"
-            contentProvider="com.cwctravel.plugins.shelvesetnavigator.ShelvesetContentProvider"
+            contentProvider="com.cwctravel.plugins.shelvesetreview.navigator.ShelvesetContentProvider"
             icon="icons/shelveset.png"
-            id="com.cwctravel.plugins.shelvesetnavigator.shelvesetContent"
-            labelProvider="com.cwctravel.plugins.shelvesetnavigator.ShelvesetLabelProvider"
+            id="com.cwctravel.plugins.shelvesetreview.navigator.shelvesetContent"
+            labelProvider="com.cwctravel.plugins.shelvesetreview.navigator.ShelvesetLabelProvider"
             name="Shelveset Contents"
             priority="normal">
          <possibleChildren>
             <or>
                <instanceof
-                     value="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetGroupItem">
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItem">
                </instanceof>
                <instanceof
-                     value="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetItem">
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetUserItem">
                </instanceof>
                <instanceof
-                     value="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetResourceItem">
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
+               </instanceof>
+               <instanceof
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem">
                </instanceof>
             </or>
          </possibleChildren>
          <triggerPoints>
             <or>
                <instanceof
-                     value="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetGroupItemContainer">
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItemContainer">
                </instanceof>
             </or>
          </triggerPoints>
          <actionProvider
-               class="com.cwctravel.plugins.shelvesetnavigator.actions.ShelvesetFileActionProvider"
-               id="com.cwctravel.plugins.shelvesetnavigator.actions.ShelvesetFileActionProvider">
+               class="com.cwctravel.plugins.shelvesetreview.actions.navigator.ShelvesetFileActionProvider"
+               id="com.cwctravel.plugins.shelvesetreview.navigator.actions.ShelvesetFileActionProvider">
          </actionProvider>
          <commonSorter
-               class="com.cwctravel.plugins.shelvesetnavigator.ShelvesetViewerSorter"
-               id="com.cwctravel.plugins.shelvesetnavigator.ShelvesetViewerSorter">
+               class="com.cwctravel.plugins.shelvesetreview.navigator.ShelvesetViewerSorter"
+               id="com.cwctravel.plugins.shelvesetreview.navigator.ShelvesetViewerSorter">
          </commonSorter>
    </navigatorContent>
    </extension>
    <extension
          point="org.eclipse.ui.navigator.viewer">
       <viewer
-            viewerId="com.cwctravel.plugins.shelvesetnavigator.view">
+            viewerId="com.cwctravel.plugins.shelvesetreview.navigator.view">
          <popupMenu
-               id="com.cwctravel.plugins.shelvesetnavigator#PopupMenu">
+               id="com.cwctravel.plugins.shelvesetreview.navigator#PopupMenu">
             <insertionPoint
                   name="group.open">
             </insertionPoint>
@@ -57,22 +60,22 @@
          </popupMenu>
       </viewer>
       <viewerContentBinding
-            viewerId="com.cwctravel.plugins.shelvesetnavigator.view">
+            viewerId="com.cwctravel.plugins.shelvesetreview.navigator.view">
          <includes>
             <contentExtension
                   isRoot="false"
-                  pattern="com.cwctravel.plugins.shelvesetnavigator.shelvesetContent">
+                  pattern="com.cwctravel.plugins.shelvesetreview.navigator.shelvesetContent">
             </contentExtension>
             <contentExtension
-                  pattern="com.cwctravel.plugins.shelvesetnavigator.ShelvesetFileLinkHelper">
+                  pattern="com.cwctravel.plugins.shelvesetreview.navigator.ShelvesetFileLinkHelper">
             </contentExtension>
          </includes>
       </viewerContentBinding>
       <viewerActionBinding
-            viewerId="com.cwctravel.plugins.shelvesetnavigator.view">
+            viewerId="com.cwctravel.plugins.shelvesetreview.navigator.view">
          <includes>
             <actionExtension
-                  pattern="com.cwctravel.plugins.shelvesetnavigator.actions.ShelvesetFileActionProvider">
+                  pattern="com.cwctravel.plugins.shelvesetreview.navigator.actions.ShelvesetFileActionProvider">
             </actionExtension>
          </includes>
       </viewerActionBinding>
@@ -81,9 +84,9 @@
          point="org.eclipse.ui.views">
       <view
             category="com.microsoft.tfs.client.common.ui.views"
-            class="com.cwctravel.plugins.shelvesetnavigator.ShelvesetNavigator"
+            class="com.cwctravel.plugins.shelvesetreview.navigator.ShelvesetNavigator"
             icon="icons/shelveset.png"
-            id="com.cwctravel.plugins.shelvesetnavigator.view"
+            id="com.cwctravel.plugins.shelvesetreview.navigator.view"
             name="Shelveset Navigator"
             restorable="true">
       </view>
@@ -93,22 +96,22 @@
       <filesystem
             scheme="tfs">
          <run
-               class="com.cwctravel.plugins.shelvesetnavigator.filesystem.TFSFileSystem">
+               class="com.cwctravel.plugins.shelvesetreview.filesystem.TFSFileSystem">
          </run>
       </filesystem>
    </extension>
    <extension
          point="org.eclipse.ui.navigator.linkHelper">
       <linkHelper
-            class="com.cwctravel.plugins.shelvesetnavigator.ShelvesetFileLinkHelper"
-            id="com.cwctravel.plugins.shelvesetnavigator.ShelvesetFileLinkHelper">
+            class="com.cwctravel.plugins.shelvesetreview.navigator.ShelvesetFileLinkHelper"
+            id="com.cwctravel.plugins.shelvesetreview.navigator.ShelvesetFileLinkHelper">
          <editorInputEnablement>
             <instanceof
                   value="org.eclipse.ui.IURIEditorInput">
             </instanceof></editorInputEnablement>
          <selectionEnablement>
             <instanceof
-                  value="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetFileItem">
+                  value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem">
             </instanceof>
          </selectionEnablement>
       </linkHelper>
@@ -117,15 +120,15 @@
          point="org.eclipse.ui.commands">
       <command
             description="Compare shelveset version with base version"
-            id="com.cwctravel.plugins.shelvesetnavigator.commands.CompareWithBaseCommand"
+            id="com.cwctravel.plugins.shelvesetreview.navigator.commands.CompareWithBaseCommand"
             name="Shelveset With Base">
       </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
       <handler
-            class="com.cwctravel.plugins.shelvesetnavigator.handlers.CompareWithBaseHandler"
-            commandId="com.cwctravel.plugins.shelvesetnavigator.commands.CompareWithBaseCommand">
+            class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.CompareWithBaseHandler"
+            commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.CompareWithBaseCommand">
           <enabledWhen>
             <with
                   variable="selection">
@@ -133,10 +136,10 @@
                      ifEmpty="false">
                   <and>
                      <instanceof
-                           value="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetFileItem">
+                           value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem">
                      </instanceof>
                      <test
-                           property="com.cwctravel.plugins.shelvesetnavigator.canCompare"
+                           property="com.cwctravel.plugins.shelvesetreview.navigator.canCompare"
                            value="true">
                      </test>
                   </and>
@@ -149,11 +152,11 @@
          point="org.eclipse.ui.menus">
       <menuContribution
             allPopups="false"
-            locationURI="popup:com.cwctravel.plugins.shelvesetnavigator#PopupMenu?after=additions">
+            locationURI="popup:com.cwctravel.plugins.shelvesetreview.navigator#PopupMenu?after=additions">
          <menu
                label="Compare">
             <command
-                  commandId="com.cwctravel.plugins.shelvesetnavigator.commands.CompareWithBaseCommand"
+                  commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.CompareWithBaseCommand"
                   style="push">
             </command>
             <visibleWhen
@@ -163,7 +166,7 @@
                   <iterate>
                      <and>
                         <instanceof
-                              value="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetFileItem">
+                              value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem">
                         </instanceof>
                      </and>
                   </iterate>
@@ -179,18 +182,18 @@
          point="org.eclipse.ui.decorators">
       <decorator
             adaptable="true"
-            class="com.cwctravel.plugins.shelvesetnavigator.decorators.ShelvesetLabelDecorator"
-            id="com.cwctravel.plugins.shelvesetnavigator.ShelvesetLabelDecorator"
+            class="com.cwctravel.plugins.shelvesetreview.decorators.ShelvesetLabelDecorator"
+            id="com.cwctravel.plugins.shelvesetreview.navigator.ShelvesetLabelDecorator"
             label="Shelveset Label Decorator"
             lightweight="true"
             state="true">
          <enablement>
             <or>
                <objectClass
-                     name="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetFileItem">
+                     name="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem">
                </objectClass>
                <objectClass
-                     name="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetItem">
+                     name="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
                </objectClass>
             </or>
          </enablement>
@@ -199,11 +202,11 @@
    <extension
          point="org.eclipse.core.expressions.propertyTesters">
       <propertyTester
-            class="com.cwctravel.plugins.shelvesetnavigator.propertytesters.ShelvesetFileItemPropertyTester"
-            id="com.cwctravel.plugins.shelvesetnavigator.propertytesters.ShelvesetFileItemPropertyTester"
-            namespace="com.cwctravel.plugins.shelvesetnavigator"
+            class="com.cwctravel.plugins.shelvesetreview.propertytesters.ShelvesetFileItemPropertyTester"
+            id="com.cwctravel.plugins.shelvesetreview.navigator.propertytesters.ShelvesetFileItemPropertyTester"
+            namespace="com.cwctravel.plugins.shelvesetreview"
             properties="canCompare"
-            type="com.cwctravel.plugins.shelvesetnavigator.model.ShelvesetFileItem">
+            type="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem">
       </propertyTester>
    </extension>
 
