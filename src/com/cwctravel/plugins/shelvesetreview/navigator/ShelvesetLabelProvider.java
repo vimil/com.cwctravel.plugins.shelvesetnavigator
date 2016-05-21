@@ -27,32 +27,38 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 	public Image getImage(Object element) {
 		Image result = null;
 		Image image = null;
-		if(element instanceof ShelvesetGroupItem) {
-			ShelvesetGroupItem shelvesetGroupItem = (ShelvesetGroupItem)element;
-			switch(shelvesetGroupItem.getGroupType()) {
+		if (element instanceof ShelvesetGroupItem) {
+			ShelvesetGroupItem shelvesetGroupItem = (ShelvesetGroupItem) element;
+			switch (shelvesetGroupItem.getGroupType()) {
 				case ShelvesetGroupItem.GROUP_TYPE_USER_SHELVESETS:
-					image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.USER_GROUP_ICON_ID);
+					image = ShelvesetReviewPlugin.getDefault().getImageRegistry()
+							.get(ShelvesetReviewPlugin.USER_GROUP_ICON_ID);
 					break;
 				case ShelvesetGroupItem.GROUP_TYPE_REVIEWER_SHELVESETS:
-					image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.REVIEW_GROUP_ICON_ID);
+					image = ShelvesetReviewPlugin.getDefault().getImageRegistry()
+							.get(ShelvesetReviewPlugin.REVIEW_GROUP_ICON_ID);
 					break;
 				case ShelvesetGroupItem.GROUP_TYPE_INACTIVE_SHELVESETS:
-					image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.INACTIVE_GROUP_ICON_ID);
+					image = ShelvesetReviewPlugin.getDefault().getImageRegistry()
+							.get(ShelvesetReviewPlugin.INACTIVE_GROUP_ICON_ID);
 					break;
 			}
-		}
-		else if(element instanceof ShelvesetUserItem) {
+		} else if (element instanceof ShelvesetUserItem) {
 			image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.USER_ICON_ID);
-		}
-		else if(element instanceof ShelvesetItem) {
-			image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.SHELVESET_ICON_ID);
+		} else if (element instanceof ShelvesetItem) {
+			ShelvesetItem shelvesetItem = (ShelvesetItem) element;
+			if (shelvesetItem.isInactive()) {
+				image = ShelvesetReviewPlugin.getDefault().getImageRegistry()
+						.get(ShelvesetReviewPlugin.INACTIVE_SHELVESET_ICON_ID);
+			} else {
+				image = ShelvesetReviewPlugin.getDefault().getImageRegistry()
+						.get(ShelvesetReviewPlugin.SHELVESET_ICON_ID);
+			}
 
-		}
-		else if(element instanceof ShelvesetFileItem) {
-			ShelvesetFileItem shelvesetFileItem = (ShelvesetFileItem)element;
+		} else if (element instanceof ShelvesetFileItem) {
+			ShelvesetFileItem shelvesetFileItem = (ShelvesetFileItem) element;
 			image = getImageForFile(shelvesetFileItem.getPath(), true);
-		}
-		else if(element instanceof ShelvesetFolderItem) {
+		} else if (element instanceof ShelvesetFolderItem) {
 			image = getImageForFolder();
 		}
 
@@ -63,20 +69,17 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 
 	public String getText(Object element) {
 		String result = null;
-		if(element instanceof ShelvesetGroupItem) {
-			ShelvesetGroupItem shelvesetGroupItem = (ShelvesetGroupItem)element;
+		if (element instanceof ShelvesetGroupItem) {
+			ShelvesetGroupItem shelvesetGroupItem = (ShelvesetGroupItem) element;
 			result = shelvesetGroupItem.getName();
-		}
-		else if(element instanceof ShelvesetUserItem) {
-			ShelvesetUserItem shelvesetUserItem = (ShelvesetUserItem)element;
+		} else if (element instanceof ShelvesetUserItem) {
+			ShelvesetUserItem shelvesetUserItem = (ShelvesetUserItem) element;
 			result = shelvesetUserItem.getShelvesetOwner();
-		}
-		else if(element instanceof ShelvesetItem) {
-			ShelvesetItem shelvesetItem = (ShelvesetItem)element;
+		} else if (element instanceof ShelvesetItem) {
+			ShelvesetItem shelvesetItem = (ShelvesetItem) element;
 			result = shelvesetItem.getName();
-		}
-		else if(element instanceof ShelvesetResourceItem) {
-			ShelvesetResourceItem shelvesetResourceItem = (ShelvesetResourceItem)element;
+		} else if (element instanceof ShelvesetResourceItem) {
+			ShelvesetResourceItem shelvesetResourceItem = (ShelvesetResourceItem) element;
 			result = shelvesetResourceItem.getName();
 
 		}
@@ -84,8 +87,8 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 	}
 
 	public String getDescription(Object element) {
-		if(element instanceof ShelvesetItem) {
-			ShelvesetItem shelvesetItem = (ShelvesetItem)element;
+		if (element instanceof ShelvesetItem) {
+			ShelvesetItem shelvesetItem = (ShelvesetItem) element;
 			return shelvesetItem.getComment();
 		}
 		return null;
@@ -97,10 +100,11 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 	}
 
 	protected final Image getImageForFile(final String filename, final boolean useEditorRegistryImages) {
-		if(useEditorRegistryImages && filename != null) {
-			final ImageDescriptor imageDescriptor = PlatformUI.getWorkbench().getEditorRegistry().getImageDescriptor(filename);
+		if (useEditorRegistryImages && filename != null) {
+			final ImageDescriptor imageDescriptor = PlatformUI.getWorkbench().getEditorRegistry()
+					.getImageDescriptor(filename);
 
-			if(imageDescriptor != null) {
+			if (imageDescriptor != null) {
 				return imageHelper.getImage(imageDescriptor);
 			}
 		}

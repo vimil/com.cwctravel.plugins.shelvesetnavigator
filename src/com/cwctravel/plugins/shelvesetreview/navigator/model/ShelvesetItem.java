@@ -3,6 +3,7 @@ package com.cwctravel.plugins.shelvesetreview.navigator.model;
 import java.util.List;
 
 import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetFileItemsRefreshJob;
+import com.cwctravel.plugins.shelvesetreview.util.ShelvesetUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 
 public class ShelvesetItem {
@@ -15,12 +16,13 @@ public class ShelvesetItem {
 	private List<ShelvesetResourceItem> children;
 	private boolean isChildrenRefreshed;
 
-	public ShelvesetItem(ShelvesetGroupItemContainer shelvesetItemContainer, ShelvesetGroupItem shelvesetGroup, Shelveset shelveset) {
+	public ShelvesetItem(ShelvesetGroupItemContainer shelvesetItemContainer, ShelvesetGroupItem shelvesetGroup,
+			Shelveset shelveset) {
 		this(shelvesetItemContainer, shelvesetGroup, null, shelveset);
 	}
 
-	public ShelvesetItem(ShelvesetGroupItemContainer shelvesetItemContainer, ShelvesetGroupItem shelvesetGroup, ShelvesetUserItem shelvesetUser,
-			Shelveset shelveset) {
+	public ShelvesetItem(ShelvesetGroupItemContainer shelvesetItemContainer, ShelvesetGroupItem shelvesetGroup,
+			ShelvesetUserItem shelvesetUser, Shelveset shelveset) {
 		this.shelveset = shelveset;
 		this.parentGroup = shelvesetGroup;
 		this.parentUser = shelvesetUser;
@@ -85,14 +87,14 @@ public class ShelvesetItem {
 	}
 
 	public boolean equals(Object obj) {
-		if(this == obj)
+		if (this == obj)
 			return true;
-		if(obj == null)
+		if (obj == null)
 			return false;
-		if(getClass() != obj.getClass())
+		if (getClass() != obj.getClass())
 			return false;
-		ShelvesetItem other = (ShelvesetItem)obj;
-		if(other.getName().equals(getName()) && other.getOwnerName().equals(getOwnerName())) {
+		ShelvesetItem other = (ShelvesetItem) obj;
+		if (other.getName().equals(getName()) && other.getOwnerName().equals(getOwnerName())) {
 			return true;
 		}
 		return false;
@@ -101,10 +103,10 @@ public class ShelvesetItem {
 	public ShelvesetFileItem findFile(String path) {
 		ShelvesetFileItem result = null;
 		List<ShelvesetResourceItem> children = getChildren();
-		if(children != null) {
-			for(ShelvesetResourceItem child: children) {
+		if (children != null) {
+			for (ShelvesetResourceItem child : children) {
 				result = findFileInternal(child, path);
-				if(result != null) {
+				if (result != null) {
 					break;
 				}
 			}
@@ -114,17 +116,41 @@ public class ShelvesetItem {
 
 	private ShelvesetFileItem findFileInternal(ShelvesetResourceItem resourceItem, String path) {
 		ShelvesetFileItem result = null;
-		if(resourceItem instanceof ShelvesetFileItem && resourceItem.getPath().equals(path)) {
-			result = (ShelvesetFileItem)resourceItem;
-		}
-		else if(resourceItem instanceof ShelvesetFolderItem) {
-			ShelvesetFolderItem shelvesetFolderItem = (ShelvesetFolderItem)resourceItem;
-			for(ShelvesetResourceItem child: shelvesetFolderItem.getChildren()) {
+		if (resourceItem instanceof ShelvesetFileItem && resourceItem.getPath().equals(path)) {
+			result = (ShelvesetFileItem) resourceItem;
+		} else if (resourceItem instanceof ShelvesetFolderItem) {
+			ShelvesetFolderItem shelvesetFolderItem = (ShelvesetFolderItem) resourceItem;
+			for (ShelvesetResourceItem child : shelvesetFolderItem.getChildren()) {
 				result = findFileInternal(child, path);
-				if(result != null) {
+				if (result != null) {
 					break;
 				}
 			}
+		}
+		return result;
+	}
+
+	public boolean isInactive() {
+		return ShelvesetUtil.isShelvesetInactive(shelveset);
+	}
+
+	public boolean canActivate() {
+		return ShelvesetUtil.canActivateShelveset(shelveset);
+	}
+
+	public void markShelvesetActive() {
+		ShelvesetUtil.markShelvesetActive(shelveset);
+	}
+
+	public void markShelvesetInactive() {
+		ShelvesetUtil.markShelvesetInactive(shelveset);
+	}
+
+	public boolean delete() {
+		boolean result = false;
+		if (isInactive()) {
+			ShelvesetUtil.deleteShelveset(shelveset);
+			result = getParent().removeShelveset(shelveset);
 		}
 		return result;
 	}

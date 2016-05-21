@@ -7,12 +7,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.core.runtime.Status;
+
+import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
+import com.cwctravel.plugins.shelvesetreview.constants.ShelvesetPropertyConstants;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem;
+import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PropertyValue;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
+
+import ms.tfs.versioncontrol.clientservices._03._PropertyValue;
+import ms.tfs.versioncontrol.clientservices._03._Shelveset;
 
 public class ShelvesetUtil {
 	public static List<ShelvesetResourceItem> groupShelvesetFileItems(ShelvesetItem shelvesetItem,
@@ -152,6 +160,88 @@ public class ShelvesetUtil {
 			}
 		}
 
+		return result;
+	}
+
+	public static boolean isShelvesetInactive(Shelveset shelveset) {
+		boolean isShelvesetInactive = ShelvesetUtil.getPropertyAsBoolean(shelveset,
+				ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, false);
+		String changesetId = ShelvesetUtil.getProperty(shelveset,
+				ShelvesetPropertyConstants.SHELVESET_PROPERTY_CHANGESET_ID, null);
+		return isShelvesetInactive || changesetId != null;
+	}
+
+	public static boolean canActivateShelveset(Shelveset shelveset) {
+		boolean isShelvesetInactive = ShelvesetUtil.getPropertyAsBoolean(shelveset,
+				ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, false);
+		String changesetId = ShelvesetUtil.getProperty(shelveset,
+				ShelvesetPropertyConstants.SHELVESET_PROPERTY_CHANGESET_ID, null);
+
+		return isShelvesetInactive && changesetId == null;
+	}
+
+	public static void markShelvesetInactive(Shelveset shelveset) {
+		setShelvesetProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, Boolean.toString(true));
+	}
+
+	public static void markShelvesetActive(Shelveset shelveset) {
+		setShelvesetProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, Boolean.toString(false));
+	}
+
+	@SuppressWarnings("restriction")
+	public static void setShelvesetProperty(Shelveset shelveset, String property, String value) {
+		if (property != null) {
+			VersionControlClient versionControlClient = TFSUtil.getVersionControlClient();
+			if (versionControlClient != null) {
+				Shelveset[] shelvesets = versionControlClient.queryShelvesets(shelveset.getName(),
+						shelveset.getOwnerName(), new String[] { property });
+				if (shelvesets != null && shelvesets.length == 1) {
+					_Shelveset _shelveset = shelveset.getWebServiceObject();
+					Shelveset newShelveset = shelvesets[0];
+					_Shelveset _newShelveset = newShelveset.getWebServiceObject();
+					_PropertyValue[] propertyValuesArray = _newShelveset.getProperties();
+					_shelveset.setProperties(propertyValuesArray);
+
+					_PropertyValue newPropertyValue = new _PropertyValue(property, value, null, null);
+					_newShelveset.setProperties(new _PropertyValue[] { newPropertyValue });
+					versionControlClient.getWebServiceLayer().updateShelveset(shelveset.getName(),
+							shelveset.getOwnerName(), newShelveset);
+
+					boolean propertyPresent = false;
+					List<_PropertyValue> newPropertyValues = new ArrayList<_PropertyValue>();
+					if (propertyValuesArray != null) {
+						for (_PropertyValue propertyValue : propertyValuesArray) {
+							newPropertyValues.add(propertyValue);
+							if (propertyValue.getPname().equals(property)) {
+								propertyPresent = true;
+								propertyValue.setVal(value);
+							}
+						}
+					}
+
+					if (!propertyPresent) {
+						newPropertyValues.add(newPropertyValue);
+						_shelveset.setProperties(newPropertyValues.toArray(new _PropertyValue[0]));
+					}
+				}
+			}
+		}
+	}
+
+	public static boolean deleteShelveset(Shelveset shelveset) {
+		boolean result = false;
+		if (shelveset != null) {
+			VersionControlClient versionControlClient = TFSUtil.getVersionControlClient();
+			if (versionControlClient != null) {
+				try {
+					versionControlClient.deleteShelveset(shelveset.getName(), shelveset.getOwnerName());
+					result = true;
+				} catch (RuntimeException e) {
+					ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
+					result = false;
+				}
+			}
+		}
 		return result;
 	}
 }

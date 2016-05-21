@@ -123,6 +123,19 @@
             id="com.cwctravel.plugins.shelvesetreview.navigator.commands.CompareWithBaseCommand"
             name="Shelveset With Base">
       </command>
+      <command
+            description="Discard Shelveset"
+            id="com.cwctravel.plugins.shelvesetreview.navigator.commands.DiscardShelvesetCommand"
+            name="Discard">
+      </command>
+      <command
+            id="com.cwctravel.plugins.shelvesetreview.navigator.commands.RestoreShelvesetCommand"
+            name="Restore Shelveset">
+      </command>
+      <command
+            id="com.cwctravel.plugins.shelvesetreview.navigator.commands.DeleteShelvesetCommand"
+            name="Delete Shelveset">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -132,20 +145,112 @@
           <enabledWhen>
             <with
                   variable="selection">
-               <iterate
-                     ifEmpty="false">
-                  <and>
-                     <instanceof
-                           value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem">
-                     </instanceof>
-                     <test
-                           property="com.cwctravel.plugins.shelvesetreview.navigator.canCompare"
-                           value="true">
-                     </test>
-                  </and>
-               </iterate>
+               <and>
+                  <count
+                        value="1">
+                  </count>
+                  <iterate
+                        ifEmpty="false">
+                     <and>
+                        <instanceof
+                              value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem">
+                        </instanceof>
+                        <test
+                              property="com.cwctravel.plugins.shelvesetreview.shelvesetfileitem.canCompare"
+                              value="true">
+                        </test>
+                     </and>
+                  </iterate>
+               </and>
             </with>
          </enabledWhen>
+      </handler>
+      <handler
+            class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.DiscardShelvesetHandler"
+            commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.DiscardShelvesetCommand">
+         <enabledWhen>
+            <with
+                  variable="selection">
+               <and>
+                  <count
+                        value="+">
+                  </count>
+                  <iterate>
+                     <and>
+                        <instanceof
+                              value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
+                        </instanceof>
+                        <test
+                              property="com.cwctravel.plugins.shelvesetreview.shelvesetitem.isActive"
+                              value="true">
+                        </test>
+                     </and>
+                  </iterate>
+               </and>
+            </with>
+         </enabledWhen>
+      </handler>
+      <handler
+            class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.RestoreShelvesetHandler"
+            commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.RestoreShelvesetCommand">
+         <enabledWhen>
+            <with
+                  variable="selection">
+               <and>
+                  <count
+                        value="+">
+                  </count>
+                  <iterate>
+                     <and>
+                        <instanceof
+                              value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
+                        </instanceof>
+                        <test
+                              property="com.cwctravel.plugins.shelvesetreview.shelvesetitem.canActivate"
+                              value="true">
+                        </test>
+                     </and>
+                  </iterate>
+               </and>
+            </with>
+         </enabledWhen>
+      </handler>
+      <handler
+            class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.DeleteShelvesetHandler"
+            commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.DeleteShelvesetCommand">
+         <enabledWhen>
+            <with
+                  variable="selection">
+               <and>
+                  <count
+                        value="1">
+                  </count>
+                  <iterate>
+                     <and>
+                        <instanceof
+                              value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
+                        </instanceof>
+                        <test
+                              property="com.cwctravel.plugins.shelvesetreview.shelvesetitem.isActive"
+                              value="false">
+                        </test>
+                     </and>
+                  </iterate>
+               </and>
+            </with>
+         </enabledWhen>
+      </handler>
+      <handler
+            class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.RefreshHandler"
+            commandId="org.eclipse.ui.file.refresh">
+         <activeWhen>
+            <with
+                  variable="activePartId">
+               <equals
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.view">
+               </equals>
+            </with>
+         </activeWhen>
       </handler>
    </extension>
    <extension
@@ -176,6 +281,59 @@
                </with>
             </visibleWhen>
          </menu>
+         <command
+               commandId="org.eclipse.ui.file.refresh"
+               label="Refresh"
+               style="push">
+            <visibleWhen
+                  checkEnabled="true">
+            </visibleWhen>
+         </command>
+         <command
+               commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.DiscardShelvesetCommand"
+               label="Discard Shelveset"
+               style="push">
+            <visibleWhen
+                  checkEnabled="true">
+            </visibleWhen>
+         </command>
+         <command
+               commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.RestoreShelvesetCommand"
+               label="Restore Shelveset"
+               style="push">
+            <visibleWhen
+                  checkEnabled="true">
+            </visibleWhen>
+         </command>
+         <command
+               commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.DeleteShelvesetCommand"
+               label="Delete Shelveset"
+               style="push">
+            <visibleWhen
+                  checkEnabled="true">
+            </visibleWhen>
+         </command>
+         <command
+               commandId="org.eclipse.ui.file.properties"
+               label="Properties"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="selection">
+                  <and>
+                     <count
+                           value="1">
+                     </count>
+                     <iterate>
+                        <instanceof
+                              value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
+                        </instanceof>
+                     </iterate>
+                  </and>
+               </with>
+            </visibleWhen>
+         </command>
       </menuContribution>
    </extension>
    <extension
@@ -204,10 +362,30 @@
       <propertyTester
             class="com.cwctravel.plugins.shelvesetreview.propertytesters.ShelvesetFileItemPropertyTester"
             id="com.cwctravel.plugins.shelvesetreview.navigator.propertytesters.ShelvesetFileItemPropertyTester"
-            namespace="com.cwctravel.plugins.shelvesetreview"
+            namespace="com.cwctravel.plugins.shelvesetreview.shelvesetfileitem"
             properties="canCompare"
             type="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem">
       </propertyTester>
+      <propertyTester
+            class="com.cwctravel.plugins.shelvesetreview.propertytesters.ShelvesetItemPropertyTester"
+            id="com.cwctravel.plugins.shelvesetreview.navigator.propertytesters.ShelvesetItemPropertyTester"
+            namespace="com.cwctravel.plugins.shelvesetreview.shelvesetitem"
+            properties="isActive,canActivate"
+            type="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
+      </propertyTester>
+   </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="com.cwctravel.plugins.shelvesetreview.propertypages.ShelvesetPropertyPage"
+            id="com.cwctravel.plugins.shelvesetreview.ShelvesetPropertyPage"
+            name="Shelveset Properties">
+         <enabledWhen>
+            <instanceof
+                  value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
 
 </plugin>

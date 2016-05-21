@@ -10,10 +10,12 @@ import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.ChangeType;
 public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
 
 	@Override
-	public void addListener(ILabelProviderListener listener) {}
+	public void addListener(ILabelProviderListener listener) {
+	}
 
 	@Override
-	public void dispose() {}
+	public void dispose() {
+	}
 
 	@Override
 	public boolean isLabelProperty(Object element, String property) {
@@ -21,17 +23,19 @@ public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
 	}
 
 	@Override
-	public void removeListener(ILabelProviderListener listener) {}
+	public void removeListener(ILabelProviderListener listener) {
+	}
 
 	@Override
 	public void decorate(Object element, IDecoration decoration) {
-		if(element instanceof ShelvesetFileItem) {
-			ShelvesetFileItem shelvesetFileItem = (ShelvesetFileItem)element;
+		if (element instanceof ShelvesetFileItem) {
+			ShelvesetFileItem shelvesetFileItem = (ShelvesetFileItem) element;
 			ChangeType changeType = shelvesetFileItem.getChangeType();
-			if(changeType.contains(ChangeType.ADD)) {
+			if (changeType.contains(ChangeType.ADD)) {
 				decoration.addPrefix("+");
-			}
-			else if(changeType.contains(ChangeType.EDIT)) {
+			} else if (changeType.contains(ChangeType.DELETE)) {
+				decoration.addPrefix("-");
+			} else if (changeType.contains(ChangeType.EDIT)) {
 				decoration.addPrefix(">");
 			}
 		}

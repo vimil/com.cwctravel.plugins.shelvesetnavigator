@@ -28,6 +28,7 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 	public static final String PLUGIN_ID = "com.cwctravel.plugins.shelvesetreview";
 
 	public static final String SHELVESET_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.shelveset";
+	public static final String INACTIVE_SHELVESET_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.inactiveshelveset";
 
 	public static final String USER_GROUP_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.usergroup";
 	public static final String REVIEW_GROUP_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.reviewgroup";
@@ -38,26 +39,36 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 
 	private ShelvesetGroupItemContainer shelvesetGroupItemContainer;
 
-	public ShelvesetReviewPlugin() {}
+	public ShelvesetReviewPlugin() {
+	}
 
 	@Override
 	protected void initializeImageRegistry(ImageRegistry registry) {
 		super.initializeImageRegistry(registry);
 		Bundle bundle = Platform.getBundle(PLUGIN_ID);
 
-		ImageDescriptor shelvesetIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/shelveset.png"), null));
+		ImageDescriptor shelvesetIconImage = ImageDescriptor
+				.createFromURL(FileLocator.find(bundle, new Path("icons/shelveset.png"), null));
 		registry.put(SHELVESET_ICON_ID, shelvesetIconImage);
 
-		ImageDescriptor userGroupIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/user-group.png"), null));
+		ImageDescriptor inactiveShelvesetIconImage = ImageDescriptor
+				.createFromURL(FileLocator.find(bundle, new Path("icons/inactive-shelveset.png"), null));
+		registry.put(INACTIVE_SHELVESET_ICON_ID, inactiveShelvesetIconImage);
+
+		ImageDescriptor userGroupIconImage = ImageDescriptor
+				.createFromURL(FileLocator.find(bundle, new Path("icons/user-group.png"), null));
 		registry.put(USER_GROUP_ICON_ID, userGroupIconImage);
 
-		ImageDescriptor reviewGroupIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/review-group.png"), null));
+		ImageDescriptor reviewGroupIconImage = ImageDescriptor
+				.createFromURL(FileLocator.find(bundle, new Path("icons/review-group.png"), null));
 		registry.put(REVIEW_GROUP_ICON_ID, reviewGroupIconImage);
 
-		ImageDescriptor inactiveGroupIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/inactive-group.png"), null));
+		ImageDescriptor inactiveGroupIconImage = ImageDescriptor
+				.createFromURL(FileLocator.find(bundle, new Path("icons/inactive-group.png"), null));
 		registry.put(INACTIVE_GROUP_ICON_ID, inactiveGroupIconImage);
 
-		ImageDescriptor userIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/user.png"), null));
+		ImageDescriptor userIconImage = ImageDescriptor
+				.createFromURL(FileLocator.find(bundle, new Path("icons/user.png"), null));
 		registry.put(USER_ICON_ID, userIconImage);
 	}
 
@@ -68,8 +79,8 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 		repositoryManager.addListener(new ShelvesetNavigatorRefresher());
 		AutoConnector autoConnector = AutoConnectorProvider.getAutoConnector();
 		autoConnector.start();
-		if(TFSUtil.getVersionControlClient() != null) {
-			refreshShelvesetGroupItems();
+		if (TFSUtil.getVersionControlClient() != null) {
+			refreshShelvesetGroupItems(true);
 		}
 		plugin = this;
 	}
@@ -91,7 +102,7 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 		return shelvesetGroupItemContainer;
 	}
 
-	public void refreshShelvesetGroupItems() {
-		new ShelvesetGroupItemsRefreshJob().schedule();
+	public void refreshShelvesetGroupItems(boolean refreshNavigator) {
+		new ShelvesetGroupItemsRefreshJob(refreshNavigator).schedule();
 	}
 }
