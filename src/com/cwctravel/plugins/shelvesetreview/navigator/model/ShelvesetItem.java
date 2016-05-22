@@ -155,4 +155,15 @@ public class ShelvesetItem {
 		return result;
 	}
 
+	public String getBuildId() {
+		return ShelvesetUtil.getShelvesetBuildId(shelveset);
+	}
+
+	public String getChangesetNumber() {
+		return ShelvesetUtil.getShelvesetChangesetNumber(shelveset);
+	}
+
+	public List<ReviewerInfo> getReviewers() {
+		return ShelvesetUtil.getShelvesetReviewers(shelveset);
+	}
 }

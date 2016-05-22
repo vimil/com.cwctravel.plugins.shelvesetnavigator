@@ -379,7 +379,7 @@
       <page
             class="com.cwctravel.plugins.shelvesetreview.propertypages.ShelvesetPropertyPage"
             id="com.cwctravel.plugins.shelvesetreview.ShelvesetPropertyPage"
-            name="Shelveset Properties">
+            name="Shelveset">
          <enabledWhen>
             <instanceof
                   value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">

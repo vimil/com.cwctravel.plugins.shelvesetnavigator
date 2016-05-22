@@ -1,6 +1,7 @@
 package com.cwctravel.plugins.shelvesetreview.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -11,10 +12,12 @@ import org.eclipse.core.runtime.Status;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.constants.ShelvesetPropertyConstants;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.comparators.ReviewerComparator;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PropertyValue;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
@@ -180,6 +183,14 @@ public class ShelvesetUtil {
 		return isShelvesetInactive && changesetId == null;
 	}
 
+	public static String getShelvesetBuildId(Shelveset shelveset) {
+		return ShelvesetUtil.getProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_BUILD_ID, null);
+	}
+
+	public static String getShelvesetChangesetNumber(Shelveset shelveset) {
+		return ShelvesetUtil.getProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_CHANGESET_ID, null);
+	}
+
 	public static void markShelvesetInactive(Shelveset shelveset) {
 		setShelvesetProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, Boolean.toString(true));
 	}
@@ -242,6 +253,39 @@ public class ShelvesetUtil {
 				}
 			}
 		}
+		return result;
+	}
+
+	public static List<ReviewerInfo> getShelvesetReviewers(Shelveset shelveset) {
+		List<ReviewerInfo> result = new ArrayList<ReviewerInfo>();
+		String[] reviewerIds = ShelvesetUtil.getPropertyAsStringArray(shelveset,
+				ShelvesetPropertyConstants.SHELVESET_PROPERTY_REVIEWER_IDS);
+
+		String[] approverIds = ShelvesetUtil.getPropertyAsStringArray(shelveset,
+				ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS);
+
+		Map<String, Boolean> reviewerIdMap = new HashMap<String, Boolean>();
+		for (String reviewerId : reviewerIds) {
+			reviewerIdMap.put(reviewerId, false);
+		}
+
+		for (String approverId : approverIds) {
+			if (reviewerIdMap.containsKey(approverId)) {
+				reviewerIdMap.put(approverId, true);
+			}
+		}
+
+		for (Map.Entry<String, Boolean> reviewerIdMapEntry : reviewerIdMap.entrySet()) {
+			ReviewerInfo reviewerInfo = new ReviewerInfo();
+			reviewerInfo.setReviewerId(reviewerIdMapEntry.getKey());
+			reviewerInfo.setApproved(reviewerIdMapEntry.getValue());
+			reviewerInfo.setModifiable(true);
+			reviewerInfo.setSource(ReviewerInfo.SOURCE_SHELVESET);
+			result.add(reviewerInfo);
+		}
+
+		Collections.sort(result, ReviewerComparator.INSTANCE);
+
 		return result;
 	}
 }
