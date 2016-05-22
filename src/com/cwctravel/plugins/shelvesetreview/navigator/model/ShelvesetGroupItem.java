@@ -97,21 +97,25 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem> {
 							ShelvesetUserItem shelvesetUserItem = null;
 							List<ShelvesetItem> shelvesetItems = new ArrayList<ShelvesetItem>();
 							for (Shelveset shelveset : userShelvesetList) {
-								boolean isCurrentUserShelvesetReviewer = false;
-								String[] reviewerIds = ShelvesetUtil.getPropertyAsStringArray(shelveset,
-										ShelvesetPropertyConstants.SHELVESET_PROPERTY_REVIEWER_IDS);
-								for (String reviewerId : reviewerIds) {
-									if (TFSUtil.userIdsSame(currentUserId, reviewerId)) {
-										isCurrentUserShelvesetReviewer = true;
-										break;
+								if (!ShelvesetUtil.isShelvesetInactive(shelveset)) {
+									boolean isCurrentUserShelvesetReviewer = false;
+									String[] reviewerIds = ShelvesetUtil.getPropertyAsStringArray(shelveset,
+											ShelvesetPropertyConstants.SHELVESET_PROPERTY_REVIEWER_IDS);
+									for (String reviewerId : reviewerIds) {
+										if (TFSUtil.userIdsSame(currentUserId, reviewerId)) {
+											isCurrentUserShelvesetReviewer = true;
+											break;
+										}
 									}
-								}
-								if (isCurrentUserShelvesetReviewer) {
-									if (shelvesetUserItem == null) {
-										shelvesetUserItem = new ShelvesetUserItem(this, shelvesetOwner, shelvesetItems);
-										shelvesetUserItems.add(shelvesetUserItem);
+									if (isCurrentUserShelvesetReviewer) {
+										if (shelvesetUserItem == null) {
+											shelvesetUserItem = new ShelvesetUserItem(this, shelvesetOwner,
+													shelvesetItems);
+											shelvesetUserItems.add(shelvesetUserItem);
+										}
+										shelvesetItems
+												.add(new ShelvesetItem(parent, this, shelvesetUserItem, shelveset));
 									}
-									shelvesetItems.add(new ShelvesetItem(parent, this, shelvesetUserItem, shelveset));
 								}
 							}
 						}

@@ -146,7 +146,7 @@ public class ShelvesetUtil {
 	public static String[] getPropertyAsStringArray(Shelveset shelveset, String propertyName) {
 		String[] result = new String[0];
 		String propertyValue = getProperty(shelveset, propertyName, null);
-		if (propertyValue != null) {
+		if (propertyValue != null && !propertyValue.isEmpty()) {
 			result = propertyValue.split(",");
 		}
 		return result;
@@ -183,6 +183,14 @@ public class ShelvesetUtil {
 		return isShelvesetInactive && changesetId == null;
 	}
 
+	public static boolean canAssignReviewers(Shelveset shelveset) {
+		boolean isShelvesetInactive = ShelvesetUtil.getPropertyAsBoolean(shelveset,
+				ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, false);
+		boolean shelvesetBelongsToCurrentUser = TFSUtil.userIdsSame(TFSUtil.getCurrentUserId(),
+				shelveset.getOwnerName());
+		return !isShelvesetInactive && shelvesetBelongsToCurrentUser;
+	}
+
 	public static String getShelvesetBuildId(Shelveset shelveset) {
 		return ShelvesetUtil.getProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_BUILD_ID, null);
 	}
@@ -199,41 +207,50 @@ public class ShelvesetUtil {
 		setShelvesetProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, Boolean.toString(false));
 	}
 
-	@SuppressWarnings("restriction")
 	public static void setShelvesetProperty(Shelveset shelveset, String property, String value) {
-		if (property != null) {
+		List<String[]> properties = new ArrayList<String[]>();
+		properties.add(new String[] { property, value });
+		setShelvesetProperties(shelveset, properties);
+	}
+
+	@SuppressWarnings("restriction")
+	public static void setShelvesetProperties(Shelveset shelveset, List<String[]> properties) {
+		if (properties != null) {
 			VersionControlClient versionControlClient = TFSUtil.getVersionControlClient();
 			if (versionControlClient != null) {
 				Shelveset[] shelvesets = versionControlClient.queryShelvesets(shelveset.getName(),
-						shelveset.getOwnerName(), new String[] { property });
+						shelveset.getOwnerName(), ShelvesetPropertyConstants.SHELVESET_PROPERTIES);
 				if (shelvesets != null && shelvesets.length == 1) {
 					_Shelveset _shelveset = shelveset.getWebServiceObject();
 					Shelveset newShelveset = shelvesets[0];
 					_Shelveset _newShelveset = newShelveset.getWebServiceObject();
 					_PropertyValue[] propertyValuesArray = _newShelveset.getProperties();
-					_shelveset.setProperties(propertyValuesArray);
 
-					_PropertyValue newPropertyValue = new _PropertyValue(property, value, null, null);
-					_newShelveset.setProperties(new _PropertyValue[] { newPropertyValue });
+					List<_PropertyValue> newPropertyValues = new ArrayList<_PropertyValue>();
+					Map<String, _PropertyValue> newPropertyValuesMap = new HashMap<String, _PropertyValue>();
+					for (String[] property : properties) {
+						_PropertyValue newPropertyValue = new _PropertyValue(property[0], property[1], null, null);
+						newPropertyValues.add(newPropertyValue);
+						newPropertyValuesMap.put(property[0], newPropertyValue);
+					}
+					_newShelveset.setProperties(newPropertyValues.toArray(new _PropertyValue[0]));
+
 					versionControlClient.getWebServiceLayer().updateShelveset(shelveset.getName(),
 							shelveset.getOwnerName(), newShelveset);
 
-					boolean propertyPresent = false;
-					List<_PropertyValue> newPropertyValues = new ArrayList<_PropertyValue>();
+					List<_PropertyValue> updatedPropertyValues = new ArrayList<_PropertyValue>();
 					if (propertyValuesArray != null) {
 						for (_PropertyValue propertyValue : propertyValuesArray) {
-							newPropertyValues.add(propertyValue);
-							if (propertyValue.getPname().equals(property)) {
-								propertyPresent = true;
-								propertyValue.setVal(value);
+							updatedPropertyValues.add(propertyValue);
+							_PropertyValue newPropertyValue = newPropertyValuesMap.remove(propertyValue.getPname());
+							if (newPropertyValue != null) {
+								propertyValue.setVal(newPropertyValue.getVal());
 							}
 						}
 					}
 
-					if (!propertyPresent) {
-						newPropertyValues.add(newPropertyValue);
-						_shelveset.setProperties(newPropertyValues.toArray(new _PropertyValue[0]));
-					}
+					updatedPropertyValues.addAll(newPropertyValuesMap.values());
+					_shelveset.setProperties(updatedPropertyValues.toArray(new _PropertyValue[0]));
 				}
 			}
 		}
@@ -286,6 +303,83 @@ public class ShelvesetUtil {
 
 		Collections.sort(result, ReviewerComparator.INSTANCE);
 
+		return result;
+	}
+
+	public static void assignReviewers(Shelveset shelveset, List<ReviewerInfo> reviewerInfos) {
+		Map<String, ReviewerInfo> currentReviewersMap = getReviewersMap(getShelvesetReviewers(shelveset));
+		Map<String, ReviewerInfo> newReviewersMap = getReviewersMap(reviewerInfos);
+		Map<String, ReviewerInfo> modifiedReviewersMap = new HashMap<String, ReviewerInfo>();
+
+		for (Map.Entry<String, ReviewerInfo> currentReviewersMapEntry : currentReviewersMap.entrySet()) {
+			String reviewerId = currentReviewersMapEntry.getKey();
+			ReviewerInfo reviewerInfo = currentReviewersMapEntry.getValue();
+			if (!reviewerInfo.isModifiable()
+					|| (reviewerInfo.isModifiable() && newReviewersMap.containsKey(reviewerId))) {
+				modifiedReviewersMap.put(reviewerId, reviewerInfo);
+			}
+		}
+
+		for (Map.Entry<String, ReviewerInfo> newReviewersMapEntry : newReviewersMap.entrySet()) {
+			String reviewerId = newReviewersMapEntry.getKey();
+			ReviewerInfo reviewerInfo = newReviewersMapEntry.getValue();
+			ReviewerInfo currentReviewerInfo = currentReviewersMap.get(reviewerId);
+			if (currentReviewerInfo == null) {
+				modifiedReviewersMap.put(reviewerId, reviewerInfo);
+			}
+		}
+
+		List<ReviewerInfo> modifiedReviewers = new ArrayList<ReviewerInfo>();
+		for (Map.Entry<String, ReviewerInfo> modifiedReviewersMapEntry : modifiedReviewersMap.entrySet()) {
+			ReviewerInfo reviewerInfo = modifiedReviewersMapEntry.getValue();
+			if (reviewerInfo != null) {
+				modifiedReviewers.add(reviewerInfo);
+			}
+		}
+
+		Collections.sort(modifiedReviewers, ReviewerComparator.INSTANCE);
+
+		StringBuilder reviewerIdsBuilder = new StringBuilder();
+		StringBuilder approverIdsBuilder = new StringBuilder();
+
+		int modifiedReviewersSize = modifiedReviewers.size();
+		for (int i = 0; i < modifiedReviewersSize; i++) {
+			ReviewerInfo reviewerInfo = modifiedReviewers.get(i);
+			String reviewerId = reviewerInfo.getReviewerId();
+
+			if (reviewerInfo.isModifiable()) {
+				if (reviewerIdsBuilder.length() > 0) {
+					reviewerIdsBuilder.append(",");
+				}
+
+				reviewerIdsBuilder.append(reviewerId);
+			}
+
+			if (reviewerInfo.isApproved()) {
+				if (approverIdsBuilder.length() > 0) {
+					approverIdsBuilder.append(",");
+				}
+				approverIdsBuilder.append(reviewerId);
+			}
+		}
+
+		String reviewerIds = reviewerIdsBuilder.toString();
+		String approverIds = approverIdsBuilder.toString();
+
+		List<String[]> properties = new ArrayList<String[]>();
+		properties.add(new String[] { ShelvesetPropertyConstants.SHELVESET_PROPERTY_REVIEWER_IDS, reviewerIds });
+		properties.add(new String[] { ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS, approverIds });
+		setShelvesetProperties(shelveset, properties);
+
+	}
+
+	private static Map<String, ReviewerInfo> getReviewersMap(List<ReviewerInfo> reviewers) {
+		Map<String, ReviewerInfo> result = new HashMap<String, ReviewerInfo>();
+		if (reviewers != null) {
+			for (ReviewerInfo reviewerInfo : reviewers) {
+				result.put(reviewerInfo.getReviewerId(), reviewerInfo);
+			}
+		}
 		return result;
 	}
 }

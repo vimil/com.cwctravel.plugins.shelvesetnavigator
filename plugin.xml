@@ -32,6 +32,12 @@
                <instanceof
                      value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItemContainer">
                </instanceof>
+               <instanceof
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItem">
+               </instanceof>
+               <instanceof
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
+               </instanceof>
             </or>
          </triggerPoints>
          <actionProvider
@@ -135,6 +141,10 @@
       <command
             id="com.cwctravel.plugins.shelvesetreview.navigator.commands.DeleteShelvesetCommand"
             name="Delete Shelveset">
+      </command>
+      <command
+            id="com.cwctravel.plugins.shelvesetreview.navigator.commands.AssignReviewersCommand"
+            name="Assign Reviewers">
       </command>
    </extension>
    <extension
@@ -241,6 +251,31 @@
          </enabledWhen>
       </handler>
       <handler
+            class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.AssignReviewersHandler"
+            commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.AssignReviewersCommand">
+         <enabledWhen>
+            <with
+                  variable="selection">
+               <and>
+                  <count
+                        value="1">
+                  </count>
+                  <iterate>
+                     <and>
+                        <instanceof
+                              value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
+                        </instanceof>
+                        <test
+                              property="com.cwctravel.plugins.shelvesetreview.shelvesetitem.canAssignReviewers"
+                              value="true">
+                        </test>
+                     </and>
+                  </iterate>
+               </and>
+            </with>
+         </enabledWhen>
+      </handler>
+      <handler
             class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.RefreshHandler"
             commandId="org.eclipse.ui.file.refresh">
          <activeWhen>
@@ -284,6 +319,14 @@
          <command
                commandId="org.eclipse.ui.file.refresh"
                label="Refresh"
+               style="push">
+            <visibleWhen
+                  checkEnabled="true">
+            </visibleWhen>
+         </command>
+         <command
+               commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.AssignReviewersCommand"
+               label="Assign Reviewers..."
                style="push">
             <visibleWhen
                   checkEnabled="true">
@@ -370,7 +413,7 @@
             class="com.cwctravel.plugins.shelvesetreview.propertytesters.ShelvesetItemPropertyTester"
             id="com.cwctravel.plugins.shelvesetreview.navigator.propertytesters.ShelvesetItemPropertyTester"
             namespace="com.cwctravel.plugins.shelvesetreview.shelvesetitem"
-            properties="isActive,canActivate"
+            properties="isActive,canActivate,canAssignReviewers"
             type="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
       </propertyTester>
    </extension>

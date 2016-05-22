@@ -5,6 +5,7 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ILightweightLabelDecorator;
 
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.ChangeType;
 
 public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
@@ -37,6 +38,11 @@ public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
 				decoration.addPrefix("-");
 			} else if (changeType.contains(ChangeType.EDIT)) {
 				decoration.addPrefix(">");
+			}
+		} else if (element instanceof ShelvesetItem) {
+			ShelvesetItem shelvesetItem = (ShelvesetItem) element;
+			if (shelvesetItem.getReviewers().isEmpty()) {
+				decoration.addSuffix("[unassigned]");
 			}
 		}
 	}

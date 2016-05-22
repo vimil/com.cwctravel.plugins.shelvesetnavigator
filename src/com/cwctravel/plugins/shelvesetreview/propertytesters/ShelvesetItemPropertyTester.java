@@ -13,6 +13,8 @@ public class ShelvesetItemPropertyTester extends PropertyTester {
 				result = shelvesetItem.isInactive() != (Boolean) expectedValue;
 			} else if ("canActivate".equals(property)) {
 				result = shelvesetItem.canActivate() == (Boolean) expectedValue;
+			} else if ("canAssignReviewers".equals(property)) {
+				result = shelvesetItem.canAssignReviewers() == (Boolean) expectedValue;
 			}
 		}
 

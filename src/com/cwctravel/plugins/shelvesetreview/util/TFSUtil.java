@@ -12,17 +12,32 @@ import org.eclipse.core.runtime.IStatus;
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.microsoft.tfs.client.common.repository.TFSRepository;
 import com.microsoft.tfs.client.eclipse.TFSEclipseClientPlugin;
+import com.microsoft.tfs.core.TFSConnection;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
+import com.microsoft.tfs.core.clients.webservices.IIdentityManagementService2;
+import com.microsoft.tfs.core.clients.webservices.IdentitySearchFactor;
+import com.microsoft.tfs.core.clients.webservices.MembershipQuery;
+import com.microsoft.tfs.core.clients.webservices.ReadIdentityOptions;
 import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
 public class TFSUtil {
 	public static VersionControlClient getVersionControlClient() {
 		VersionControlClient vC = null;
 		TFSRepository tfsRepository = TFSEclipseClientPlugin.getDefault().getRepositoryManager().getDefaultRepository();
-		if(tfsRepository != null) {
+		if (tfsRepository != null) {
 			vC = tfsRepository.getVersionControlClient();
 		}
 		return vC;
+	}
+
+	public static TFSConnection getTFSConnection() {
+		TFSConnection result = null;
+
+		TFSRepository tfsRepository = TFSEclipseClientPlugin.getDefault().getRepositoryManager().getDefaultRepository();
+		if (tfsRepository != null) {
+			result = tfsRepository.getConnection();
+		}
+		return result;
 	}
 
 	public static String getCurrentUserDisplayName() {
@@ -39,9 +54,10 @@ public class TFSUtil {
 		URI result = null;
 		try {
 			String hash = computeMD5Hash(downloadURL);
-			result = new URI("tfs://" + Base64.getUrlEncoder().encodeToString((path + ";" + downloadURL + ";" + hash + ";" + shelvesetName + ";" + shelvesetOwnerName).getBytes("UTF-8")));
-		}
-		catch(UnsupportedEncodingException | URISyntaxException | NoSuchAlgorithmException uEE) {
+			result = new URI("tfs://" + Base64.getUrlEncoder().encodeToString(
+					(path + ";" + downloadURL + ";" + hash + ";" + shelvesetName + ";" + shelvesetOwnerName)
+							.getBytes("UTF-8")));
+		} catch (UnsupportedEncodingException | URISyntaxException | NoSuchAlgorithmException uEE) {
 			ShelvesetReviewPlugin.log(IStatus.WARNING, uEE.getMessage(), uEE);
 		}
 
@@ -54,8 +70,7 @@ public class TFSUtil {
 			String decodedStr = new String(Base64.getUrlDecoder().decode(uri.getAuthority()), "UTF-8");
 			result = decodedStr.split(";");
 
-		}
-		catch(UnsupportedEncodingException e) {
+		} catch (UnsupportedEncodingException e) {
 			ShelvesetReviewPlugin.log(IStatus.WARNING, e.getMessage(), e);
 		}
 
@@ -66,7 +81,7 @@ public class TFSUtil {
 		String result = null;
 		byte[] hash = MessageDigest.getInstance("MD5").digest(str.getBytes("UTF-8"));
 		StringBuilder sb = new StringBuilder(2 * hash.length);
-		for(byte b: hash) {
+		for (byte b : hash) {
 			sb.append(String.format("%02x", b & 0xff));
 		}
 		result = sb.toString();
@@ -74,18 +89,18 @@ public class TFSUtil {
 	}
 
 	public static boolean userIdsSame(String userId1, String userId2) {
-		if(userId1 == userId2) {
+		if (userId1 == userId2) {
 			return true;
 		}
-		if(userId1 == null) {
+		if (userId1 == null) {
 			return false;
 		}
 
-		if(userId2 == null) {
+		if (userId2 == null) {
 			return false;
 		}
 
-		if(userId1.equals(userId2)) {
+		if (userId1.equals(userId2)) {
 			return true;
 		}
 
@@ -95,21 +110,39 @@ public class TFSUtil {
 		String currentDomain = System.getenv("userdomain");
 
 		String domain1 = currentDomain;
-		if(userId1Parts.length == 2) {
+		if (userId1Parts.length == 2) {
 			domain1 = userId1Parts[0];
 			userId1 = userId1Parts[1];
-		}
-		else {
+		} else {
 			domain1 = currentDomain;
 		}
 
 		String domain2 = currentDomain;
-		if(userId2Parts.length == 2) {
+		if (userId2Parts.length == 2) {
 			domain2 = userId2Parts[0];
 			userId2 = userId2Parts[1];
 		}
 
 		return domain1.equalsIgnoreCase(domain2) && userId1.equalsIgnoreCase(userId2);
+	}
 
+	public static String findUserId(String userId) {
+		String result = null;
+		if (userId != null && !userId.isEmpty()) {
+			TFSConnection tfsConnection = getTFSConnection();
+			if (tfsConnection != null) {
+				IIdentityManagementService2 identitySvc = (IIdentityManagementService2) tfsConnection
+						.getClient(IIdentityManagementService2.class);
+
+				if (identitySvc != null) {
+					TeamFoundationIdentity teamFoundationIdentity = identitySvc.readIdentity(
+							IdentitySearchFactor.GENERAL, userId, MembershipQuery.NONE, ReadIdentityOptions.NONE);
+					if (teamFoundationIdentity != null) {
+						result = teamFoundationIdentity.getUniqueName();
+					}
+				}
+			}
+		}
+		return result;
 	}
 }

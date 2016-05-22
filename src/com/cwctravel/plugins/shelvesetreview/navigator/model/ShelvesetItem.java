@@ -166,4 +166,12 @@ public class ShelvesetItem {
 	public List<ReviewerInfo> getReviewers() {
 		return ShelvesetUtil.getShelvesetReviewers(shelveset);
 	}
+
+	public boolean canAssignReviewers() {
+		return ShelvesetUtil.canAssignReviewers(shelveset);
+	}
+
+	public void assignReviewers(List<ReviewerInfo> reviewerInfos) {
+		ShelvesetUtil.assignReviewers(shelveset, reviewerInfos);
+	}
 }
