@@ -136,7 +136,7 @@ public class TFSUtil {
 
 				if (identitySvc != null) {
 					TeamFoundationIdentity teamFoundationIdentity = identitySvc.readIdentity(
-							IdentitySearchFactor.GENERAL, userId, MembershipQuery.NONE, ReadIdentityOptions.NONE);
+							IdentitySearchFactor.GENERAL, userId, MembershipQuery.DIRECT, ReadIdentityOptions.NONE);
 					if (teamFoundationIdentity != null) {
 						result = teamFoundationIdentity.getUniqueName();
 					}
