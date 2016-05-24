@@ -54,9 +54,10 @@ public class TFSUtil {
 		URI result = null;
 		try {
 			String hash = computeMD5Hash(downloadURL);
-			result = new URI("tfs://" + Base64.getUrlEncoder().encodeToString(
-					(path + ";" + downloadURL + ";" + hash + ";" + shelvesetName + ";" + shelvesetOwnerName)
-							.getBytes("UTF-8")));
+			result = new URI("tfs://"
+					+ Base64.getUrlEncoder().encodeToString(
+							(path + ";" + downloadURL + ";" + hash + ";" + shelvesetName + ";" + shelvesetOwnerName)
+									.getBytes("UTF-8")));
 		} catch (UnsupportedEncodingException | URISyntaxException | NoSuchAlgorithmException uEE) {
 			ShelvesetReviewPlugin.log(IStatus.WARNING, uEE.getMessage(), uEE);
 		}
@@ -137,7 +138,8 @@ public class TFSUtil {
 				if (identitySvc != null) {
 					TeamFoundationIdentity teamFoundationIdentity = identitySvc.readIdentity(
 							IdentitySearchFactor.GENERAL, userId, MembershipQuery.DIRECT, ReadIdentityOptions.NONE);
-					if (teamFoundationIdentity != null) {
+					if (teamFoundationIdentity != null && teamFoundationIdentity.isActive()
+							&& !teamFoundationIdentity.isContainer()) {
 						result = teamFoundationIdentity.getUniqueName();
 					}
 				}

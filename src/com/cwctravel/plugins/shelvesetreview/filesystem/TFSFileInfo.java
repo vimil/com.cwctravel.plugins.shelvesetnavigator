@@ -11,7 +11,7 @@ public class TFSFileInfo implements IFileInfo {
 	}
 
 	@Override
-	public int compareTo(IFileInfo o) {
+	public int compareTo(Object o) {
 		return 0;
 	}
 
