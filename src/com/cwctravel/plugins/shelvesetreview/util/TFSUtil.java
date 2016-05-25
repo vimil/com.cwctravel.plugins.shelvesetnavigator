@@ -26,6 +26,20 @@ public class TFSUtil {
 		TFSRepository tfsRepository = TFSEclipseClientPlugin.getDefault().getRepositoryManager().getDefaultRepository();
 		if (tfsRepository != null) {
 			vC = tfsRepository.getVersionControlClient();
+			TFSConnection tfsConnection = tfsRepository.getConnection();
+			// System.out.println(credentials);
+			/*
+			 * try { HttpClient client = tfsConnection.getHTTPClient();
+			 * GetMethod method = new GetMethod(
+			 * "https://vimilsaju.visualstudio.com/_apis/discussion/threads?artifactUri=vstfs%3A%2F%2F%2FVersionControl%2FShelveset%2Ftest-shelf2%252526shelvesetOwner%25253Dvimilsaju%25252540outlook.com"
+			 * );
+			 * 
+			 * client.executeMethod(method);
+			 * System.out.println(method.getResponseBodyAsString()); } catch
+			 * (IOException e) { // TODO Auto-generated catch block
+			 * e.printStackTrace(); }
+			 */
+
 		}
 		return vC;
 	}

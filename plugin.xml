@@ -96,6 +96,13 @@
             name="Shelveset Navigator"
             restorable="true">
       </view>
+      <view
+            category="com.microsoft.tfs.client.common.ui.views"
+            class="com.cwctravel.plugins.shelvesetreview.views.ReviewDiscussionView"
+            icon="icons/review-discussion-icon.png"
+            id="com.cwctravel.plugins.shelvesetreview.views.ReviewCommentsView"
+            name="Review Discussion">
+      </view>
    </extension>
    <extension
          point="org.eclipse.core.filesystem.filesystems">
@@ -429,6 +436,24 @@
             </instanceof>
          </enabledWhen>
       </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="org.eclipse.jdt.ui.JavaPerspective">
+         <view
+               id="com.cwctravel.plugins.shelvesetreview.views.ReviewCommentsView"
+               ratio="0.5"
+               relationship="right"
+               relative="org.eclipse.ui.views.ProblemView">
+         </view>
+      </perspectiveExtension>
+   </extension>
+   <extension
+         point="org.eclipse.help.contexts">
+      <contexts
+            file="contexts.xml">
+      </contexts>
    </extension>
 
 </plugin>
