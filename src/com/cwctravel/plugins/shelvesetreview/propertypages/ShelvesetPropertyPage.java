@@ -33,7 +33,7 @@ public class ShelvesetPropertyPage extends PropertyPage {
 
 	@Override
 	protected Control createContents(Composite parent) {
-		shelvesetItem = ((IAdaptable) getElement()).getAdapter(ShelvesetItem.class);
+		shelvesetItem = (ShelvesetItem) ((IAdaptable) getElement()).getAdapter(ShelvesetItem.class);
 		Composite composite = createDefaultComposite(parent);
 		addMainSection(composite);
 
@@ -148,8 +148,7 @@ public class ShelvesetPropertyPage extends PropertyPage {
 
 		Label shelvesetStatusLabel = new Label(parent, SWT.NONE);
 		shelvesetStatusLabel.setText(shelvesetStatus);
-		FormData fdShelvesetStatusLabel = new FormData(convertWidthInCharsToPixels(50),
-				convertHeightInCharsToPixels(1));
+		FormData fdShelvesetStatusLabel = new FormData(convertWidthInCharsToPixels(50), convertHeightInCharsToPixels(1));
 		fdShelvesetStatusLabel.top = new FormAttachment(shelvesetChangesetNumberLabel, 3, SWT.BOTTOM);
 		fdShelvesetStatusLabel.left = new FormAttachment(shelvesetStatusTitleLabel, 0, SWT.RIGHT);
 		shelvesetStatusLabel.setLayoutData(fdShelvesetStatusLabel);
