@@ -34,6 +34,7 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 	public static final String REVIEW_GROUP_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.reviewgroup";
 	public static final String INACTIVE_GROUP_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.inactivegroup";
 	public static final String USER_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.user";
+	public static final String BUILD_SUCCESSFUL_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.buildsuccessful";
 
 	private static ShelvesetReviewPlugin plugin;
 
@@ -47,29 +48,34 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 		super.initializeImageRegistry(registry);
 		Bundle bundle = Platform.getBundle(PLUGIN_ID);
 
-		ImageDescriptor shelvesetIconImage = ImageDescriptor
-				.createFromURL(FileLocator.find(bundle, new Path("icons/shelveset.png"), null));
+		ImageDescriptor shelvesetIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path(
+				"icons/shelveset.png"), null));
 		registry.put(SHELVESET_ICON_ID, shelvesetIconImage);
 
-		ImageDescriptor inactiveShelvesetIconImage = ImageDescriptor
-				.createFromURL(FileLocator.find(bundle, new Path("icons/inactive-shelveset.png"), null));
+		ImageDescriptor inactiveShelvesetIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path(
+				"icons/inactive-shelveset.png"), null));
 		registry.put(INACTIVE_SHELVESET_ICON_ID, inactiveShelvesetIconImage);
 
-		ImageDescriptor userGroupIconImage = ImageDescriptor
-				.createFromURL(FileLocator.find(bundle, new Path("icons/user-group.png"), null));
+		ImageDescriptor userGroupIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path(
+				"icons/user-group.png"), null));
 		registry.put(USER_GROUP_ICON_ID, userGroupIconImage);
 
-		ImageDescriptor reviewGroupIconImage = ImageDescriptor
-				.createFromURL(FileLocator.find(bundle, new Path("icons/review-group.png"), null));
+		ImageDescriptor reviewGroupIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path(
+				"icons/review-group.png"), null));
 		registry.put(REVIEW_GROUP_ICON_ID, reviewGroupIconImage);
 
-		ImageDescriptor inactiveGroupIconImage = ImageDescriptor
-				.createFromURL(FileLocator.find(bundle, new Path("icons/inactive-group.png"), null));
+		ImageDescriptor inactiveGroupIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path(
+				"icons/inactive-group.png"), null));
 		registry.put(INACTIVE_GROUP_ICON_ID, inactiveGroupIconImage);
 
-		ImageDescriptor userIconImage = ImageDescriptor
-				.createFromURL(FileLocator.find(bundle, new Path("icons/user.png"), null));
+		ImageDescriptor userIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path(
+				"icons/user.png"), null));
 		registry.put(USER_ICON_ID, userIconImage);
+
+		ImageDescriptor buildSuccessfulIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path(
+				"icons/build-successful-icon.png"), null));
+		registry.put(BUILD_SUCCESSFUL_ICON_ID, buildSuccessfulIconImage);
+
 	}
 
 	public void start(BundleContext context) throws Exception {

@@ -1,9 +1,11 @@
 package com.cwctravel.plugins.shelvesetreview.decorators;
 
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ILightweightLabelDecorator;
 
+import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.ChangeType;
@@ -41,8 +43,15 @@ public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
 			}
 		} else if (element instanceof ShelvesetItem) {
 			ShelvesetItem shelvesetItem = (ShelvesetItem) element;
-			if (shelvesetItem.getReviewers().isEmpty()) {
+			if (!shelvesetItem.isInactive() && shelvesetItem.getReviewers().isEmpty()) {
 				decoration.addSuffix("[unassigned]");
+			}
+
+			String buildId = shelvesetItem.getBuildId();
+			if (buildId != null && !buildId.isEmpty()) {
+				ImageDescriptor buildSuccessfulImageDescriptor = ShelvesetReviewPlugin.getDefault().getImageRegistry()
+						.getDescriptor(ShelvesetReviewPlugin.BUILD_SUCCESSFUL_ICON_ID);
+				decoration.addOverlay(buildSuccessfulImageDescriptor);
 			}
 		}
 	}
