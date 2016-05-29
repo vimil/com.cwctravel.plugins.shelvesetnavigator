@@ -455,5 +455,60 @@
             file="contexts.xml">
       </contexts>
    </extension>
+   <extension
+         point="org.eclipse.ui.editors.markerAnnotationSpecification">
+      <specification
+            annotationType="com.cwctravel.plugins.shelvesetreview.commentMarker"
+            colorPreferenceKey="reviewCommentColorBackground"
+            colorPreferenceValue="255,255,128"
+            contributesToHeader="true"
+            highlightPreferenceKey="reviewCommentHighlight"
+            highlightPreferenceValue="true"
+            icon="icons/review-discussion-icon.png"
+            includeOnPreferencePage="true"
+            isGoToNextNavigationTarget="false"
+            isGoToNextNavigationTargetKey="reviewCommentGoNext"
+            isGoToPreviousNavigationTarget="false"
+            isGoToPreviousNavigationTargetKey="reviewCommentGoPrev"
+            label="Review Comments"
+            overviewRulerPreferenceKey="reviewCommentOverviewRuler"
+            overviewRulerPreferenceValue="true"
+            presentationLayer="5"
+            showInNextPrevDropdownToolbarAction="true"
+            showInNextPrevDropdownToolbarActionKey="reviewCommentShowNextPrev"
+            symbolicIcon="info"
+            textPreferenceKey="reviewCommentText"
+            textPreferenceValue="true"
+            textStylePreferenceKey="reviewCommentTextStyle"
+            textStylePreferenceValue="BOX"
+            verticalRulerPreferenceKey="reviewCommentVerticalRuler"
+            verticalRulerPreferenceValue="true">
+      </specification>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.annotationTypes">
+      <type
+            markerSeverity="0"
+            markerType="com.cwctravel.plugins.shelvesetreview.commentMarker"
+            name="com.cwctravel.plugins.shelvesetreview.commentMarker">
+      </type>
+   </extension>
+   <extension
+         id="commentMarker"
+         name="Comment Marker"
+         point="org.eclipse.core.resources.markers">
+      <attribute
+            name="startLine">
+      </attribute>
+      <attribute
+            name="startColumn">
+      </attribute>
+      <attribute
+            name="endLine">
+      </attribute>
+      <attribute
+            name="endColumn">
+      </attribute>
+   </extension>
 
 </plugin>

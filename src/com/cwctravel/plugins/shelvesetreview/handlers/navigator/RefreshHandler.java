@@ -10,7 +10,7 @@ public class RefreshHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		ShelvesetReviewPlugin.getDefault().refreshShelvesetGroupItems(true);
+		ShelvesetReviewPlugin.getDefault().scheduleRefreshShelvesetGroupItems();
 		return null;
 	}
 

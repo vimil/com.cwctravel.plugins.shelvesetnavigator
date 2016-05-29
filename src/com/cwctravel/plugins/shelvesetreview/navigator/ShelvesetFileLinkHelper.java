@@ -37,11 +37,10 @@ public class ShelvesetFileLinkHelper implements ILinkHelper {
 			if (fileStore instanceof TFSFileStore) {
 				TFSFileStore tfsFileStore = (TFSFileStore) fileStore;
 
-				ShelvesetGroupItemContainer shelvesetGroupItemContainer = ShelvesetReviewPlugin.getDefault()
-						.getShelvesetGroupItemContainer();
+				ShelvesetGroupItemContainer shelvesetGroupItemContainer = ShelvesetReviewPlugin.getDefault().getShelvesetGroupItemContainer();
 
-				ShelvesetItem shelvesetItem = shelvesetGroupItemContainer
-						.findShelvesetItem(tfsFileStore.getShelvesetName(), tfsFileStore.getShelvesetOwnerName());
+				ShelvesetItem shelvesetItem = shelvesetGroupItemContainer.findShelvesetItem(tfsFileStore.getShelvesetName(),
+						tfsFileStore.getShelvesetOwnerName());
 				if (shelvesetItem != null) {
 					ShelvesetFileItem shelvesetFileItem = shelvesetItem.findFile(tfsFileStore.getPath());
 					List<Object> treePathSgementsList = new ArrayList<Object>();
@@ -68,8 +67,7 @@ public class ShelvesetFileLinkHelper implements ILinkHelper {
 			if (firstElement instanceof ShelvesetFileItem) {
 				ShelvesetFileItem shelvesetFileItem = (ShelvesetFileItem) firstElement;
 				try {
-					FileStoreEditorInput fileStoreEditorInput = new FileStoreEditorInput(
-							EFS.getStore(shelvesetFileItem.getURI()));
+					FileStoreEditorInput fileStoreEditorInput = new FileStoreEditorInput(EFS.getStore(shelvesetFileItem.getURI()));
 					IEditorPart editor = page.findEditor(fileStoreEditorInput);
 					if (editor != null) {
 						page.bringToTop(editor);

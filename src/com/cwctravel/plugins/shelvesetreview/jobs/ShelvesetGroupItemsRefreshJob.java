@@ -8,17 +8,14 @@ import org.eclipse.core.runtime.jobs.Job;
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 
 public class ShelvesetGroupItemsRefreshJob extends Job {
-	private boolean refreshNavigator;
 
-	public ShelvesetGroupItemsRefreshJob(boolean refreshNavigator) {
+	public ShelvesetGroupItemsRefreshJob() {
 		super("Refreshing Shelvesets");
-		this.refreshNavigator = refreshNavigator;
 	}
 
 	@Override
 	protected IStatus run(IProgressMonitor monitor) {
-		ShelvesetReviewPlugin.getDefault().getShelvesetGroupItemContainer().refreshShelvesetGroupItems(refreshNavigator,
-				false, monitor);
+		ShelvesetReviewPlugin.getDefault().refreshShelvesetGroupItems(false, monitor);
 		return Status.OK_STATUS;
 	}
 

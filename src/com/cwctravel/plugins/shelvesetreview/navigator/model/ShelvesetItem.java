@@ -1,9 +1,23 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.ui.progress.UIJob;
+
+import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetFileItemsRefreshJob;
+import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
 import com.cwctravel.plugins.shelvesetreview.util.ShelvesetUtil;
+import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
+import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
+import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.ItemType;
+import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingChange;
+import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingSet;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 
 public class ShelvesetItem {
@@ -13,16 +27,17 @@ public class ShelvesetItem {
 
 	private Shelveset shelveset;
 
+	private DiscussionInfo discussionInfo;
+
 	private List<ShelvesetResourceItem> children;
 	private boolean isChildrenRefreshed;
 
-	public ShelvesetItem(ShelvesetGroupItemContainer shelvesetItemContainer, ShelvesetGroupItem shelvesetGroup,
-			Shelveset shelveset) {
+	public ShelvesetItem(ShelvesetGroupItemContainer shelvesetItemContainer, ShelvesetGroupItem shelvesetGroup, Shelveset shelveset) {
 		this(shelvesetItemContainer, shelvesetGroup, null, shelveset);
 	}
 
-	public ShelvesetItem(ShelvesetGroupItemContainer shelvesetItemContainer, ShelvesetGroupItem shelvesetGroup,
-			ShelvesetUserItem shelvesetUser, Shelveset shelveset) {
+	public ShelvesetItem(ShelvesetGroupItemContainer shelvesetItemContainer, ShelvesetGroupItem shelvesetGroup, ShelvesetUserItem shelvesetUser,
+			Shelveset shelveset) {
 		this.shelveset = shelveset;
 		this.parentGroup = shelvesetGroup;
 		this.parentUser = shelvesetUser;
@@ -65,16 +80,45 @@ public class ShelvesetItem {
 		return isChildrenRefreshed;
 	}
 
-	public void setChildren(List<ShelvesetResourceItem> children) {
-		this.children = children;
+	public void scheduleRefresh() {
+		new ShelvesetFileItemsRefreshJob(this).schedule();
 	}
 
-	public void setChildrenRefreshed(boolean isChildrenRefreshed) {
-		this.isChildrenRefreshed = isChildrenRefreshed;
-	}
+	public void refresh(IProgressMonitor monitor) {
+		monitor.beginTask("Updating Shelveset", 0);
+		List<ShelvesetFileItem> shelvesetFileItems = new ArrayList<ShelvesetFileItem>();
 
-	public void refreshShelvesetFileItems(boolean expand) {
-		new ShelvesetFileItemsRefreshJob(this, expand).schedule();
+		VersionControlClient vC = TFSUtil.getVersionControlClient();
+		PendingSet[] pendingSets = vC.queryShelvedChanges(getName(), getOwnerName(), null, true, null);
+
+		if (pendingSets != null) {
+			for (PendingSet pendingSet : pendingSets) {
+				PendingChange[] pendingChanges = pendingSet.getPendingChanges();
+				if (pendingChanges != null) {
+					for (PendingChange pendingChange : pendingChanges) {
+						ItemType itemType = pendingChange.getItemType();
+						if (itemType == ItemType.FILE) {
+							ShelvesetFileItem shelvesetResourceItem = new ShelvesetFileItem(this, pendingSet, pendingChange);
+							shelvesetFileItems.add(shelvesetResourceItem);
+						}
+
+					}
+				}
+			}
+		}
+
+		children = ShelvesetUtil.groupShelvesetFileItems(this, shelvesetFileItems);
+		isChildrenRefreshed = true;
+
+		monitor.done();
+
+		new UIJob("Shelveset Item Refresh") {
+			@Override
+			public IStatus runInUIThread(IProgressMonitor monitor) {
+				ShelvesetReviewPlugin.getDefault().fireShelvesetItemRefreshed(ShelvesetItem.this);
+				return Status.OK_STATUS;
+			}
+		}.schedule();
 	}
 
 	public int hashCode() {
@@ -138,15 +182,15 @@ public class ShelvesetItem {
 		return ShelvesetUtil.canActivateShelveset(shelveset);
 	}
 
-	public void markShelvesetActive() {
+	public void markShelvesetActive(IProgressMonitor monitor) {
 		ShelvesetUtil.markShelvesetActive(shelveset);
 	}
 
-	public void markShelvesetInactive() {
+	public void markShelvesetInactive(IProgressMonitor monitor) {
 		ShelvesetUtil.markShelvesetInactive(shelveset);
 	}
 
-	public boolean delete() {
+	public boolean delete(IProgressMonitor monitor) {
 		boolean result = false;
 		if (isInactive()) {
 			ShelvesetUtil.deleteShelveset(shelveset);
@@ -174,4 +218,16 @@ public class ShelvesetItem {
 	public void assignReviewers(List<ReviewerInfo> reviewerInfos) {
 		ShelvesetUtil.assignReviewers(shelveset, reviewerInfos);
 	}
+
+	public void refreshDiscussion(IProgressMonitor monitor) throws IOException {
+		monitor.beginTask("Retrieveing discussion for Shelveset " + getName(), 1);
+		discussionInfo = ShelvesetUtil.retrieveDiscussion(shelveset);
+		monitor.worked(1);
+		monitor.done();
+	}
+
+	public DiscussionInfo getDiscussionInfo() {
+		return discussionInfo;
+	}
+
 }

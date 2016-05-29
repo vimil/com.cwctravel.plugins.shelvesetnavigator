@@ -17,6 +17,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
@@ -27,10 +28,20 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.DrillDownAdapter;
 import org.eclipse.ui.part.ViewPart;
+
+import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
+import com.cwctravel.plugins.shelvesetreview.events.ShelvesetItemDiscussionRefreshEvent;
+import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetItemDiscussionRefreshListener;
+import com.cwctravel.plugins.shelvesetreview.navigator.ShelvesetNavigator;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 
 /**
  * This sample class demonstrates how to plug-in a new workbench view. The view
@@ -47,7 +58,7 @@ import org.eclipse.ui.part.ViewPart;
  * <p>
  */
 
-public class ReviewDiscussionView extends ViewPart {
+public class ReviewDiscussionView extends ViewPart implements IShelvesetItemDiscussionRefreshListener {
 
 	/**
 	 * The ID of the view as specified by the extension.
@@ -59,100 +70,6 @@ public class ReviewDiscussionView extends ViewPart {
 	private Action action1;
 	private Action action2;
 	private Action doubleClickAction;
-
-	/*
-	 * The content provider class is responsible for providing objects to the
-	 * view. It can wrap existing objects in adapters or simply return objects
-	 * as-is. These objects may be sensitive to the current input of the view,
-	 * or ignore it and always show the same content (like Task List, for
-	 * example).
-	 */
-
-	/*
-	 * class TreeObject implements IAdaptable { private String name; private
-	 * TreeParent parent;
-	 * 
-	 * public TreeObject(String name) { this.name = name; }
-	 * 
-	 * public String getName() { return name; }
-	 * 
-	 * public void setParent(TreeParent parent) { this.parent = parent; }
-	 * 
-	 * public TreeParent getParent() { return parent; }
-	 * 
-	 * public String toString() { return getName(); }
-	 * 
-	 * public <T> T getAdapter(Class<T> key) { return null; } }
-	 * 
-	 * class TreeParent extends TreeObject { private ArrayList children;
-	 * 
-	 * public TreeParent(String name) { super(name); children = new ArrayList();
-	 * }
-	 * 
-	 * public void addChild(TreeObject child) { children.add(child);
-	 * child.setParent(this); }
-	 * 
-	 * public void removeChild(TreeObject child) { children.remove(child);
-	 * child.setParent(null); }
-	 * 
-	 * public TreeObject[] getChildren() { return (TreeObject[])
-	 * children.toArray(new TreeObject[children.size()]); }
-	 * 
-	 * public boolean hasChildren() { return children.size() > 0; } }
-	 */
-
-	/*
-	 * class ViewContentProvider implements IStructuredContentProvider,
-	 * ITreeContentProvider { private TreeParent invisibleRoot;
-	 * 
-	 * public void inputChanged(Viewer v, Object oldInput, Object newInput) { }
-	 * 
-	 * public void dispose() { }
-	 * 
-	 * public Object[] getElements(Object parent) { if
-	 * (parent.equals(getViewSite())) { if (invisibleRoot == null) initialize();
-	 * return getChildren(invisibleRoot); } return getChildren(parent); }
-	 * 
-	 * public Object getParent(Object child) { if (child instanceof TreeObject)
-	 * { return ((TreeObject) child).getParent(); } return null; }
-	 * 
-	 * public Object[] getChildren(Object parent) { if (parent instanceof
-	 * TreeParent) { return ((TreeParent) parent).getChildren(); } return new
-	 * Object[0]; }
-	 * 
-	 * public boolean hasChildren(Object parent) { if (parent instanceof
-	 * TreeParent) return ((TreeParent) parent).hasChildren(); return false; }
-	 * 
-	 * 
-	 * We will set up a dummy model to initialize tree heararchy. In a real
-	 * code, you will connect to a real model and expose its hierarchy.
-	 * 
-	 * private void initialize() { TreeObject to1 = new TreeObject("Leaf 1");
-	 * TreeObject to2 = new TreeObject("Leaf 2"); TreeObject to3 = new
-	 * TreeObject("Leaf 3"); TreeParent p1 = new TreeParent("Parent 1");
-	 * p1.addChild(to1); p1.addChild(to2); p1.addChild(to3);
-	 * 
-	 * TreeObject to4 = new TreeObject("Leaf 4"); TreeParent p2 = new
-	 * TreeParent("Parent 2"); p2.addChild(to4);
-	 * 
-	 * TreeParent root = new TreeParent("Root"); root.addChild(p1);
-	 * root.addChild(p2);
-	 * 
-	 * invisibleRoot = new TreeParent(""); invisibleRoot.addChild(root); } }
-	 */
-
-	/*
-	 * class ViewLabelProvider extends LabelProvider implements ILabelProvider {
-	 * public String getColumnText(Object obj, int index) { return getText(obj);
-	 * }
-	 * 
-	 * public Image getColumnImage(Object obj, int index) { return
-	 * getImage(obj); }
-	 * 
-	 * public Image getImage(Object obj) { return
-	 * PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.
-	 * IMG_OBJ_ELEMENT); } }
-	 */
 
 	class City {
 		Street[] streets = new Street[2];
@@ -304,6 +221,37 @@ public class ReviewDiscussionView extends ViewPart {
 	public ReviewDiscussionView() {
 	}
 
+	private ShelvesetItem getSelectedShelvesetItem() {
+		ShelvesetItem result = null;
+		IWorkbenchWindow[] workbenchWIndows = PlatformUI.getWorkbench().getWorkbenchWindows();
+		if (workbenchWIndows != null) {
+			for (IWorkbenchWindow workbenchWIndow : workbenchWIndows) {
+				IWorkbenchPage[] workbenchPages = workbenchWIndow.getPages();
+				if (workbenchPages != null) {
+					for (IWorkbenchPage workbenchPage : workbenchPages) {
+						IViewReference[] viewReferences = workbenchPage.getViewReferences();
+						if (viewReferences != null) {
+							for (IViewReference viewReference : viewReferences) {
+								IViewPart viewPart = viewReference.getView(false);
+								if (viewPart instanceof ShelvesetNavigator) {
+									ShelvesetNavigator shelvesetNavigator = (ShelvesetNavigator) viewPart;
+									ITreeSelection treeSelection = shelvesetNavigator.getCommonViewer().getStructuredSelection();
+									if (treeSelection != null) {
+										Object firstElement = treeSelection.getFirstElement();
+										if (firstElement instanceof ShelvesetItem) {
+											result = (ShelvesetItem) firstElement;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return result;
+	}
+
 	/**
 	 * This is a callback that will allow us to create the viewer and initialize
 	 * it.
@@ -338,13 +286,23 @@ public class ReviewDiscussionView extends ViewPart {
 		viewer.expandAll();
 
 		// Create the help context id for the viewer's control
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(),
-				"com.cwctravel.plugins.shelvesetreview.viewer");
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), "com.cwctravel.plugins.shelvesetreview.viewer");
 		getSite().setSelectionProvider(viewer);
 		makeActions();
 		hookContextMenu();
 		hookDoubleClickAction();
 		contributeToActionBars();
+		registerListeners();
+
+	}
+
+	public void dispose() {
+		ShelvesetReviewPlugin.getDefault().removeShelvesetItemDiscussionRefreshListener(this);
+	}
+
+	private void registerListeners() {
+		ShelvesetReviewPlugin.getDefault().addShelvesetItemDiscussionRefreshListener(this);
+
 	}
 
 	private void hookContextMenu() {
@@ -391,13 +349,15 @@ public class ReviewDiscussionView extends ViewPart {
 	private void makeActions() {
 		action1 = new Action() {
 			public void run() {
-				showMessage("Action 1 executed");
+				ShelvesetItem shelvesetItem = getSelectedShelvesetItem();
+				if (shelvesetItem != null) {
+					ShelvesetReviewPlugin.getDefault().scheduleRefreshShelvesetItemDiscussion(shelvesetItem);
+				}
 			}
 		};
 		action1.setText("Action 1");
 		action1.setToolTipText("Action 1 tooltip");
-		action1.setImageDescriptor(
-				PlatformUI.getWorkbench().getSharedImages().getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
+		action1.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
 
 		action2 = new Action() {
 			public void run() {
@@ -406,8 +366,7 @@ public class ReviewDiscussionView extends ViewPart {
 		};
 		action2.setText("Action 2");
 		action2.setToolTipText("Action 2 tooltip");
-		action2.setImageDescriptor(
-				PlatformUI.getWorkbench().getSharedImages().getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
+		action2.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
 		doubleClickAction = new Action() {
 			public void run() {
 				ISelection selection = viewer.getSelection();
@@ -434,5 +393,10 @@ public class ReviewDiscussionView extends ViewPart {
 	 */
 	public void setFocus() {
 		viewer.getControl().setFocus();
+	}
+
+	@Override
+	public void onShelvesetItemDiscussionRefreshed(ShelvesetItemDiscussionRefreshEvent event) {
+		System.out.println("Shelveset discussion refeshed for " + event.getShelvesetItem().getName());
 	}
 }

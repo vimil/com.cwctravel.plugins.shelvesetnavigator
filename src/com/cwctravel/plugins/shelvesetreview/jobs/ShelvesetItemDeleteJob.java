@@ -18,9 +18,8 @@ public class ShelvesetItemDeleteJob extends Job {
 
 	@Override
 	protected IStatus run(IProgressMonitor monitor) {
-		if (shelvesetItem.delete()) {
-			ShelvesetReviewPlugin.getDefault().getShelvesetGroupItemContainer().refreshShelvesetGroupItems(true, true,
-					monitor);
+		if (shelvesetItem.delete(monitor)) {
+			ShelvesetReviewPlugin.getDefault().refreshShelvesetGroupItems(true, monitor);
 		}
 		return Status.OK_STATUS;
 	}

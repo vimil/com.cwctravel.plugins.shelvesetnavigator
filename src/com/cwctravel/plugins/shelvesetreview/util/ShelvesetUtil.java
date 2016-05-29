@@ -1,5 +1,6 @@
 package com.cwctravel.plugins.shelvesetreview.util;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,6 +19,9 @@ import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.comparators.ReviewerComparator;
+import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.DiscussionService;
+import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
+import com.microsoft.tfs.core.TFSConnection;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PropertyValue;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
@@ -379,6 +383,16 @@ public class ShelvesetUtil {
 			for (ReviewerInfo reviewerInfo : reviewers) {
 				result.put(reviewerInfo.getReviewerId(), reviewerInfo);
 			}
+		}
+		return result;
+	}
+
+	public static DiscussionInfo retrieveDiscussion(Shelveset shelveset) throws IOException {
+		DiscussionInfo result = null;
+		TFSConnection connection = TFSUtil.getTFSConnection();
+		if (connection != null) {
+			result = DiscussionService.getShelvesetDiscussion(connection, shelveset.getName(),
+					shelveset.getOwnerName());
 		}
 		return result;
 	}

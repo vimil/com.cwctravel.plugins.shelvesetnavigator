@@ -1,10 +1,9 @@
-package com.cwctravel.plugins.shelvesetreview.navigator;
+package com.cwctravel.plugins.shelvesetreview;
 
-import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.microsoft.tfs.client.common.repository.RepositoryManagerEvent;
 import com.microsoft.tfs.client.common.repository.RepositoryManagerListener;
 
-public class ShelvesetNavigatorRefresher implements RepositoryManagerListener {
+public class ShelvesetRepositoryManagerListener implements RepositoryManagerListener {
 	@Override
 	public void onRepositoryRemoved(RepositoryManagerEvent event) {
 	}
@@ -15,6 +14,6 @@ public class ShelvesetNavigatorRefresher implements RepositoryManagerListener {
 
 	@Override
 	public void onDefaultRepositoryChanged(RepositoryManagerEvent event) {
-		ShelvesetReviewPlugin.getDefault().refreshShelvesetGroupItems(true);
+		ShelvesetReviewPlugin.getDefault().scheduleRefreshShelvesetGroupItems();
 	}
 }

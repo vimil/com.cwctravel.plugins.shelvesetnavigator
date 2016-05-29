@@ -31,19 +31,18 @@ public class ShelvesetItemUpdateJob extends Job {
 			monitor.subTask("Updating Shelveset" + shelvesetItem.getName());
 			switch (updateType) {
 				case UPDATE_TYPE_MARK_SHELVESET_ACTIVE: {
-					shelvesetItem.markShelvesetActive();
+					shelvesetItem.markShelvesetActive(monitor);
 					break;
 				}
 				case UPDATE_TYPE_MARK_SHELVESET_INACTIVE: {
-					shelvesetItem.markShelvesetInactive();
+					shelvesetItem.markShelvesetInactive(monitor);
 					break;
 				}
 			}
 			monitor.worked(1);
 		}
 		monitor.done();
-		ShelvesetReviewPlugin.getDefault().getShelvesetGroupItemContainer().refreshShelvesetGroupItems(true, true,
-				monitor);
+		ShelvesetReviewPlugin.getDefault().refreshShelvesetGroupItems(true, monitor);
 		return Status.OK_STATUS;
 	}
 }
