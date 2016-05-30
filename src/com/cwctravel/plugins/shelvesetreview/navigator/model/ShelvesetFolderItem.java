@@ -40,4 +40,24 @@ public class ShelvesetFolderItem extends ShelvesetResourceItem {
 		}
 		return result;
 	}
+
+	public boolean hasDiscussions() {
+		boolean result = false;
+		for (ShelvesetResourceItem shelvesetResourceItem : getChildren()) {
+			if (shelvesetResourceItem instanceof ShelvesetFileItem) {
+				ShelvesetFileItem shelvesetFileItem = (ShelvesetFileItem) shelvesetResourceItem;
+				if (shelvesetFileItem.hasDiscussions()) {
+					result = true;
+					break;
+				}
+			} else if (shelvesetResourceItem instanceof ShelvesetFolderItem) {
+				ShelvesetFolderItem shelvesetFolderItem = (ShelvesetFolderItem) shelvesetResourceItem;
+				if (shelvesetFolderItem.hasDiscussions()) {
+					result = true;
+					break;
+				}
+			}
+		}
+		return result;
+	}
 }

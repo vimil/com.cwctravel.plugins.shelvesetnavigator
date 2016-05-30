@@ -10,6 +10,8 @@ import org.eclipse.ui.navigator.IPipelinedTreeContentProvider;
 import org.eclipse.ui.navigator.PipelinedShapeModification;
 import org.eclipse.ui.navigator.PipelinedViewerUpdate;
 
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItemContainer;
@@ -32,37 +34,40 @@ public class ShelvesetContentProvider implements IPipelinedTreeContentProvider {
 	@Override
 	public Object[] getElements(Object inputElement) {
 		Object[] result = null;
-		if(inputElement instanceof ShelvesetGroupItemContainer) {
-			ShelvesetGroupItemContainer shelvesetGroupItemContainer = (ShelvesetGroupItemContainer)inputElement;
+		if (inputElement instanceof ShelvesetGroupItemContainer) {
+			ShelvesetGroupItemContainer shelvesetGroupItemContainer = (ShelvesetGroupItemContainer) inputElement;
 			List<ShelvesetGroupItem> shelvesetGroupItems = shelvesetGroupItemContainer.getShelvesetGroupItems();
 			result = shelvesetGroupItems.toArray(new ShelvesetGroupItem[0]);
-		}
-		else if(inputElement instanceof ShelvesetGroupItem) {
-			ShelvesetGroupItem shelvesetGroupItem = (ShelvesetGroupItem)inputElement;
-			if(shelvesetGroupItem.isUserGroup()) {
+		} else if (inputElement instanceof ShelvesetGroupItem) {
+			ShelvesetGroupItem shelvesetGroupItem = (ShelvesetGroupItem) inputElement;
+			if (shelvesetGroupItem.isUserGroup()) {
 				List<ShelvesetUserItem> shelvesetUserItems = shelvesetGroupItem.getShelvesetUserItems();
 				result = shelvesetUserItems.toArray(new ShelvesetUserItem[0]);
-			}
-			else {
+			} else {
 				List<ShelvesetItem> shelvesetItems = shelvesetGroupItem.getShelvesetItems();
 				result = shelvesetItems.toArray(new ShelvesetItem[0]);
 			}
-		}
-		else if(inputElement instanceof ShelvesetUserItem) {
-			ShelvesetUserItem shelvesetUserItem = (ShelvesetUserItem)inputElement;
+		} else if (inputElement instanceof ShelvesetUserItem) {
+			ShelvesetUserItem shelvesetUserItem = (ShelvesetUserItem) inputElement;
 			List<ShelvesetItem> shelvesetItems = shelvesetUserItem.getShelvesetItems();
 			result = shelvesetItems.toArray(new ShelvesetItem[0]);
-		}
-		else if(inputElement instanceof ShelvesetItem) {
-			ShelvesetItem shelvesetItem = (ShelvesetItem)inputElement;
+		} else if (inputElement instanceof ShelvesetItem) {
+			ShelvesetItem shelvesetItem = (ShelvesetItem) inputElement;
 			List<ShelvesetResourceItem> shelvesetResourceItems = shelvesetItem.getChildren();
-			if(shelvesetResourceItems != null) {
+			if (shelvesetResourceItems != null) {
 				result = shelvesetResourceItems.toArray(new ShelvesetResourceItem[0]);
 			}
-		}
-		else if(inputElement instanceof ShelvesetFolderItem) {
-			ShelvesetFolderItem shelvesetFolderItem = (ShelvesetFolderItem)inputElement;
+		} else if (inputElement instanceof ShelvesetFolderItem) {
+			ShelvesetFolderItem shelvesetFolderItem = (ShelvesetFolderItem) inputElement;
 			List<ShelvesetResourceItem> shelvesetResourceItems = shelvesetFolderItem.getChildren();
+			result = shelvesetResourceItems.toArray(new ShelvesetResourceItem[0]);
+		} else if (inputElement instanceof ShelvesetFileItem) {
+			ShelvesetFileItem shelvesetFileItem = (ShelvesetFileItem) inputElement;
+			List<ShelvesetResourceItem> shelvesetResourceItems = shelvesetFileItem.getDiscussions();
+			result = shelvesetResourceItems.toArray(new ShelvesetResourceItem[0]);
+		} else if (inputElement instanceof ShelvesetDiscussionItem) {
+			ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) inputElement;
+			List<ShelvesetResourceItem> shelvesetResourceItems = shelvesetDiscussionItem.getChildDiscussions();
 			result = shelvesetResourceItems.toArray(new ShelvesetResourceItem[0]);
 		}
 		return result;
@@ -76,28 +81,37 @@ public class ShelvesetContentProvider implements IPipelinedTreeContentProvider {
 	@Override
 	public Object getParent(Object element) {
 		Object result = null;
-		if(element instanceof ShelvesetGroupItem) {
-			ShelvesetGroupItem shelvesetGroupItem = (ShelvesetGroupItem)element;
+		if (element instanceof ShelvesetGroupItem) {
+			ShelvesetGroupItem shelvesetGroupItem = (ShelvesetGroupItem) element;
 			result = shelvesetGroupItem.getParent();
-		}
-		else if(element instanceof ShelvesetUserItem) {
-			ShelvesetUserItem shelvesetUserItem = (ShelvesetUserItem)element;
+		} else if (element instanceof ShelvesetUserItem) {
+			ShelvesetUserItem shelvesetUserItem = (ShelvesetUserItem) element;
 			result = shelvesetUserItem.getParentGroup();
-		}
-		else if(element instanceof ShelvesetItem) {
-			ShelvesetItem shelvesetItem = (ShelvesetItem)element;
+		} else if (element instanceof ShelvesetItem) {
+			ShelvesetItem shelvesetItem = (ShelvesetItem) element;
 			ShelvesetUserItem shelvesetUser = shelvesetItem.getParentUser();
-			if(shelvesetUser != null) {
+			if (shelvesetUser != null) {
 				result = shelvesetUser;
-			}
-			else {
+			} else {
 				result = shelvesetItem.getParentGroup();
 			}
-		}
-		else if(element instanceof ShelvesetResourceItem) {
-			ShelvesetResourceItem shelvesetResourceItem = (ShelvesetResourceItem)element;
+		} else if (element instanceof ShelvesetDiscussionItem) {
+			ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) element;
+			ShelvesetDiscussionItem parentDiscussion = shelvesetDiscussionItem.getParentDiscussion();
+			if (parentDiscussion != null) {
+				result = parentDiscussion;
+			} else {
+				ShelvesetFileItem parentFile = shelvesetDiscussionItem.getParentFile();
+				if (parentFile != null) {
+					result = parentFile;
+				} else {
+					result = shelvesetDiscussionItem.getParent();
+				}
+			}
+		} else if (element instanceof ShelvesetResourceItem) {
+			ShelvesetResourceItem shelvesetResourceItem = (ShelvesetResourceItem) element;
 			result = shelvesetResourceItem.getParentFolder();
-			if(result == null) {
+			if (result == null) {
 				result = shelvesetResourceItem.getParent();
 			}
 		}
@@ -107,10 +121,9 @@ public class ShelvesetContentProvider implements IPipelinedTreeContentProvider {
 	@Override
 	public boolean hasChildren(Object element) {
 		boolean result = false;
-		if(element instanceof ShelvesetGroupItem || element instanceof ShelvesetUserItem || element instanceof ShelvesetItem) {
+		if (element instanceof ShelvesetGroupItem || element instanceof ShelvesetUserItem || element instanceof ShelvesetItem) {
 			result = true;
-		}
-		else {
+		} else {
 			Object[] children = getChildren(element);
 			result = children != null && children.length > 0;
 		}

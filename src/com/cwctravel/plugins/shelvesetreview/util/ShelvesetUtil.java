@@ -14,13 +14,16 @@ import org.eclipse.core.runtime.Status;
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.constants.ShelvesetPropertyConstants;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.comparators.ReviewerComparator;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.DiscussionService;
+import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCommentInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
+import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadInfo;
 import com.microsoft.tfs.core.TFSConnection;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PropertyValue;
@@ -30,8 +33,8 @@ import ms.tfs.versioncontrol.clientservices._03._PropertyValue;
 import ms.tfs.versioncontrol.clientservices._03._Shelveset;
 
 public class ShelvesetUtil {
-	public static List<ShelvesetResourceItem> groupShelvesetFileItems(ShelvesetItem shelvesetItem,
-			List<ShelvesetFileItem> shelvesetFileItems) {
+	public static List<ShelvesetResourceItem> groupShelvesetFileItems(ShelvesetItem shelvesetItem, List<ShelvesetFileItem> shelvesetFileItems,
+			DiscussionInfo discussionInfo) {
 		List<ShelvesetResourceItem> result = new ArrayList<ShelvesetResourceItem>();
 
 		Map<String, Object> root = new HashMap<String, Object>();
@@ -45,7 +48,70 @@ public class ShelvesetUtil {
 			traverseTree(shelvesetItem, result, root);
 		}
 
+		ShelvesetDiscussionItem overallShelvesetDiscussionItem = processShelvesetItemDiscussions(shelvesetItem, shelvesetFileItems, discussionInfo);
+		if (overallShelvesetDiscussionItem != null) {
+			result.add(0, overallShelvesetDiscussionItem);
+		}
+
 		return result;
+	}
+
+	private static ShelvesetDiscussionItem processShelvesetItemDiscussions(ShelvesetItem shelvesetItem, List<ShelvesetFileItem> shelvesetFileItems,
+			DiscussionInfo discussionInfo) {
+		ShelvesetDiscussionItem overallShelvesetDiscussionItem = null;
+		if (discussionInfo != null) {
+			List<DiscussionThreadInfo> discussionThreadInfos = DiscussionUtil.findAllOverallDiscussionThreads(discussionInfo);
+			if (!discussionThreadInfos.isEmpty()) {
+				overallShelvesetDiscussionItem = processDiscussionThreadInfos(shelvesetItem, null, discussionInfo, discussionThreadInfos);
+			}
+
+			if (shelvesetFileItems != null) {
+				for (ShelvesetFileItem shelvesetFileItem : shelvesetFileItems) {
+					List<DiscussionThreadInfo> fileDiscussionThreadInfos = DiscussionUtil.findAllDiscussionThreads(discussionInfo,
+							shelvesetFileItem.getPath());
+					processDiscussionThreadInfos(shelvesetItem, shelvesetFileItem, discussionInfo, fileDiscussionThreadInfos);
+				}
+			}
+		}
+		return overallShelvesetDiscussionItem;
+	}
+
+	private static ShelvesetDiscussionItem processDiscussionThreadInfos(ShelvesetItem shelvesetItem, ShelvesetFileItem shelvesetFileItem,
+			DiscussionInfo discussionInfo, List<DiscussionThreadInfo> discussionThreadInfos) {
+		ShelvesetDiscussionItem overallShelvesetDiscussionItem = null;
+		if (shelvesetFileItem == null) {
+			overallShelvesetDiscussionItem = new ShelvesetDiscussionItem(shelvesetItem, null, null, null, null);
+		}
+		List<ShelvesetResourceItem> shelvesetDiscussionItems = new ArrayList<ShelvesetResourceItem>();
+		for (DiscussionThreadInfo discussionThreadInfo : discussionThreadInfos) {
+			List<DiscussionCommentInfo> discussionCommentInfos = DiscussionUtil.findRootDiscussionComments(discussionThreadInfo);
+			for (DiscussionCommentInfo discussionCommentInfo : discussionCommentInfos) {
+				ShelvesetDiscussionItem shelvesetDiscussionItem = new ShelvesetDiscussionItem(shelvesetItem, shelvesetFileItem,
+						overallShelvesetDiscussionItem, discussionThreadInfo, discussionCommentInfo);
+				shelvesetDiscussionItems.add(shelvesetDiscussionItem);
+			}
+		}
+
+		for (ShelvesetResourceItem shelvesetResourceItem : shelvesetDiscussionItems) {
+			ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) shelvesetResourceItem;
+			List<ShelvesetResourceItem> childShelvesetDiscussionItems = new ArrayList<ShelvesetResourceItem>();
+			DiscussionThreadInfo[] discussionThreadInfoHolder = new DiscussionThreadInfo[1];
+			List<DiscussionCommentInfo> childDiscussionCommentInfos = DiscussionUtil.findChildDiscussions(discussionInfo,
+					shelvesetDiscussionItem.getThreadId(), shelvesetDiscussionItem.getId(), discussionThreadInfoHolder);
+			for (DiscussionCommentInfo discussionCommentInfo : childDiscussionCommentInfos) {
+				ShelvesetDiscussionItem childShelvesetDiscussionItem = new ShelvesetDiscussionItem(shelvesetItem, shelvesetFileItem,
+						shelvesetDiscussionItem, discussionThreadInfoHolder[0], discussionCommentInfo);
+				childShelvesetDiscussionItems.add(childShelvesetDiscussionItem);
+			}
+			shelvesetDiscussionItem.setChildDiscussions(childShelvesetDiscussionItems);
+		}
+
+		if (overallShelvesetDiscussionItem != null) {
+			overallShelvesetDiscussionItem.setChildDiscussions(shelvesetDiscussionItems);
+		} else {
+			shelvesetFileItem.setDiscussions(shelvesetDiscussionItems);
+		}
+		return overallShelvesetDiscussionItem;
 	}
 
 	private static void traverseTree(ShelvesetItem shelvesetItem, Object parent, Object child) {
@@ -171,27 +237,21 @@ public class ShelvesetUtil {
 	}
 
 	public static boolean isShelvesetInactive(Shelveset shelveset) {
-		boolean isShelvesetInactive = ShelvesetUtil.getPropertyAsBoolean(shelveset,
-				ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, false);
-		String changesetId = ShelvesetUtil.getProperty(shelveset,
-				ShelvesetPropertyConstants.SHELVESET_PROPERTY_CHANGESET_ID, null);
+		boolean isShelvesetInactive = ShelvesetUtil.getPropertyAsBoolean(shelveset, ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, false);
+		String changesetId = ShelvesetUtil.getProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_CHANGESET_ID, null);
 		return isShelvesetInactive || changesetId != null;
 	}
 
 	public static boolean canActivateShelveset(Shelveset shelveset) {
-		boolean isShelvesetInactive = ShelvesetUtil.getPropertyAsBoolean(shelveset,
-				ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, false);
-		String changesetId = ShelvesetUtil.getProperty(shelveset,
-				ShelvesetPropertyConstants.SHELVESET_PROPERTY_CHANGESET_ID, null);
+		boolean isShelvesetInactive = ShelvesetUtil.getPropertyAsBoolean(shelveset, ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, false);
+		String changesetId = ShelvesetUtil.getProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_CHANGESET_ID, null);
 
 		return isShelvesetInactive && changesetId == null;
 	}
 
 	public static boolean canAssignReviewers(Shelveset shelveset) {
-		boolean isShelvesetInactive = ShelvesetUtil.getPropertyAsBoolean(shelveset,
-				ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, false);
-		boolean shelvesetBelongsToCurrentUser = TFSUtil.userIdsSame(TFSUtil.getCurrentUserId(),
-				shelveset.getOwnerName());
+		boolean isShelvesetInactive = ShelvesetUtil.getPropertyAsBoolean(shelveset, ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, false);
+		boolean shelvesetBelongsToCurrentUser = TFSUtil.userIdsSame(TFSUtil.getCurrentUserId(), shelveset.getOwnerName());
 		return !isShelvesetInactive && shelvesetBelongsToCurrentUser;
 	}
 
@@ -222,8 +282,8 @@ public class ShelvesetUtil {
 		if (properties != null) {
 			VersionControlClient versionControlClient = TFSUtil.getVersionControlClient();
 			if (versionControlClient != null) {
-				Shelveset[] shelvesets = versionControlClient.queryShelvesets(shelveset.getName(),
-						shelveset.getOwnerName(), ShelvesetPropertyConstants.SHELVESET_PROPERTIES);
+				Shelveset[] shelvesets = versionControlClient.queryShelvesets(shelveset.getName(), shelveset.getOwnerName(),
+						ShelvesetPropertyConstants.SHELVESET_PROPERTIES);
 				if (shelvesets != null && shelvesets.length == 1) {
 					_Shelveset _shelveset = shelveset.getWebServiceObject();
 					Shelveset newShelveset = shelvesets[0];
@@ -239,8 +299,7 @@ public class ShelvesetUtil {
 					}
 					_newShelveset.setProperties(newPropertyValues.toArray(new _PropertyValue[0]));
 
-					versionControlClient.getWebServiceLayer().updateShelveset(shelveset.getName(),
-							shelveset.getOwnerName(), newShelveset);
+					versionControlClient.getWebServiceLayer().updateShelveset(shelveset.getName(), shelveset.getOwnerName(), newShelveset);
 
 					List<_PropertyValue> updatedPropertyValues = new ArrayList<_PropertyValue>();
 					if (propertyValuesArray != null) {
@@ -279,11 +338,9 @@ public class ShelvesetUtil {
 
 	public static List<ReviewerInfo> getShelvesetReviewers(Shelveset shelveset) {
 		List<ReviewerInfo> result = new ArrayList<ReviewerInfo>();
-		String[] reviewerIds = ShelvesetUtil.getPropertyAsStringArray(shelveset,
-				ShelvesetPropertyConstants.SHELVESET_PROPERTY_REVIEWER_IDS);
+		String[] reviewerIds = ShelvesetUtil.getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_REVIEWER_IDS);
 
-		String[] approverIds = ShelvesetUtil.getPropertyAsStringArray(shelveset,
-				ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS);
+		String[] approverIds = ShelvesetUtil.getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS);
 
 		Map<String, Boolean> reviewerIdMap = new HashMap<String, Boolean>();
 		for (String reviewerId : reviewerIds) {
@@ -318,8 +375,7 @@ public class ShelvesetUtil {
 		for (Map.Entry<String, ReviewerInfo> currentReviewersMapEntry : currentReviewersMap.entrySet()) {
 			String reviewerId = currentReviewersMapEntry.getKey();
 			ReviewerInfo reviewerInfo = currentReviewersMapEntry.getValue();
-			if (!reviewerInfo.isModifiable()
-					|| (reviewerInfo.isModifiable() && newReviewersMap.containsKey(reviewerId))) {
+			if (!reviewerInfo.isModifiable() || (reviewerInfo.isModifiable() && newReviewersMap.containsKey(reviewerId))) {
 				modifiedReviewersMap.put(reviewerId, reviewerInfo);
 			}
 		}
@@ -391,8 +447,7 @@ public class ShelvesetUtil {
 		DiscussionInfo result = null;
 		TFSConnection connection = TFSUtil.getTFSConnection();
 		if (connection != null) {
-			result = DiscussionService.getShelvesetDiscussion(connection, shelveset.getName(),
-					shelveset.getOwnerName());
+			result = DiscussionService.getShelvesetDiscussion(connection, shelveset.getName(), shelveset.getOwnerName());
 		}
 		return result;
 	}

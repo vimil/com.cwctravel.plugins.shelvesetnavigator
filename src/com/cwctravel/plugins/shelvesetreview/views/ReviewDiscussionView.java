@@ -37,9 +37,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.DrillDownAdapter;
 import org.eclipse.ui.part.ViewPart;
 
-import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
-import com.cwctravel.plugins.shelvesetreview.events.ShelvesetItemDiscussionRefreshEvent;
-import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetItemDiscussionRefreshListener;
 import com.cwctravel.plugins.shelvesetreview.navigator.ShelvesetNavigator;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 
@@ -58,7 +55,7 @@ import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
  * <p>
  */
 
-public class ReviewDiscussionView extends ViewPart implements IShelvesetItemDiscussionRefreshListener {
+public class ReviewDiscussionView extends ViewPart {
 
 	/**
 	 * The ID of the view as specified by the extension.
@@ -292,18 +289,19 @@ public class ReviewDiscussionView extends ViewPart implements IShelvesetItemDisc
 		hookContextMenu();
 		hookDoubleClickAction();
 		contributeToActionBars();
-		registerListeners();
+		// registerListeners();
 
 	}
 
-	public void dispose() {
-		ShelvesetReviewPlugin.getDefault().removeShelvesetItemDiscussionRefreshListener(this);
-	}
-
-	private void registerListeners() {
-		ShelvesetReviewPlugin.getDefault().addShelvesetItemDiscussionRefreshListener(this);
-
-	}
+	/*
+	 * public void dispose() { ShelvesetReviewPlugin.getDefault().
+	 * removeShelvesetItemDiscussionRefreshListener(this); }
+	 * 
+	 * private void registerListeners() { ShelvesetReviewPlugin.getDefault().
+	 * addShelvesetItemDiscussionRefreshListener(this);
+	 * 
+	 * }
+	 */
 
 	private void hookContextMenu() {
 		MenuManager menuMgr = new MenuManager("#PopupMenu");
@@ -349,10 +347,8 @@ public class ReviewDiscussionView extends ViewPart implements IShelvesetItemDisc
 	private void makeActions() {
 		action1 = new Action() {
 			public void run() {
-				ShelvesetItem shelvesetItem = getSelectedShelvesetItem();
-				if (shelvesetItem != null) {
-					ShelvesetReviewPlugin.getDefault().scheduleRefreshShelvesetItemDiscussion(shelvesetItem);
-				}
+				// ShelvesetItem shelvesetItem = getSelectedShelvesetItem();
+
 			}
 		};
 		action1.setText("Action 1");
@@ -395,8 +391,4 @@ public class ReviewDiscussionView extends ViewPart implements IShelvesetItemDisc
 		viewer.getControl().setFocus();
 	}
 
-	@Override
-	public void onShelvesetItemDiscussionRefreshed(ShelvesetItemDiscussionRefreshEvent event) {
-		System.out.println("Shelveset discussion refeshed for " + event.getShelvesetItem().getName());
-	}
 }

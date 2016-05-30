@@ -25,8 +25,8 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
-import org.eclipse.ui.texteditor.AbstractTextEditor;
 import org.eclipse.ui.texteditor.IDocumentProvider;
+import org.eclipse.ui.texteditor.ITextEditor;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.filesystem.TFSFileStore;
@@ -42,8 +42,7 @@ import com.microsoft.tfs.client.common.repository.RepositoryManagerEvent;
 import com.microsoft.tfs.client.common.repository.RepositoryManagerListener;
 import com.microsoft.tfs.core.TFSConnection;
 
-public class ReviewCommentAnnotator implements RepositoryManagerListener, IWindowListener, IPartListener {
-	private static final String REVIEW_COMMENT_MARKER = "com.cwctravel.plugins.shelvesetreview.commentMarker";
+public class DiscussionAnnotator implements RepositoryManagerListener, IWindowListener, IPartListener {
 
 	private void annotate(TFSFileStore tfsFileStore, IDocument document, IAnnotationModel annotationModel, IProgressMonitor monitor) {
 		String shelvesetName = tfsFileStore.getShelvesetName();
@@ -52,7 +51,7 @@ public class ReviewCommentAnnotator implements RepositoryManagerListener, IWindo
 			TFSConnection tfsConnection = TFSUtil.getTFSConnection();
 			if (tfsConnection != null) {
 				DiscussionInfo discussionInfo = DiscussionService.getShelvesetDiscussion(tfsConnection, shelvesetName, shelvesetOwner);
-				List<DiscussionThreadInfo> discussionThreadInfos = DiscussionUtil.findAllThreads(discussionInfo, tfsFileStore.getPath());
+				List<DiscussionThreadInfo> discussionThreadInfos = DiscussionUtil.findAllDiscussionThreads(discussionInfo, tfsFileStore.getPath());
 				for (DiscussionThreadInfo discussionThreadInfo : discussionThreadInfos) {
 					DiscussionThreadPropertiesInfo discussionThreadPropertiesInfo = discussionThreadInfo.getThreadProperties();
 					if (discussionThreadPropertiesInfo != null) {
@@ -73,7 +72,8 @@ public class ReviewCommentAnnotator implements RepositoryManagerListener, IWindo
 									commentsBuilder.append(": ");
 									commentsBuilder.append(discussionCommentInfo.getContent());
 
-									Annotation annotation = new Annotation(REVIEW_COMMENT_MARKER, false, commentsBuilder.toString());
+									Annotation annotation = new DiscussionAnnotation(discussionCommentInfo.getThreadId(),
+											discussionCommentInfo.getId(), commentsBuilder.toString());
 									Position position = new Position(startOffset, endOffset - startOffset);
 									annotationModel.addAnnotation(annotation, position);
 								}
@@ -123,15 +123,23 @@ public class ReviewCommentAnnotator implements RepositoryManagerListener, IWindo
 					IFileStore fileStore = EFS.getStore(fileStoreEditorInput.getURI());
 					if (fileStore instanceof TFSFileStore) {
 						TFSFileStore tfsFileStore = (TFSFileStore) fileStore;
-						if (editorPart instanceof AbstractTextEditor) {
-							AbstractTextEditor abstractTextEditor = (AbstractTextEditor) editorPart;
-							IDocumentProvider documentProvider = abstractTextEditor.getDocumentProvider();
+						if (editorPart instanceof ITextEditor) {
+							ITextEditor textEditor = (ITextEditor) editorPart;
+							IDocumentProvider documentProvider = textEditor.getDocumentProvider();
 							IDocument document = documentProvider.getDocument(editorInput);
+
+							/*
+							 * ISourceViewer sourceViewer =
+							 * getSourceViewerFor(editorPart); if (sourceViewer
+							 * != null) { sourceViewer.setAnnotationHover(new
+							 * DiscussionAnnotationHover()); }
+							 */
+
 							IAnnotationModel annotationModel = documentProvider.getAnnotationModel(editorInput);
 							new Job("Updating Review Comments") {
 								@Override
 								protected IStatus run(IProgressMonitor monitor) {
-									ReviewCommentAnnotator.this.annotate(tfsFileStore, document, annotationModel, monitor);
+									DiscussionAnnotator.this.annotate(tfsFileStore, document, annotationModel, monitor);
 									return Status.OK_STATUS;
 								}
 							}.schedule();
@@ -140,10 +148,22 @@ public class ReviewCommentAnnotator implements RepositoryManagerListener, IWindo
 				} catch (CoreException e) {
 					ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
 				}
-
 			}
 		}
 	}
+
+	/*
+	 * private ISourceViewer getSourceViewerFor(IEditorPart editorPart) {
+	 * ISourceViewer result = null; Class<?> clazz = editorPart.getClass();
+	 * outer: while (clazz != null) { Method[] methods =
+	 * clazz.getDeclaredMethods(); for (Method method : methods) { if
+	 * (method.getName().equals("getSourceViewer")) {
+	 * method.setAccessible(true); try { result = (ISourceViewer)
+	 * method.invoke(editorPart); break outer; } catch (IllegalAccessException |
+	 * IllegalArgumentException | InvocationTargetException e) {
+	 * e.printStackTrace(); } } } clazz = clazz.getSuperclass(); } return
+	 * result; }
+	 */
 
 	@Override
 	public void partActivated(IWorkbenchPart part) {

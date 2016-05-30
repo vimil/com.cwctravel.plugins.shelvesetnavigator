@@ -9,6 +9,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.navigator.IDescriptionProvider;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItem;
@@ -31,16 +32,13 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 			ShelvesetGroupItem shelvesetGroupItem = (ShelvesetGroupItem) element;
 			switch (shelvesetGroupItem.getGroupType()) {
 				case ShelvesetGroupItem.GROUP_TYPE_USER_SHELVESETS:
-					image = ShelvesetReviewPlugin.getDefault().getImageRegistry()
-							.get(ShelvesetReviewPlugin.USER_GROUP_ICON_ID);
+					image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.USER_GROUP_ICON_ID);
 					break;
 				case ShelvesetGroupItem.GROUP_TYPE_REVIEWER_SHELVESETS:
-					image = ShelvesetReviewPlugin.getDefault().getImageRegistry()
-							.get(ShelvesetReviewPlugin.REVIEW_GROUP_ICON_ID);
+					image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.REVIEW_GROUP_ICON_ID);
 					break;
 				case ShelvesetGroupItem.GROUP_TYPE_INACTIVE_SHELVESETS:
-					image = ShelvesetReviewPlugin.getDefault().getImageRegistry()
-							.get(ShelvesetReviewPlugin.INACTIVE_GROUP_ICON_ID);
+					image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.INACTIVE_GROUP_ICON_ID);
 					break;
 			}
 		} else if (element instanceof ShelvesetUserItem) {
@@ -48,11 +46,9 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 		} else if (element instanceof ShelvesetItem) {
 			ShelvesetItem shelvesetItem = (ShelvesetItem) element;
 			if (shelvesetItem.isInactive()) {
-				image = ShelvesetReviewPlugin.getDefault().getImageRegistry()
-						.get(ShelvesetReviewPlugin.INACTIVE_SHELVESET_ICON_ID);
+				image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.INACTIVE_SHELVESET_ICON_ID);
 			} else {
-				image = ShelvesetReviewPlugin.getDefault().getImageRegistry()
-						.get(ShelvesetReviewPlugin.SHELVESET_ICON_ID);
+				image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.SHELVESET_ICON_ID);
 			}
 
 		} else if (element instanceof ShelvesetFileItem) {
@@ -60,6 +56,8 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 			image = getImageForFile(shelvesetFileItem.getPath(), true);
 		} else if (element instanceof ShelvesetFolderItem) {
 			image = getImageForFolder();
+		} else if (element instanceof ShelvesetDiscussionItem) {
+			image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.DISCUSSION_ICON_ID);
 		}
 
 		result = image;
@@ -78,10 +76,12 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 		} else if (element instanceof ShelvesetItem) {
 			ShelvesetItem shelvesetItem = (ShelvesetItem) element;
 			result = shelvesetItem.getName();
+		} else if (element instanceof ShelvesetDiscussionItem) {
+			ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) element;
+			result = shelvesetDiscussionItem.getName();
 		} else if (element instanceof ShelvesetResourceItem) {
 			ShelvesetResourceItem shelvesetResourceItem = (ShelvesetResourceItem) element;
 			result = shelvesetResourceItem.getName();
-
 		}
 		return result;
 	}
@@ -101,8 +101,7 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 
 	protected final Image getImageForFile(final String filename, final boolean useEditorRegistryImages) {
 		if (useEditorRegistryImages && filename != null) {
-			final ImageDescriptor imageDescriptor = PlatformUI.getWorkbench().getEditorRegistry()
-					.getImageDescriptor(filename);
+			final ImageDescriptor imageDescriptor = PlatformUI.getWorkbench().getEditorRegistry().getImageDescriptor(filename);
 
 			if (imageDescriptor != null) {
 				return imageHelper.getImage(imageDescriptor);

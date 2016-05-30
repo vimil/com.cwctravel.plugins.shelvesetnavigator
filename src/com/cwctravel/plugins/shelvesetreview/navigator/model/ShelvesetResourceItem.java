@@ -1,5 +1,7 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
+import com.cwctravel.plugins.shelvesetreview.util.StringUtil;
+
 public abstract class ShelvesetResourceItem {
 	private final ShelvesetItem parent;
 
@@ -36,7 +38,10 @@ public abstract class ShelvesetResourceItem {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + getPath().hashCode();
+		String path = getPath();
+		if (path != null) {
+			result = prime * result + path.hashCode();
+		}
 		result = prime * result + getShelvesetName().hashCode();
 		result = prime * result + getShelvesetOwnerName().hashCode();
 
@@ -51,7 +56,9 @@ public abstract class ShelvesetResourceItem {
 		if (getClass() != obj.getClass())
 			return false;
 		ShelvesetResourceItem other = (ShelvesetResourceItem) obj;
-		if (other.getPath().equals(getPath()) && other.getShelvesetName().equals(getShelvesetName())
+		String otherPath = other.getPath();
+		String path = getPath();
+		if (StringUtil.equals(otherPath, path) && other.getShelvesetName().equals(getShelvesetName())
 				&& other.getShelvesetOwnerName().equals(getShelvesetOwnerName())) {
 			return true;
 		}

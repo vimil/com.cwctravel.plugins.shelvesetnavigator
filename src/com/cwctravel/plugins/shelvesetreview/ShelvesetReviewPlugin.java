@@ -14,14 +14,11 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
-import com.cwctravel.plugins.shelvesetreview.annotator.ReviewCommentAnnotator;
+import com.cwctravel.plugins.shelvesetreview.annotator.DiscussionAnnotator;
 import com.cwctravel.plugins.shelvesetreview.events.ShelvesetContainerRefreshEvent;
-import com.cwctravel.plugins.shelvesetreview.events.ShelvesetItemDiscussionRefreshEvent;
 import com.cwctravel.plugins.shelvesetreview.events.ShelvesetItemRefreshEvent;
 import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetGroupItemsRefreshJob;
-import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetItemDiscussionRefreshJob;
 import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetContainerRefreshListener;
-import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetItemDiscussionRefreshListener;
 import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetItemRefreshListener;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
@@ -47,19 +44,19 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 	public static final String INACTIVE_GROUP_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.inactivegroup";
 	public static final String USER_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.user";
 	public static final String BUILD_SUCCESSFUL_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.buildsuccessful";
+	public static final String DISCUSSION_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.discussion";
+	public static final String DISCUSSION_OVR_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.ovr.discussion";
 
 	private static ShelvesetReviewPlugin plugin;
 
 	private ListenerList shelvesetContainerRefreshListeners;
 	private ListenerList shelvesetItemRefreshListeners;
-	private ListenerList shelvesetItemDiscussionRefreshListeners;
 
 	private ShelvesetGroupItemContainer shelvesetGroupItemContainer;
 
 	public ShelvesetReviewPlugin() {
 		shelvesetContainerRefreshListeners = new ListenerList();
 		shelvesetItemRefreshListeners = new ListenerList();
-		shelvesetItemDiscussionRefreshListeners = new ListenerList();
 	}
 
 	@Override
@@ -90,6 +87,13 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 				.createFromURL(FileLocator.find(bundle, new Path("icons/build-successful-icon.png"), null));
 		registry.put(BUILD_SUCCESSFUL_ICON_ID, buildSuccessfulIconImage);
 
+		ImageDescriptor discussionIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/discussion-icon.png"), null));
+		registry.put(DISCUSSION_ICON_ID, discussionIconImage);
+
+		ImageDescriptor discussionOverlayIconImage = ImageDescriptor
+				.createFromURL(FileLocator.find(bundle, new Path("icons/discussion-ovr-icon.png"), null));
+		registry.put(DISCUSSION_OVR_ICON_ID, discussionOverlayIconImage);
+
 	}
 
 	public void start(BundleContext context) throws Exception {
@@ -103,15 +107,12 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 			scheduleRefreshShelvesetGroupItems();
 		}
 
-		ReviewCommentAnnotator reviewCommentAnnnotator = new ReviewCommentAnnotator();
+		DiscussionAnnotator reviewCommentAnnnotator = new DiscussionAnnotator();
 
 		IWorkbench workbench = PlatformUI.getWorkbench();
 		workbench.getActiveWorkbenchWindow().getPartService().addPartListener(reviewCommentAnnnotator);
 		workbench.addWindowListener(reviewCommentAnnnotator);
 		repositoryManager.addListener(reviewCommentAnnnotator);
-		// IFileBufferManager manager = FileBuffers.getTextFileBufferManager();
-
-		// manager.addFileBufferListener(reviewCommentAnnnotator);
 
 		plugin = this;
 	}
@@ -141,10 +142,6 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 		getShelvesetGroupItemContainer().refresh(softRefresh, monitor);
 	}
 
-	public void scheduleRefreshShelvesetItemDiscussion(ShelvesetItem shelvesetItem) {
-		new ShelvesetItemDiscussionRefreshJob(shelvesetItem).schedule();
-	}
-
 	public void addShelvesetItemRefreshListener(IShelvesetItemRefreshListener listener) {
 		if (listener != null) {
 			shelvesetItemRefreshListeners.add(listener);
@@ -169,18 +166,6 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 		}
 	}
 
-	public void addShelvesetItemDiscussionRefreshListener(IShelvesetItemDiscussionRefreshListener listener) {
-		if (listener != null) {
-			shelvesetItemDiscussionRefreshListeners.add(listener);
-		}
-	}
-
-	public void removeShelvesetItemDiscussionRefreshListener(IShelvesetItemDiscussionRefreshListener listener) {
-		if (listener != null) {
-			shelvesetItemDiscussionRefreshListeners.remove(listener);
-		}
-	}
-
 	public void fireShelvesetContainerRefreshed() {
 		for (Object objListener : shelvesetContainerRefreshListeners.getListeners()) {
 			if (objListener instanceof IShelvesetContainerRefreshListener) {
@@ -199,12 +184,4 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 		}
 	}
 
-	public void fireShelvesetItemDiscussionRefreshed(ShelvesetItem shelvesetItem) {
-		for (Object objListener : shelvesetItemDiscussionRefreshListeners.getListeners()) {
-			if (objListener instanceof IShelvesetItemDiscussionRefreshListener) {
-				IShelvesetItemDiscussionRefreshListener listener = (IShelvesetItemDiscussionRefreshListener) objListener;
-				listener.onShelvesetItemDiscussionRefreshed(new ShelvesetItemDiscussionRefreshEvent(shelvesetItem));
-			}
-		}
-	}
 }

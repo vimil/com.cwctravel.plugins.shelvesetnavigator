@@ -76,6 +76,7 @@ public class DiscussionService {
 								if (!isCommentDeleted) {
 									DiscussionCommentInfo discussionCommentInfo = new DiscussionCommentInfo();
 									discussionCommentInfo.setId((int) discussionCommentObj.get("id"));
+									discussionCommentInfo.setParentId((int) discussionCommentObj.getOrDefault("parentId", 0));
 									discussionCommentInfo.setThreadId((int) discussionCommentObj.get("threadId"));
 									discussionCommentInfo.setContent((String) discussionCommentObj.get("content"));
 									discussionCommentInfo.setPublishedDate(toCalendar(discussionThreadObj, "publishedDate"));

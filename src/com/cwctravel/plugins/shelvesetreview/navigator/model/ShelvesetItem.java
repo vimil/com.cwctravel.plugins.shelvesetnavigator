@@ -12,6 +12,7 @@ import org.eclipse.ui.progress.UIJob;
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetFileItemsRefreshJob;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
+import com.cwctravel.plugins.shelvesetreview.util.DiscussionUtil;
 import com.cwctravel.plugins.shelvesetreview.util.ShelvesetUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
@@ -106,8 +107,14 @@ public class ShelvesetItem {
 				}
 			}
 		}
+		try {
+			discussionInfo = ShelvesetUtil.retrieveDiscussion(shelveset);
+		} catch (IOException e) {
+			ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
+		}
 
-		children = ShelvesetUtil.groupShelvesetFileItems(this, shelvesetFileItems);
+		children = ShelvesetUtil.groupShelvesetFileItems(this, shelvesetFileItems, discussionInfo);
+
 		isChildrenRefreshed = true;
 
 		monitor.done();
@@ -219,15 +226,8 @@ public class ShelvesetItem {
 		ShelvesetUtil.assignReviewers(shelveset, reviewerInfos);
 	}
 
-	public void refreshDiscussion(IProgressMonitor monitor) throws IOException {
-		monitor.beginTask("Retrieveing discussion for Shelveset " + getName(), 1);
-		discussionInfo = ShelvesetUtil.retrieveDiscussion(shelveset);
-		monitor.worked(1);
-		monitor.done();
-	}
-
-	public DiscussionInfo getDiscussionInfo() {
-		return discussionInfo;
+	public boolean hasDiscussions() {
+		return DiscussionUtil.isDiscussionPresent(discussionInfo);
 	}
 
 }

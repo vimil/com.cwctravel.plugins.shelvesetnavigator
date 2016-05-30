@@ -25,6 +25,9 @@
                <instanceof
                      value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem">
                </instanceof>
+               <instanceof
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem">
+               </instanceof>
             </or>
          </possibleChildren>
          <triggerPoints>
@@ -37,6 +40,9 @@
                </instanceof>
                <instanceof
                      value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
+               </instanceof>
+               <instanceof
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem">
                </instanceof>
             </or>
          </triggerPoints>
@@ -99,7 +105,7 @@
       <view
             category="com.microsoft.tfs.client.common.ui.views"
             class="com.cwctravel.plugins.shelvesetreview.views.ReviewDiscussionView"
-            icon="icons/review-discussion-icon.png"
+            icon="icons/discussion-icon.png"
             id="com.cwctravel.plugins.shelvesetreview.views.ReviewCommentsView"
             name="Review Discussion">
       </view>
@@ -403,6 +409,12 @@
                <objectClass
                      name="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
                </objectClass>
+               <objectClass
+                     name="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem">
+               </objectClass>
+               <objectClass
+                     name="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem">
+               </objectClass>
             </or>
          </enablement>
       </decorator>
@@ -458,30 +470,30 @@
    <extension
          point="org.eclipse.ui.editors.markerAnnotationSpecification">
       <specification
-            annotationType="com.cwctravel.plugins.shelvesetreview.commentMarker"
-            colorPreferenceKey="reviewCommentColorBackground"
+            annotationType="com.cwctravel.plugins.shelvesetreview.discussionMarker"
+            colorPreferenceKey="discussionColorBackground"
             colorPreferenceValue="255,255,128"
             contributesToHeader="true"
-            highlightPreferenceKey="reviewCommentHighlight"
+            highlightPreferenceKey="discussionHighlight"
             highlightPreferenceValue="true"
-            icon="icons/review-discussion-icon.png"
+            icon="icons/discussion-icon.png"
             includeOnPreferencePage="true"
             isGoToNextNavigationTarget="false"
-            isGoToNextNavigationTargetKey="reviewCommentGoNext"
+            isGoToNextNavigationTargetKey="discussionGoNext"
             isGoToPreviousNavigationTarget="false"
-            isGoToPreviousNavigationTargetKey="reviewCommentGoPrev"
-            label="Review Comments"
-            overviewRulerPreferenceKey="reviewCommentOverviewRuler"
+            isGoToPreviousNavigationTargetKey="discussionGoPrev"
+            label="Discussion Comments"
+            overviewRulerPreferenceKey="discussionOverviewRuler"
             overviewRulerPreferenceValue="true"
             presentationLayer="5"
             showInNextPrevDropdownToolbarAction="true"
-            showInNextPrevDropdownToolbarActionKey="reviewCommentShowNextPrev"
+            showInNextPrevDropdownToolbarActionKey="discussionShowNextPrev"
             symbolicIcon="info"
-            textPreferenceKey="reviewCommentText"
+            textPreferenceKey="discussionText"
             textPreferenceValue="true"
-            textStylePreferenceKey="reviewCommentTextStyle"
+            textStylePreferenceKey="discussionTextStyle"
             textStylePreferenceValue="BOX"
-            verticalRulerPreferenceKey="reviewCommentVerticalRuler"
+            verticalRulerPreferenceKey="discussionVerticalRuler"
             verticalRulerPreferenceValue="true">
       </specification>
    </extension>
@@ -489,13 +501,13 @@
          point="org.eclipse.ui.editors.annotationTypes">
       <type
             markerSeverity="0"
-            markerType="com.cwctravel.plugins.shelvesetreview.commentMarker"
-            name="com.cwctravel.plugins.shelvesetreview.commentMarker">
+            markerType="com.cwctravel.plugins.shelvesetreview.discussionMarker"
+            name="com.cwctravel.plugins.shelvesetreview.discussionMarker">
       </type>
    </extension>
    <extension
-         id="commentMarker"
-         name="Comment Marker"
+         id="discussionMarker"
+         name="Discussion Marker"
          point="org.eclipse.core.resources.markers">
       <attribute
             name="startLine">

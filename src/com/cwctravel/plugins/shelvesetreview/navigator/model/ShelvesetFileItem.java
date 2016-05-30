@@ -1,6 +1,7 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
 import java.net.URI;
+import java.util.List;
 
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.ChangeType;
@@ -12,6 +13,8 @@ public class ShelvesetFileItem extends ShelvesetResourceItem {
 
 	private PendingSet pendingSet;
 	private PendingChange pendingChange;
+
+	private List<ShelvesetResourceItem> discussions;
 
 	public ShelvesetFileItem(ShelvesetItem root, PendingSet pendingSet, PendingChange pendingChange) {
 		super(root);
@@ -50,13 +53,24 @@ public class ShelvesetFileItem extends ShelvesetResourceItem {
 	public URI getURI() {
 		String path = getPath();
 		String shelvedDownloadURL = pendingChange.getShelvedDownloadURL();
-		URI encodedDownloadURL = TFSUtil.encodeURI(path, getShelvesetName(), getShelvesetOwnerName(),
-				shelvedDownloadURL);
+		URI encodedDownloadURL = TFSUtil.encodeURI(path, getShelvesetName(), getShelvesetOwnerName(), shelvedDownloadURL);
 		return encodedDownloadURL;
 	}
 
 	public ChangeType getChangeType() {
 		return pendingChange.getChangeType();
+	}
+
+	public List<ShelvesetResourceItem> getDiscussions() {
+		return discussions;
+	}
+
+	public void setDiscussions(List<ShelvesetResourceItem> discussions) {
+		this.discussions = discussions;
+	}
+
+	public boolean hasDiscussions() {
+		return discussions != null && !discussions.isEmpty();
 	}
 
 }

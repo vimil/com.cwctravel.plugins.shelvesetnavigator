@@ -4,6 +4,7 @@ import java.util.Calendar;
 
 public class DiscussionCommentInfo {
 	private int id;
+	private int parentId;
 	private int threadId;
 	private String content;
 	private Calendar publishedDate;
@@ -20,6 +21,14 @@ public class DiscussionCommentInfo {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+
+	public int getParentId() {
+		return parentId;
+	}
+
+	public void setParentId(int parentId) {
+		this.parentId = parentId;
 	}
 
 	public int getThreadId() {
