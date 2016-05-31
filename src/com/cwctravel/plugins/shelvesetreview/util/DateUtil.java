@@ -12,6 +12,9 @@ import org.eclipse.core.runtime.Status;
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 
 public class DateUtil {
+	private static final float MILLIS_PER_HOUR = (1000 * 60 * 60);
+	private static final float MILLIS_PER_DAY = MILLIS_PER_HOUR * 24;
+
 	public static final String DATE_FORMAT_1 = "yyyy-MM-dd'T'HH:mm:ss.SSSX";
 	public static final String DATE_FORMAT_2 = "yyyy-MM-dd'T'HH:mm:ss.SSX";
 	public static final String DATE_FORMAT_3 = "yyyy-MM-dd'T'HH:mm:ss.SX";
@@ -44,5 +47,29 @@ public class DateUtil {
 			result = sDF.format(date.getTime());
 		}
 		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T extends Calendar> T removeTimePart(T calendar) {
+		T result = null;
+		if (calendar != null) {
+			result = (T) calendar.clone();
+			result.set(Calendar.HOUR_OF_DAY, 0);
+			result.set(Calendar.MINUTE, 0);
+			result.set(Calendar.SECOND, 0);
+			result.set(Calendar.MILLISECOND, 0);
+		}
+		return result;
+	}
+
+	public static Calendar currentDate() {
+		GregorianCalendar currentDate = new GregorianCalendar();
+		currentDate = removeTimePart(currentDate);
+		return currentDate;
+	}
+
+	public static float differenceInDaysBetweenDates(Calendar date1, Calendar date2) {
+		return (((date1.getTimeInMillis() + date1.getTimeZone().getOffset(date1.getTimeInMillis())) - (date2.getTimeInMillis() + date2.getTimeZone()
+				.getOffset(date2.getTimeInMillis()))) / MILLIS_PER_DAY);
 	}
 }

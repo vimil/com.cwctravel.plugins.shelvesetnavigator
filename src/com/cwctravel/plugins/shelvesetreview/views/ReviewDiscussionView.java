@@ -17,7 +17,6 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
@@ -28,17 +27,10 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
-import org.eclipse.ui.IViewPart;
-import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchActionConstants;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.DrillDownAdapter;
 import org.eclipse.ui.part.ViewPart;
-
-import com.cwctravel.plugins.shelvesetreview.navigator.ShelvesetNavigator;
-import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 
 /**
  * This sample class demonstrates how to plug-in a new workbench view. The view
@@ -218,36 +210,25 @@ public class ReviewDiscussionView extends ViewPart {
 	public ReviewDiscussionView() {
 	}
 
-	private ShelvesetItem getSelectedShelvesetItem() {
-		ShelvesetItem result = null;
-		IWorkbenchWindow[] workbenchWIndows = PlatformUI.getWorkbench().getWorkbenchWindows();
-		if (workbenchWIndows != null) {
-			for (IWorkbenchWindow workbenchWIndow : workbenchWIndows) {
-				IWorkbenchPage[] workbenchPages = workbenchWIndow.getPages();
-				if (workbenchPages != null) {
-					for (IWorkbenchPage workbenchPage : workbenchPages) {
-						IViewReference[] viewReferences = workbenchPage.getViewReferences();
-						if (viewReferences != null) {
-							for (IViewReference viewReference : viewReferences) {
-								IViewPart viewPart = viewReference.getView(false);
-								if (viewPart instanceof ShelvesetNavigator) {
-									ShelvesetNavigator shelvesetNavigator = (ShelvesetNavigator) viewPart;
-									ITreeSelection treeSelection = shelvesetNavigator.getCommonViewer().getStructuredSelection();
-									if (treeSelection != null) {
-										Object firstElement = treeSelection.getFirstElement();
-										if (firstElement instanceof ShelvesetItem) {
-											result = (ShelvesetItem) firstElement;
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		return result;
-	}
+	/*
+	 * private ShelvesetItem getSelectedShelvesetItem() { ShelvesetItem result =
+	 * null; IWorkbenchWindow[] workbenchWIndows =
+	 * PlatformUI.getWorkbench().getWorkbenchWindows(); if (workbenchWIndows !=
+	 * null) { for (IWorkbenchWindow workbenchWIndow : workbenchWIndows) {
+	 * IWorkbenchPage[] workbenchPages = workbenchWIndow.getPages(); if
+	 * (workbenchPages != null) { for (IWorkbenchPage workbenchPage :
+	 * workbenchPages) { IViewReference[] viewReferences =
+	 * workbenchPage.getViewReferences(); if (viewReferences != null) { for
+	 * (IViewReference viewReference : viewReferences) { IViewPart viewPart =
+	 * viewReference.getView(false); if (viewPart instanceof ShelvesetNavigator)
+	 * { ShelvesetNavigator shelvesetNavigator = (ShelvesetNavigator) viewPart;
+	 * ITreeSelection treeSelection =
+	 * shelvesetNavigator.getCommonViewer().getStructuredSelection(); if
+	 * (treeSelection != null) { Object firstElement =
+	 * treeSelection.getFirstElement(); if (firstElement instanceof
+	 * ShelvesetItem) { result = (ShelvesetItem) firstElement; } } } } } } } } }
+	 * return result; }
+	 */
 
 	/**
 	 * This is a callback that will allow us to create the viewer and initialize

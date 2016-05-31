@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import ms.tfs.versioncontrol.clientservices._03._PropertyValue;
+import ms.tfs.versioncontrol.clientservices._03._Shelveset;
+
 import org.eclipse.core.runtime.Status;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
@@ -29,10 +32,9 @@ import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PropertyValue;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 
-import ms.tfs.versioncontrol.clientservices._03._PropertyValue;
-import ms.tfs.versioncontrol.clientservices._03._Shelveset;
-
 public class ShelvesetUtil {
+	private static final int MAX_ACTIVE_SHELVESET_AGE = 90;
+
 	public static List<ShelvesetResourceItem> groupShelvesetFileItems(ShelvesetItem shelvesetItem, List<ShelvesetFileItem> shelvesetFileItems,
 			DiscussionInfo discussionInfo) {
 		List<ShelvesetResourceItem> result = new ArrayList<ShelvesetResourceItem>();
@@ -204,7 +206,7 @@ public class ShelvesetUtil {
 	}
 
 	public static boolean getPropertyAsBoolean(Shelveset shelveset, String propertyName, boolean defaultValue) {
-		boolean result = false;
+		boolean result = defaultValue;
 		String propertyValue = getProperty(shelveset, propertyName, null);
 		if (propertyValue != null) {
 			result = Boolean.parseBoolean(propertyValue);
@@ -237,20 +239,24 @@ public class ShelvesetUtil {
 	}
 
 	public static boolean isShelvesetInactive(Shelveset shelveset) {
-		boolean isShelvesetInactive = ShelvesetUtil.getPropertyAsBoolean(shelveset, ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, false);
+		float shelvesetAge = DateUtil.differenceInDaysBetweenDates(DateUtil.currentDate(), shelveset.getCreationDate());
+
+		boolean isShelvesetInactive = ShelvesetUtil.getPropertyAsBoolean(shelveset, ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG,
+				(shelvesetAge > MAX_ACTIVE_SHELVESET_AGE ? true : false));
+
 		String changesetId = ShelvesetUtil.getProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_CHANGESET_ID, null);
 		return isShelvesetInactive || changesetId != null;
 	}
 
 	public static boolean canActivateShelveset(Shelveset shelveset) {
-		boolean isShelvesetInactive = ShelvesetUtil.getPropertyAsBoolean(shelveset, ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, false);
+		boolean isShelvesetInactive = isShelvesetInactive(shelveset);
 		String changesetId = ShelvesetUtil.getProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_CHANGESET_ID, null);
 
 		return isShelvesetInactive && changesetId == null;
 	}
 
 	public static boolean canAssignReviewers(Shelveset shelveset) {
-		boolean isShelvesetInactive = ShelvesetUtil.getPropertyAsBoolean(shelveset, ShelvesetPropertyConstants.SHELVESET_INACTIVE_FLAG, false);
+		boolean isShelvesetInactive = isShelvesetInactive(shelveset);
 		boolean shelvesetBelongsToCurrentUser = TFSUtil.userIdsSame(TFSUtil.getCurrentUserId(), shelveset.getOwnerName());
 		return !isShelvesetInactive && shelvesetBelongsToCurrentUser;
 	}
