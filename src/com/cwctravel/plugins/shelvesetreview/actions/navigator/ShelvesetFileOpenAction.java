@@ -52,6 +52,7 @@ public class ShelvesetFileOpenAction extends Action implements ISelectionChanged
 				Object element = structuredSelection.getFirstElement();
 				if (element instanceof ShelvesetFileItem) {
 					shelvesetFileItem = (ShelvesetFileItem) element;
+					shelvesetDiscussionItem = null;
 					result = true;
 				} else if (element instanceof ShelvesetDiscussionItem) {
 					shelvesetDiscussionItem = (ShelvesetDiscussionItem) element;

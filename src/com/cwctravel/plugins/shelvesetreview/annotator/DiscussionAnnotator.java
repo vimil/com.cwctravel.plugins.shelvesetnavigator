@@ -114,6 +114,9 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 		}
 	}
 
+	/**
+	 * @param editorPart
+	 */
 	private void annotateEditorPart(IEditorPart editorPart) {
 		if (editorPart != null) {
 			IEditorInput editorInput = editorPart.getEditorInput();
@@ -131,8 +134,17 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 							/*
 							 * ISourceViewer sourceViewer =
 							 * getSourceViewerFor(editorPart); if (sourceViewer
-							 * != null) { sourceViewer.setAnnotationHover(new
-							 * DiscussionAnnotationHover()); }
+							 * != null) { SourceViewerConfiguration
+							 * sourceViewerConfiguration =
+							 * getSourceViewerConfigurationFor(editorPart); if
+							 * (sourceViewerConfiguration != null) {
+							 * DiscussionAnnotationHover annotationHover = new
+							 * DiscussionAnnotationHover(sourceViewer); String[]
+							 * contentTypes = sourceViewerConfiguration.
+							 * getConfiguredContentTypes(sourceViewer); for
+							 * (String contentType : contentTypes) {
+							 * sourceViewer.setTextHover(annotationHover,
+							 * contentType); } } }
 							 */
 
 							IAnnotationModel annotationModel = documentProvider.getAnnotationModel(editorInput);
@@ -159,6 +171,18 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 	 * clazz.getDeclaredMethods(); for (Method method : methods) { if
 	 * (method.getName().equals("getSourceViewer")) {
 	 * method.setAccessible(true); try { result = (ISourceViewer)
+	 * method.invoke(editorPart); break outer; } catch (IllegalAccessException |
+	 * IllegalArgumentException | InvocationTargetException e) {
+	 * e.printStackTrace(); } } } clazz = clazz.getSuperclass(); } return
+	 * result; }
+	 * 
+	 * private SourceViewerConfiguration
+	 * getSourceViewerConfigurationFor(IEditorPart editorPart) {
+	 * SourceViewerConfiguration result = null; Class<?> clazz =
+	 * editorPart.getClass(); outer: while (clazz != null) { Method[] methods =
+	 * clazz.getDeclaredMethods(); for (Method method : methods) { if
+	 * (method.getName().equals("getSourceViewerConfiguration")) {
+	 * method.setAccessible(true); try { result = (SourceViewerConfiguration)
 	 * method.invoke(editorPart); break outer; } catch (IllegalAccessException |
 	 * IllegalArgumentException | InvocationTargetException e) {
 	 * e.printStackTrace(); } } } clazz = clazz.getSuperclass(); } return
