@@ -391,6 +391,11 @@
             </visibleWhen>
          </command>
       </menuContribution>
+      <menuContribution
+            allPopups="false"
+            class="com.cwctravel.plugins.shelvesetreview.annotator.DiscussionAnnotationMenuContributionFactory"
+            locationURI="popup:#AbstractTextEditorRulerContext?after=additions">
+      </menuContribution>
    </extension>
    <extension
          point="org.eclipse.ui.decorators">

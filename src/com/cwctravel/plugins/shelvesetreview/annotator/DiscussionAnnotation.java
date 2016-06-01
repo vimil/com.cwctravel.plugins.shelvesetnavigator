@@ -3,7 +3,7 @@ package com.cwctravel.plugins.shelvesetreview.annotator;
 import org.eclipse.jface.text.source.Annotation;
 
 public class DiscussionAnnotation extends Annotation implements Comparable<DiscussionAnnotation> {
-	private static final String DISCUSSION_MARKER = "com.cwctravel.plugins.shelvesetreview.discussionMarker";
+	static final String DISCUSSION_MARKER = "com.cwctravel.plugins.shelvesetreview.discussionMarker";
 
 	private int threadId;
 	private int commentd;
