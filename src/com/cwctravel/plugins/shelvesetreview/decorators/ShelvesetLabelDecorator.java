@@ -10,6 +10,8 @@ import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussion
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
+import com.cwctravel.plugins.shelvesetreview.util.DateUtil;
+import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.ChangeType;
 
 public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
@@ -67,7 +69,17 @@ public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
 			if (buildId != null && !buildId.isEmpty()) {
 				ImageDescriptor buildSuccessfulImageDescriptor = ShelvesetReviewPlugin.getDefault().getImageRegistry()
 						.getDescriptor(ShelvesetReviewPlugin.BUILD_SUCCESSFUL_ICON_ID);
-				decoration.addOverlay(buildSuccessfulImageDescriptor);
+				decoration.addOverlay(buildSuccessfulImageDescriptor, IDecoration.BOTTOM_LEFT);
+			}
+
+			if (shelvesetItem.isInactive()) {
+				decoration.addSuffix(" [" + DateUtil.ageAsPrettyString(shelvesetItem.getCreationDate()) + "]");
+			}
+
+			if (shelvesetItem.isApprovedByUser(TFSUtil.getCurrentUserId())) {
+				ImageDescriptor approvedImageDescriptor = ShelvesetReviewPlugin.getDefault().getImageRegistry()
+						.getDescriptor(ShelvesetReviewPlugin.APPROVED_OVR_ICON_ID);
+				decoration.addOverlay(approvedImageDescriptor);
 			}
 
 		} else if (element instanceof ShelvesetDiscussionItem) {
@@ -78,5 +90,4 @@ public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
 			}
 		}
 	}
-
 }

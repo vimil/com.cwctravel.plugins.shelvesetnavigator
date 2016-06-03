@@ -16,10 +16,12 @@ import com.cwctravel.plugins.shelvesetreview.constants.ShelvesetPropertyConstant
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
+import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
 public class ShelvesetGroupItemContainer extends PlatformObject {
 	private Map<String, List<Shelveset>> userShelvesetItemsMap;
 	private final List<ShelvesetGroupItem> shelvesetGroupItems;
+	private final List<TeamFoundationIdentity> reviewGroupMembers;
 
 	public ShelvesetGroupItemContainer() {
 		userShelvesetItemsMap = new HashMap<String, List<Shelveset>>();
@@ -31,6 +33,8 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 		shelvesetGroupItems.add(userShelvesetGroupItem);
 		shelvesetGroupItems.add(reviewerShelvesetGroupItem);
 		shelvesetGroupItems.add(inactiveShelvesetGroupItem);
+
+		reviewGroupMembers = new ArrayList<TeamFoundationIdentity>();
 	}
 
 	public List<ShelvesetGroupItem> getShelvesetGroupItems() {
@@ -73,6 +77,9 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 					userShelvesetItemsMapEntry.setValue(userShelvesetItems);
 					monitor.worked(1);
 				}
+
+				reviewGroupMembers.clear();
+				reviewGroupMembers.addAll(TFSUtil.getReviewGroupMembers());
 			}
 			monitor.done();
 		}
@@ -110,6 +117,10 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 
 		return result;
 
+	}
+
+	public List<TeamFoundationIdentity> getReviewGroupMembers() {
+		return reviewGroupMembers;
 	}
 
 }

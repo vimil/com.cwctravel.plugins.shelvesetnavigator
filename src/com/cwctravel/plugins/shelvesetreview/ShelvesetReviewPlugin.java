@@ -46,6 +46,7 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 	public static final String BUILD_SUCCESSFUL_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.buildsuccessful";
 	public static final String DISCUSSION_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.discussion";
 	public static final String DISCUSSION_OVR_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.ovr.discussion";
+	public static final String APPROVED_OVR_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.ovr.approved";
 
 	private static ShelvesetReviewPlugin plugin;
 
@@ -67,8 +68,8 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 		ImageDescriptor shelvesetIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/shelveset.png"), null));
 		registry.put(SHELVESET_ICON_ID, shelvesetIconImage);
 
-		ImageDescriptor inactiveShelvesetIconImage = ImageDescriptor
-				.createFromURL(FileLocator.find(bundle, new Path("icons/inactive-shelveset.png"), null));
+		ImageDescriptor inactiveShelvesetIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/inactive-shelveset.png"),
+				null));
 		registry.put(INACTIVE_SHELVESET_ICON_ID, inactiveShelvesetIconImage);
 
 		ImageDescriptor userGroupIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/user-group.png"), null));
@@ -83,16 +84,20 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 		ImageDescriptor userIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/user.png"), null));
 		registry.put(USER_ICON_ID, userIconImage);
 
-		ImageDescriptor buildSuccessfulIconImage = ImageDescriptor
-				.createFromURL(FileLocator.find(bundle, new Path("icons/build-successful-icon.png"), null));
+		ImageDescriptor buildSuccessfulIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle,
+				new Path("icons/build-successful-icon.png"), null));
 		registry.put(BUILD_SUCCESSFUL_ICON_ID, buildSuccessfulIconImage);
 
 		ImageDescriptor discussionIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/discussion-icon.png"), null));
 		registry.put(DISCUSSION_ICON_ID, discussionIconImage);
 
-		ImageDescriptor discussionOverlayIconImage = ImageDescriptor
-				.createFromURL(FileLocator.find(bundle, new Path("icons/discussion-ovr-icon.png"), null));
+		ImageDescriptor discussionOverlayIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle,
+				new Path("icons/discussion-ovr-icon.png"), null));
 		registry.put(DISCUSSION_OVR_ICON_ID, discussionOverlayIconImage);
+
+		ImageDescriptor approvedOverlayIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/approved-ovr-icon.png"),
+				null));
+		registry.put(APPROVED_OVR_ICON_ID, approvedOverlayIconImage);
 
 	}
 

@@ -5,7 +5,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 import org.eclipse.core.runtime.IStatus;
 
@@ -15,6 +17,7 @@ import com.microsoft.tfs.client.eclipse.TFSEclipseClientPlugin;
 import com.microsoft.tfs.core.TFSConnection;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.webservices.IIdentityManagementService2;
+import com.microsoft.tfs.core.clients.webservices.IdentityDescriptor;
 import com.microsoft.tfs.core.clients.webservices.IdentitySearchFactor;
 import com.microsoft.tfs.core.clients.webservices.MembershipQuery;
 import com.microsoft.tfs.core.clients.webservices.ReadIdentityOptions;
@@ -70,8 +73,7 @@ public class TFSUtil {
 			String hash = computeMD5Hash(downloadURL);
 			result = new URI("tfs://"
 					+ Base64.getUrlEncoder().encodeToString(
-							(path + ";" + downloadURL + ";" + hash + ";" + shelvesetName + ";" + shelvesetOwnerName)
-									.getBytes("UTF-8")));
+							(path + ";" + downloadURL + ";" + hash + ";" + shelvesetName + ";" + shelvesetOwnerName).getBytes("UTF-8")));
 		} catch (UnsupportedEncodingException | URISyntaxException | NoSuchAlgorithmException uEE) {
 			ShelvesetReviewPlugin.log(IStatus.WARNING, uEE.getMessage(), uEE);
 		}
@@ -146,17 +148,54 @@ public class TFSUtil {
 		if (userId != null && !userId.isEmpty()) {
 			TFSConnection tfsConnection = getTFSConnection();
 			if (tfsConnection != null) {
-				IIdentityManagementService2 identitySvc = (IIdentityManagementService2) tfsConnection
-						.getClient(IIdentityManagementService2.class);
+				IIdentityManagementService2 identitySvc = (IIdentityManagementService2) tfsConnection.getClient(IIdentityManagementService2.class);
 
 				if (identitySvc != null) {
-					TeamFoundationIdentity teamFoundationIdentity = identitySvc.readIdentity(
-							IdentitySearchFactor.GENERAL, userId, MembershipQuery.DIRECT, ReadIdentityOptions.NONE);
-					if (teamFoundationIdentity != null && teamFoundationIdentity.isActive()
-							&& !teamFoundationIdentity.isContainer()) {
+					TeamFoundationIdentity teamFoundationIdentity = identitySvc.readIdentity(IdentitySearchFactor.GENERAL, userId,
+							MembershipQuery.DIRECT, ReadIdentityOptions.NONE);
+					if (teamFoundationIdentity != null && teamFoundationIdentity.isActive() && !teamFoundationIdentity.isContainer()) {
 						result = teamFoundationIdentity.getUniqueName();
 					}
 				}
+			}
+		}
+		return result;
+	}
+
+	public static List<TeamFoundationIdentity> getReviewGroupMembers() {
+		List<TeamFoundationIdentity> result = new ArrayList<TeamFoundationIdentity>();
+		TFSConnection tfsConnection = getTFSConnection();
+		if (tfsConnection != null) {
+			IIdentityManagementService2 identitySvc = (IIdentityManagementService2) tfsConnection.getClient(IIdentityManagementService2.class);
+
+			if (identitySvc != null) {
+				TeamFoundationIdentity reviewerIdentity = identitySvc.readIdentity(IdentitySearchFactor.GENERAL, "Reviewers",
+						MembershipQuery.EXPANDED, ReadIdentityOptions.NONE);
+				if (reviewerIdentity != null) {
+					IdentityDescriptor[] reviewGroupMemberDescriptors = reviewerIdentity.getMembers();
+					if (reviewGroupMemberDescriptors != null) {
+						for (IdentityDescriptor reviewGroupMemberDescriptor : reviewGroupMemberDescriptors) {
+
+							TeamFoundationIdentity reviewGroupMemberIdentity = identitySvc.readIdentity(IdentitySearchFactor.IDENTIFIER,
+									reviewGroupMemberDescriptor.getIdentifier(), MembershipQuery.DIRECT, ReadIdentityOptions.NONE);
+							if (reviewGroupMemberIdentity != null) {
+								result.add(reviewGroupMemberIdentity);
+							}
+						}
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	public static String normalizeUserId(String userId) {
+		String result = userId;
+		if (result != null) {
+			String[] userIdParts = userId.split("\\\\");
+			if (userIdParts.length != 2) {
+				String currentDomain = System.getenv("userdomain");
+				result = currentDomain + "\\" + userId;
 			}
 		}
 		return result;

@@ -159,6 +159,10 @@
             id="com.cwctravel.plugins.shelvesetreview.navigator.commands.AssignReviewersCommand"
             name="Assign Reviewers">
       </command>
+      <command
+            id="com.cwctravel.plugins.shelvesetreview.navigator.commands.ApproveShelvesetCommand"
+            name="Approver Shelveset">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -205,6 +209,10 @@
                         </instanceof>
                         <test
                               property="com.cwctravel.plugins.shelvesetreview.shelvesetitem.isActive"
+                              value="true">
+                        </test>
+                        <test
+                              property="com.cwctravel.plugins.shelvesetreview.belongsToCurrentUser"
                               value="true">
                         </test>
                      </and>
@@ -280,6 +288,31 @@
                         </instanceof>
                         <test
                               property="com.cwctravel.plugins.shelvesetreview.shelvesetitem.canAssignReviewers"
+                              value="true">
+                        </test>
+                     </and>
+                  </iterate>
+               </and>
+            </with>
+         </enabledWhen>
+      </handler>
+      <handler
+            class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.ApproveShelvesetHandler"
+            commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.ApproveShelvesetCommand">
+         <enabledWhen>
+            <with
+                  variable="selection">
+               <and>
+                  <count
+                        value="1">
+                  </count>
+                  <iterate>
+                     <and>
+                        <instanceof
+                              value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
+                        </instanceof>
+                        <test
+                              property="com.cwctravel.plugins.shelvesetreview.shelvesetitem.canApprove"
                               value="true">
                         </test>
                      </and>
@@ -370,6 +403,14 @@
             </visibleWhen>
          </command>
          <command
+               commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.ApproveShelvesetCommand"
+               label="Approve Shelveset"
+               style="push">
+            <visibleWhen
+                  checkEnabled="true">
+            </visibleWhen>
+         </command>
+         <command
                commandId="org.eclipse.ui.file.properties"
                label="Properties"
                style="push">
@@ -432,7 +473,7 @@
             class="com.cwctravel.plugins.shelvesetreview.propertytesters.ShelvesetItemPropertyTester"
             id="com.cwctravel.plugins.shelvesetreview.navigator.propertytesters.ShelvesetItemPropertyTester"
             namespace="com.cwctravel.plugins.shelvesetreview.shelvesetitem"
-            properties="isActive,canActivate,canAssignReviewers"
+            properties="isActive,canActivate,canAssignReviewers,belongsToCurrentUser,canApprove"
             type="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
       </propertyTester>
    </extension>

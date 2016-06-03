@@ -2,6 +2,7 @@ package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -10,6 +11,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.progress.UIJob;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
+import com.cwctravel.plugins.shelvesetreview.exceptions.ApproveException;
 import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetFileItemsRefreshJob;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
 import com.cwctravel.plugins.shelvesetreview.util.DiscussionUtil;
@@ -228,6 +230,23 @@ public class ShelvesetItem {
 
 	public boolean hasDiscussions() {
 		return DiscussionUtil.isDiscussionPresent(discussionInfo);
+	}
+
+	public Calendar getCreationDate() {
+		return shelveset.getCreationDate();
+	}
+
+	public boolean canApprove() {
+		return ShelvesetUtil.canApprove(shelveset, parent.getReviewGroupMembers());
+	}
+
+	public void approve() throws ApproveException {
+		ShelvesetUtil.approve(shelveset, parent.getReviewGroupMembers());
+
+	}
+
+	public boolean isApprovedByUser(String userId) {
+		return ShelvesetUtil.isApprovedbyUser(shelveset, userId);
 	}
 
 }

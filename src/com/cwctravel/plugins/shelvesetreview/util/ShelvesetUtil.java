@@ -16,6 +16,7 @@ import org.eclipse.core.runtime.Status;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.constants.ShelvesetPropertyConstants;
+import com.cwctravel.plugins.shelvesetreview.exceptions.ApproveException;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
@@ -31,6 +32,7 @@ import com.microsoft.tfs.core.TFSConnection;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PropertyValue;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
+import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
 public class ShelvesetUtil {
 	private static final int MAX_ACTIVE_SHELVESET_AGE = 90;
@@ -350,10 +352,12 @@ public class ShelvesetUtil {
 
 		Map<String, Boolean> reviewerIdMap = new HashMap<String, Boolean>();
 		for (String reviewerId : reviewerIds) {
+			reviewerId = TFSUtil.normalizeUserId(reviewerId);
 			reviewerIdMap.put(reviewerId, false);
 		}
 
 		for (String approverId : approverIds) {
+			approverId = TFSUtil.normalizeUserId(approverId);
 			if (reviewerIdMap.containsKey(approverId)) {
 				reviewerIdMap.put(approverId, true);
 			}
@@ -454,6 +458,75 @@ public class ShelvesetUtil {
 		TFSConnection connection = TFSUtil.getTFSConnection();
 		if (connection != null) {
 			result = DiscussionService.getShelvesetDiscussion(connection, shelveset.getName(), shelveset.getOwnerName());
+		}
+		return result;
+	}
+
+	public static void approve(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) throws ApproveException {
+
+		if (!isShelvesetInactive(shelveset)) {
+			String currentUserId = TFSUtil.getCurrentUserId();
+			if (isUserReviewer(currentUserId, shelveset, reviewGroupMembers)) {
+				String[] approverIds = getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS);
+				Set<String> approverIdsSet = new HashSet<String>();
+				if (approverIds != null) {
+					for (String approverId : approverIds) {
+						approverIdsSet.add(approverId);
+					}
+				}
+				approverIdsSet.add(currentUserId);
+				String newAppoverIdsStr = StringUtil.joinCollection(approverIdsSet, ",");
+				setShelvesetProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS, newAppoverIdsStr);
+			} else {
+				throw new ApproveException("Current User is not a reviewer of the shelveset");
+			}
+		} else {
+			throw new ApproveException("Shelveset is not active");
+		}
+	}
+
+	private static boolean isUserReviewer(String userId, Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) {
+		boolean result = false;
+
+		List<ReviewerInfo> reviewerInfos = getShelvesetReviewers(shelveset);
+		if (reviewerInfos != null) {
+			for (ReviewerInfo reviewerInfo : reviewerInfos) {
+				if (TFSUtil.userIdsSame(userId, reviewerInfo.getReviewerId())) {
+					result = true;
+					break;
+				}
+			}
+		}
+
+		if (!result && reviewGroupMembers != null) {
+			for (TeamFoundationIdentity reviewGroupMember : reviewGroupMembers) {
+				if (TFSUtil.userIdsSame(userId, reviewGroupMember.getUniqueName())) {
+					result = true;
+					break;
+				}
+			}
+		}
+
+		return result;
+	}
+
+	public static boolean canApprove(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) {
+		String currentUserId = TFSUtil.getCurrentUserId();
+		return !isShelvesetInactive(shelveset) && isUserReviewer(currentUserId, shelveset, reviewGroupMembers)
+				&& !isApprovedbyUser(shelveset, currentUserId) && !TFSUtil.userIdsSame(currentUserId, shelveset.getOwnerName());
+	}
+
+	public static boolean isApprovedbyUser(Shelveset shelveset, String userId) {
+		boolean result = false;
+		String[] approverIds = getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS);
+		if (approverIds != null) {
+			String currentUserId = TFSUtil.getCurrentUserId();
+			for (String approverId : approverIds) {
+				if (TFSUtil.userIdsSame(currentUserId, approverId)) {
+					result = true;
+					break;
+				}
+			}
 		}
 		return result;
 	}
