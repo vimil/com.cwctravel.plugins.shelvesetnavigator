@@ -161,7 +161,11 @@
       </command>
       <command
             id="com.cwctravel.plugins.shelvesetreview.navigator.commands.ApproveShelvesetCommand"
-            name="Approver Shelveset">
+            name="Approve Shelveset">
+      </command>
+      <command
+            id="com.cwctravel.plugins.shelvesetreview.navigator.commands.UnapproveShelvesetCommand"
+            name="Unapprove Shelveset">
       </command>
    </extension>
    <extension
@@ -322,6 +326,31 @@
          </enabledWhen>
       </handler>
       <handler
+            class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.UnapproveShelvesetHandler"
+            commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.UnapproveShelvesetCommand">
+         <enabledWhen>
+            <with
+                  variable="selection">
+               <and>
+                  <count
+                        value="1">
+                  </count>
+                  <iterate>
+                     <and>
+                        <instanceof
+                              value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
+                        </instanceof>
+                        <test
+                              property="com.cwctravel.plugins.shelvesetreview.shelvesetitem.canUnapprove"
+                              value="true">
+                        </test>
+                     </and>
+                  </iterate>
+               </and>
+            </with>
+         </enabledWhen>
+      </handler>
+      <handler
             class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.RefreshHandler"
             commandId="org.eclipse.ui.file.refresh">
          <activeWhen>
@@ -411,6 +440,14 @@
             </visibleWhen>
          </command>
          <command
+               commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.UnapproveShelvesetCommand"
+               label="Unapprove Shelveset"
+               style="push">
+            <visibleWhen
+                  checkEnabled="true">
+            </visibleWhen>
+         </command>
+         <command
                commandId="org.eclipse.ui.file.properties"
                label="Properties"
                style="push">
@@ -478,7 +515,7 @@
             class="com.cwctravel.plugins.shelvesetreview.propertytesters.ShelvesetItemPropertyTester"
             id="com.cwctravel.plugins.shelvesetreview.navigator.propertytesters.ShelvesetItemPropertyTester"
             namespace="com.cwctravel.plugins.shelvesetreview.shelvesetitem"
-            properties="isActive,canActivate,canAssignReviewers,belongsToCurrentUser,canApprove"
+            properties="isActive,canActivate,canAssignReviewers,belongsToCurrentUser,canApprove,canUnapprove"
             type="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
       </propertyTester>
    </extension>

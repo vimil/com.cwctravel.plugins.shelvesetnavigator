@@ -5,7 +5,10 @@ import java.util.Iterator;
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -16,15 +19,21 @@ import org.eclipse.jface.text.source.IVerticalRulerInfo;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
+import com.cwctravel.plugins.shelvesetreview.dialogs.DiscussionDialog;
 import com.cwctravel.plugins.shelvesetreview.filesystem.TFSFileStore;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 
 public class DiscussionAnnotationMenuContribution extends ContributionItem {
 	private ITextEditor editor;
@@ -92,8 +101,43 @@ public class DiscussionAnnotationMenuContribution extends ContributionItem {
 	// Action to be performed when clicking on the menu item is defined here
 	private SelectionAdapter createDynamicSelectionListener(DiscussionAnnotation discussionAnnotation) {
 		return new SelectionAdapter() {
-			public void widgetSelected(SelectionEvent e) {
-				System.out.println("Clicked");
+			public void widgetSelected(SelectionEvent event) {
+				IEditorInput editorInput = editor.getEditorInput();
+				if (editorInput instanceof FileStoreEditorInput) {
+					FileStoreEditorInput fileStoreEditorInput = (FileStoreEditorInput) editorInput;
+					IFileStore fileStore;
+					try {
+						fileStore = EFS.getStore(fileStoreEditorInput.getURI());
+						if (fileStore instanceof TFSFileStore) {
+							TFSFileStore tfsFileStore = (TFSFileStore) fileStore;
+							ShelvesetItem shelvesetItem = ShelvesetReviewPlugin.getDefault().getShelvesetGroupItemContainer()
+									.findShelvesetItem(tfsFileStore.getShelvesetName(), tfsFileStore.getShelvesetOwnerName());
+							if (shelvesetItem != null) {
+								new Job("") {
+
+									@Override
+									protected IStatus run(IProgressMonitor monitor) {
+										shelvesetItem.refresh(monitor);
+										ShelvesetFileItem shelvesetFileItem = shelvesetItem.findFile(tfsFileStore.getPath());
+										if (shelvesetFileItem != null) {
+											Display.getDefault().asyncExec(() -> {
+												Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+												DiscussionDialog discussionDialog = new DiscussionDialog(shelvesetFileItem,
+														rulerInfo.getLineOfLastMouseButtonActivity(), -1, shell);
+												discussionDialog.create();
+												discussionDialog.open();
+											});
+										}
+										return Status.OK_STATUS;
+									}
+								}.schedule();
+
+							}
+						}
+					} catch (CoreException e) {
+						ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
+					}
+				}
 			}
 		};
 	}

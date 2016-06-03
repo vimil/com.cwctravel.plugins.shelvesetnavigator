@@ -9,9 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import ms.tfs.versioncontrol.clientservices._03._PropertyValue;
-import ms.tfs.versioncontrol.clientservices._03._Shelveset;
-
 import org.eclipse.core.runtime.Status;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
@@ -33,6 +30,9 @@ import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PropertyValue;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
+
+import ms.tfs.versioncontrol.clientservices._03._PropertyValue;
+import ms.tfs.versioncontrol.clientservices._03._Shelveset;
 
 public class ShelvesetUtil {
 	private static final int MAX_ACTIVE_SHELVESET_AGE = 90;
@@ -463,7 +463,6 @@ public class ShelvesetUtil {
 	}
 
 	public static void approve(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) throws ApproveException {
-
 		if (!isShelvesetInactive(shelveset)) {
 			String currentUserId = TFSUtil.getCurrentUserId();
 			if (isUserReviewer(currentUserId, shelveset, reviewGroupMembers)) {
@@ -535,5 +534,34 @@ public class ShelvesetUtil {
 			}
 		}
 		return result;
+	}
+
+	public static void unapprove(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) throws ApproveException {
+		if (!isShelvesetInactive(shelveset)) {
+			String currentUserId = TFSUtil.getCurrentUserId();
+			if (isUserReviewer(currentUserId, shelveset, reviewGroupMembers)) {
+				String[] approverIds = getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS);
+				Set<String> approverIdsSet = new HashSet<String>();
+				if (approverIds != null) {
+					for (String approverId : approverIds) {
+						approverIdsSet.add(approverId);
+					}
+				}
+				approverIdsSet.remove(currentUserId);
+				String newAppoverIdsStr = StringUtil.joinCollection(approverIdsSet, ",");
+				setShelvesetProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS, newAppoverIdsStr);
+			} else {
+				throw new ApproveException("Current User is not a reviewer of the shelveset");
+			}
+		} else {
+			throw new ApproveException("Shelveset is not active");
+		}
+	}
+
+	public static Boolean canUnapprove(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) {
+		String currentUserId = TFSUtil.getCurrentUserId();
+		return !isShelvesetInactive(shelveset) && isUserReviewer(currentUserId, shelveset, reviewGroupMembers)
+				&& isApprovedbyUser(shelveset, currentUserId) && !TFSUtil.userIdsSame(currentUserId, shelveset.getOwnerName());
+
 	}
 }

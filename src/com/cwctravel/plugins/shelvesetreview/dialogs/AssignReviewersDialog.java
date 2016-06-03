@@ -28,9 +28,9 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
+import com.cwctravel.plugins.shelvesetreview.contentProviders.ReviewerContentProvider;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
-import com.cwctravel.plugins.shelvesetreview.propertypages.ReviewerContentProvider;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 
 public class AssignReviewersDialog extends TitleAreaDialog {

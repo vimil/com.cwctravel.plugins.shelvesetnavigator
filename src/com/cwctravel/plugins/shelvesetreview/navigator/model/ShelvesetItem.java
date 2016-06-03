@@ -249,4 +249,12 @@ public class ShelvesetItem {
 		return ShelvesetUtil.isApprovedbyUser(shelveset, userId);
 	}
 
+	public void unapprove() throws ApproveException {
+		ShelvesetUtil.unapprove(shelveset, parent.getReviewGroupMembers());
+	}
+
+	public Boolean canUnapprove() {
+		return ShelvesetUtil.canUnapprove(shelveset, parent.getReviewGroupMembers());
+	}
+
 }

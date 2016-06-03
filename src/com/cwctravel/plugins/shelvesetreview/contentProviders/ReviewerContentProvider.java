@@ -1,4 +1,4 @@
-package com.cwctravel.plugins.shelvesetreview.propertypages;
+package com.cwctravel.plugins.shelvesetreview.contentProviders;
 
 import java.util.HashSet;
 import java.util.List;

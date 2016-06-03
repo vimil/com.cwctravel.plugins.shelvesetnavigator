@@ -3,6 +3,7 @@ package com.cwctravel.plugins.shelvesetreview.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCommentInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadInfo;
@@ -90,6 +91,30 @@ public class DiscussionUtil {
 				}
 			}
 		}
+		return result;
+	}
+
+	public static List<ShelvesetDiscussionItem> getTopLevelDiscussionItems(Object inputItem, int lineNumber, int columnNumber) {
+		List<ShelvesetDiscussionItem> result = new ArrayList<ShelvesetDiscussionItem>();
+		VisitorUtil.visit(inputItem, (item) -> {
+			if (item instanceof ShelvesetDiscussionItem) {
+				ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) item;
+				if (lineNumber < 0 && columnNumber < 0) {
+					result.add(shelvesetDiscussionItem);
+				} else if (lineNumber >= 0) {
+					if (shelvesetDiscussionItem.getStartLine() == lineNumber + 1) {
+						if (columnNumber < 0) {
+							result.add(shelvesetDiscussionItem);
+						} else if (shelvesetDiscussionItem.getStartColumn() <= columnNumber
+								&& shelvesetDiscussionItem.getEndColumn() >= columnNumber) {
+							result.add(shelvesetDiscussionItem);
+						}
+					}
+				}
+				return false;
+			}
+			return true;
+		});
 		return result;
 	}
 

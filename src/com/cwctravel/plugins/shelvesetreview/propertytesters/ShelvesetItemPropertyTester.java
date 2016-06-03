@@ -20,6 +20,8 @@ public class ShelvesetItemPropertyTester extends PropertyTester {
 				result = TFSUtil.userIdsSame(TFSUtil.getCurrentUserId(), shelvesetItem.getOwnerName()) == (Boolean) expectedValue;
 			} else if ("canApprove".equals(property)) {
 				result = shelvesetItem.canApprove() == (Boolean) expectedValue;
+			} else if ("canUnapprove".equals(property)) {
+				result = shelvesetItem.canUnapprove() == (Boolean) expectedValue;
 			}
 		}
 
