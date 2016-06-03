@@ -1,9 +1,14 @@
 package com.cwctravel.plugins.shelvesetreview.actions.navigator;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.content.IContentType;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -13,8 +18,10 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.ui.IEditorDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorRegistry;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.PlatformUI;
@@ -71,28 +78,53 @@ public class ShelvesetFileOpenAction extends Action implements ISelectionChanged
 			if (shelvesetFileItem != null) {
 				IFileStore fileStore = EFS.getStore(shelvesetFileItem.getURI());
 				IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-				IEditorPart editorPart = IDE.openEditorOnFileStore(page, fileStore);
-				if (shelvesetDiscussionItem != null) {
-					if (editorPart instanceof ITextEditor) {
-						ITextEditor textEditor = (ITextEditor) editorPart;
-						IEditorInput editorInput = editorPart.getEditorInput();
-						if (editorInput instanceof FileStoreEditorInput) {
-							IDocumentProvider documentProvider = textEditor.getDocumentProvider();
-							IDocument document = documentProvider.getDocument(editorInput);
-							try {
-								int startLine = shelvesetDiscussionItem.getStartLine();
-								int startColumn = shelvesetDiscussionItem.getStartColumn();
-								int endLine = shelvesetDiscussionItem.getEndLine();
-								int endColumn = shelvesetDiscussionItem.getEndColumn();
-								if (startLine > 0 && endLine >= startLine && startColumn >= 0 && endColumn >= 0) {
-									int startOffset = document.getLineOffset(startLine - 1) + startColumn - 1;
-
-									int endOffset = document.getLineOffset(endLine - 1) + endColumn - 1;
-									textEditor.selectAndReveal(startOffset, endOffset - startOffset);
-								}
-							} catch (BadLocationException e) {
-								ShelvesetReviewPlugin.log(IStatus.ERROR, e.getMessage(), e);
+				IEditorPart editorPart = null;
+				try {
+					editorPart = IDE.openEditorOnFileStore(page, fileStore);
+				} catch (CoreException e) {
+					IContentType contentType = null;
+					String fileName = fileStore.fetchInfo().getName();
+					try {
+						InputStream is = null;
+						try {
+							is = fileStore.openInputStream(EFS.NONE, null);
+							contentType = Platform.getContentTypeManager().findContentTypeFor(is, fileName);
+						} finally {
+							if (is != null) {
+								is.close();
 							}
+						}
+					} catch (CoreException ex) {
+						// continue without content type
+					} catch (IOException ex) {
+						// continue without content type
+					}
+
+					IEditorRegistry editorReg = PlatformUI.getWorkbench().getEditorRegistry();
+					IEditorDescriptor defaultEditor = editorReg.getDefaultEditor(fileName, contentType);
+					if (defaultEditor != null) {
+						editorPart = page.openEditor(new FileStoreEditorInput(fileStore), defaultEditor.getId());
+					}
+				}
+				if (shelvesetDiscussionItem != null && editorPart instanceof ITextEditor) {
+					ITextEditor textEditor = (ITextEditor) editorPart;
+					IEditorInput editorInput = editorPart.getEditorInput();
+					if (editorInput instanceof FileStoreEditorInput) {
+						IDocumentProvider documentProvider = textEditor.getDocumentProvider();
+						IDocument document = documentProvider.getDocument(editorInput);
+						try {
+							int startLine = shelvesetDiscussionItem.getStartLine();
+							int startColumn = shelvesetDiscussionItem.getStartColumn();
+							int endLine = shelvesetDiscussionItem.getEndLine();
+							int endColumn = shelvesetDiscussionItem.getEndColumn();
+							if (startLine > 0 && endLine >= startLine && startColumn >= 0 && endColumn >= 0) {
+								int startOffset = document.getLineOffset(startLine - 1) + startColumn - 1;
+
+								int endOffset = document.getLineOffset(endLine - 1) + endColumn - 1;
+								textEditor.selectAndReveal(startOffset, endOffset - startOffset);
+							}
+						} catch (BadLocationException e) {
+							ShelvesetReviewPlugin.log(IStatus.ERROR, e.getMessage(), e);
 						}
 					}
 				}

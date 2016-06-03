@@ -1,8 +1,10 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
+import org.eclipse.core.runtime.IAdaptable;
+
 import com.cwctravel.plugins.shelvesetreview.util.StringUtil;
 
-public abstract class ShelvesetResourceItem {
+public abstract class ShelvesetResourceItem implements IAdaptable {
 	private final ShelvesetItem parent;
 
 	private ShelvesetFolderItem parentFolder;
@@ -63,5 +65,10 @@ public abstract class ShelvesetResourceItem {
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
+		return getParent().getAdapter(adapter);
 	}
 }

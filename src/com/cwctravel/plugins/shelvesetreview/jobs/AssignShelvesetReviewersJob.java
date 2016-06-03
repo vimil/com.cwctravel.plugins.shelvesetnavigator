@@ -6,9 +6,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.ui.progress.UIJob;
 
-import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
+import com.cwctravel.plugins.shelvesetreview.jobs.ui.RefreshShelvesetsJob;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 
@@ -28,20 +27,7 @@ public class AssignShelvesetReviewersJob extends Job {
 		shelvesetItem.assignReviewers(reviewerInfos);
 		monitor.done();
 
-		new UIJob("Shelveset Item Refresh") {
-			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor) {
-				ShelvesetReviewPlugin.getDefault().fireShelvesetItemRefreshed(shelvesetItem);
-				return Status.OK_STATUS;
-			}
-		}.schedule();
-
-		/*
-		 * RefreshShelvesetNavigatorJob refreshShelvesetNavigatorsJob = new
-		 * RefreshShelvesetNavigatorJob();
-		 * refreshShelvesetNavigatorsJob.setShelvesetItem(shelvesetItem);
-		 * refreshShelvesetNavigatorsJob.schedule();
-		 */
+		new RefreshShelvesetsJob(shelvesetItem).schedule();
 
 		return Status.OK_STATUS;
 	}

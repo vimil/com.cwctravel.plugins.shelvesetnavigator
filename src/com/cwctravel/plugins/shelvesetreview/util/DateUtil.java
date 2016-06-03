@@ -58,12 +58,19 @@ public class DateUtil {
 	}
 
 	public static String ageAsPrettyString(Calendar date) {
-		GregorianCalendar currentDate = new GregorianCalendar();
-		return differenceBetweenDatesAsPrettyString(date, currentDate);
+		return ageAsPrettyString(date, null);
 	}
 
-	public static String differenceBetweenDatesAsPrettyString(Calendar date1, Calendar date2) {
+	public static String ageAsPrettyString(Calendar date, String suffix) {
+		GregorianCalendar currentDate = new GregorianCalendar();
+		return differenceBetweenDatesAsPrettyString(date, currentDate, suffix);
+	}
+
+	public static String differenceBetweenDatesAsPrettyString(Calendar date1, Calendar date2, String suffix) {
 		String result = null;
+		if (suffix == null) {
+			suffix = "old";
+		}
 		if (date1 != null && date2 != null) {
 			long duration = date2.getTimeInMillis() - date1.getTimeInMillis();
 			long years = (duration / MILLIS_IN_YEAR);
@@ -74,17 +81,17 @@ public class DateUtil {
 			long minutes = (duration / MILLIS_IN_MINUTES);
 
 			if (years > 0) {
-				result = "~ " + years + " yr" + (years > 1 ? "s" : "") + " old";
+				result = "~ " + years + " yr" + (years > 1 ? "s" : "") + " " + suffix;
 			} else if (months > 0) {
-				result = "~ " + months + " mth" + (months > 1 ? "s" : "") + " old";
+				result = "~ " + months + " mth" + (months > 1 ? "s" : "") + " " + suffix;
 			} else if (weeks > 0) {
-				result = "~ " + weeks + " week" + (weeks > 1 ? "s" : "") + " old";
+				result = "~ " + weeks + " week" + (weeks > 1 ? "s" : "") + " " + suffix;
 			} else if (days > 0) {
-				result = "~ " + days + " day" + (days > 1 ? "s" : "") + " old";
+				result = "~ " + days + " day" + (days > 1 ? "s" : "") + " " + suffix;
 			} else if (hours > 0) {
-				result = "~ " + hours + " hr" + (hours > 1 ? "s" : "") + " old";
+				result = "~ " + hours + " hr" + (hours > 1 ? "s" : "") + " " + suffix;
 			} else if (minutes > 0) {
-				result = "~ " + minutes + " min" + (minutes > 1 ? "s" : "") + " old";
+				result = "~ " + minutes + " min" + (minutes > 1 ? "s" : "") + " " + suffix;
 			} else {
 				result = "few seconds old";
 			}

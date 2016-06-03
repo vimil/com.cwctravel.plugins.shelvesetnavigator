@@ -17,6 +17,7 @@ import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetUserCategoryItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetUserItem;
 
 public class ShelvesetContentProvider implements IPipelinedTreeContentProvider {
@@ -49,7 +50,18 @@ public class ShelvesetContentProvider implements IPipelinedTreeContentProvider {
 			}
 		} else if (inputElement instanceof ShelvesetUserItem) {
 			ShelvesetUserItem shelvesetUserItem = (ShelvesetUserItem) inputElement;
-			List<ShelvesetItem> shelvesetItems = shelvesetUserItem.getShelvesetItems();
+			List<ShelvesetUserCategoryItem> shelvesetUserCategoryItems = shelvesetUserItem.getShelvesetUserCategoryItems();
+			if (shelvesetUserCategoryItems.size() == 1) {
+				ShelvesetUserCategoryItem shelvesetUserCategoryItem = shelvesetUserCategoryItems.get(0);
+				List<ShelvesetItem> shelvesetItems = shelvesetUserCategoryItem.getShelvesetItems();
+				result = shelvesetItems.toArray(new ShelvesetItem[0]);
+			} else {
+				result = shelvesetUserCategoryItems.toArray(new ShelvesetUserCategoryItem[0]);
+			}
+
+		} else if (inputElement instanceof ShelvesetUserCategoryItem) {
+			ShelvesetUserCategoryItem shelvesetUserCategoryItem = (ShelvesetUserCategoryItem) inputElement;
+			List<ShelvesetItem> shelvesetItems = shelvesetUserCategoryItem.getShelvesetItems();
 			result = shelvesetItems.toArray(new ShelvesetItem[0]);
 		} else if (inputElement instanceof ShelvesetItem) {
 			ShelvesetItem shelvesetItem = (ShelvesetItem) inputElement;
@@ -87,13 +99,21 @@ public class ShelvesetContentProvider implements IPipelinedTreeContentProvider {
 		} else if (element instanceof ShelvesetUserItem) {
 			ShelvesetUserItem shelvesetUserItem = (ShelvesetUserItem) element;
 			result = shelvesetUserItem.getParentGroup();
+		} else if (element instanceof ShelvesetUserCategoryItem) {
+			ShelvesetUserCategoryItem shelvesetUserCategoryItem = (ShelvesetUserCategoryItem) element;
+			result = shelvesetUserCategoryItem.getParentUser();
 		} else if (element instanceof ShelvesetItem) {
 			ShelvesetItem shelvesetItem = (ShelvesetItem) element;
-			ShelvesetUserItem shelvesetUser = shelvesetItem.getParentUser();
-			if (shelvesetUser != null) {
-				result = shelvesetUser;
+			ShelvesetUserCategoryItem shelvesetUserCategory = shelvesetItem.getParentUserCategory();
+			if (shelvesetUserCategory != null) {
+				result = shelvesetUserCategory;
 			} else {
-				result = shelvesetItem.getParentGroup();
+				ShelvesetUserItem shelvesetUser = shelvesetItem.getParentUser();
+				if (shelvesetUser != null) {
+					result = shelvesetUser;
+				} else {
+					result = shelvesetItem.getParentGroup();
+				}
 			}
 		} else if (element instanceof ShelvesetDiscussionItem) {
 			ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) element;

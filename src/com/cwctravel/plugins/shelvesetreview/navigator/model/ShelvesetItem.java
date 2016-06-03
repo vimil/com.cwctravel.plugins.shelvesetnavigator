@@ -5,14 +5,14 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.ui.progress.UIJob;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.exceptions.ApproveException;
-import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetFileItemsRefreshJob;
+import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetItemsRefreshJob;
+import com.cwctravel.plugins.shelvesetreview.jobs.ui.RefreshShelvesetsJob;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
 import com.cwctravel.plugins.shelvesetreview.util.DiscussionUtil;
 import com.cwctravel.plugins.shelvesetreview.util.ShelvesetUtil;
@@ -23,10 +23,11 @@ import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingChang
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingSet;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 
-public class ShelvesetItem {
+public class ShelvesetItem implements IAdaptable {
 	private final ShelvesetGroupItemContainer parent;
 	private final ShelvesetGroupItem parentGroup;
 	private final ShelvesetUserItem parentUser;
+	private final ShelvesetUserCategoryItem parentUserCategory;
 
 	private Shelveset shelveset;
 
@@ -36,14 +37,20 @@ public class ShelvesetItem {
 	private boolean isChildrenRefreshed;
 
 	public ShelvesetItem(ShelvesetGroupItemContainer shelvesetItemContainer, ShelvesetGroupItem shelvesetGroup, Shelveset shelveset) {
-		this(shelvesetItemContainer, shelvesetGroup, null, shelveset);
+		this(shelvesetItemContainer, shelvesetGroup, null, null, shelveset);
 	}
 
 	public ShelvesetItem(ShelvesetGroupItemContainer shelvesetItemContainer, ShelvesetGroupItem shelvesetGroup, ShelvesetUserItem shelvesetUser,
 			Shelveset shelveset) {
+		this(shelvesetItemContainer, shelvesetGroup, shelvesetUser, null, shelveset);
+	}
+
+	public ShelvesetItem(ShelvesetGroupItemContainer shelvesetItemContainer, ShelvesetGroupItem shelvesetGroup, ShelvesetUserItem shelvesetUser,
+			ShelvesetUserCategoryItem shelvesetUserCategory, Shelveset shelveset) {
 		this.shelveset = shelveset;
 		this.parentGroup = shelvesetGroup;
 		this.parentUser = shelvesetUser;
+		this.parentUserCategory = shelvesetUserCategory;
 		this.parent = shelvesetItemContainer;
 	}
 
@@ -79,12 +86,18 @@ public class ShelvesetItem {
 		return parentUser;
 	}
 
+	public ShelvesetUserCategoryItem getParentUserCategory() {
+		return parentUserCategory;
+	}
+
 	public boolean isChildrenRefreshed() {
 		return isChildrenRefreshed;
 	}
 
 	public void scheduleRefresh() {
-		new ShelvesetFileItemsRefreshJob(this).schedule();
+		List<ShelvesetItem> shelvesetItems = new ArrayList<ShelvesetItem>();
+		shelvesetItems.add(this);
+		new ShelvesetItemsRefreshJob(shelvesetItems).schedule();
 	}
 
 	public void refresh(IProgressMonitor monitor) {
@@ -121,13 +134,7 @@ public class ShelvesetItem {
 
 		monitor.done();
 
-		new UIJob("Shelveset Item Refresh") {
-			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor) {
-				ShelvesetReviewPlugin.getDefault().fireShelvesetItemRefreshed(ShelvesetItem.this);
-				return Status.OK_STATUS;
-			}
-		}.schedule();
+		new RefreshShelvesetsJob(this).schedule();
 	}
 
 	public int hashCode() {
@@ -255,6 +262,27 @@ public class ShelvesetItem {
 
 	public Boolean canUnapprove() {
 		return ShelvesetUtil.canUnapprove(shelveset, parent.getReviewGroupMembers());
+	}
+
+	public boolean isCurrentUserOwner() {
+		return TFSUtil.userIdsSame(TFSUtil.getCurrentUserId(), shelveset.getOwnerName());
+	}
+
+	@Override
+	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
+		if (ShelvesetItem.class.equals(adapter)) {
+			return this;
+		} else if (ShelvesetUserCategoryItem.class.equals(adapter)) {
+			return getParentUserCategory();
+		} else if (ShelvesetUserItem.class.equals(adapter)) {
+			return getParentUser();
+		}
+		if (ShelvesetGroupItem.class.equals(adapter)) {
+			return getParentGroup();
+		} else if (ShelvesetGroupItemContainer.class.equals(adapter)) {
+			return getParent();
+		}
+		return null;
 	}
 
 }

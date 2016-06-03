@@ -20,6 +20,9 @@
                      value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetUserItem">
                </instanceof>
                <instanceof
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetUserCategoryItem">
+               </instanceof>
+               <instanceof
                      value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
                </instanceof>
                <instanceof
@@ -39,7 +42,16 @@
                      value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItem">
                </instanceof>
                <instanceof
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetUserItem">
+               </instanceof>
+               <instanceof
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetUserCategoryItem">
+               </instanceof>
+               <instanceof
                      value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
+               </instanceof>
+               <instanceof
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem">
                </instanceof>
                <instanceof
                      value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem">
@@ -258,7 +270,7 @@
                   variable="selection">
                <and>
                   <count
-                        value="1">
+                        value="+">
                   </count>
                   <iterate>
                      <and>

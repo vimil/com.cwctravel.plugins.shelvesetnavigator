@@ -162,5 +162,4 @@ public class ShelvesetDiscussionItem extends ShelvesetResourceItem {
 		}
 		return result;
 	}
-
 }

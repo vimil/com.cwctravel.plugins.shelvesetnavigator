@@ -43,6 +43,9 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 	public static final String REVIEW_GROUP_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.reviewgroup";
 	public static final String INACTIVE_GROUP_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.inactivegroup";
 	public static final String USER_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.user";
+	public static final String MIXED_USER_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.user.mixed";
+	public static final String UNASSIGNED_SHELVESET_USER_CATEGORY_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.usercategory.unassigned";
+	public static final String PENDING_REVIEW_USER_CATEGORY_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.usercategory.pendingReview";
 	public static final String BUILD_SUCCESSFUL_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.buildsuccessful";
 	public static final String DISCUSSION_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.discussion";
 	public static final String DISCUSSION_OVR_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.ovr.discussion";
@@ -84,6 +87,17 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 		ImageDescriptor userIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/user.png"), null));
 		registry.put(USER_ICON_ID, userIconImage);
 
+		ImageDescriptor mixedUserIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/mixed-user.png"), null));
+		registry.put(MIXED_USER_ICON_ID, mixedUserIconImage);
+
+		ImageDescriptor unassignedUserCategoryImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path(
+				"icons/unassigned-user-category.png"), null));
+		registry.put(UNASSIGNED_SHELVESET_USER_CATEGORY_ICON_ID, unassignedUserCategoryImage);
+
+		ImageDescriptor pendingReviewUserCategoryImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path(
+				"icons/pendingreview-user-category.png"), null));
+		registry.put(PENDING_REVIEW_USER_CATEGORY_ICON_ID, pendingReviewUserCategoryImage);
+
 		ImageDescriptor buildSuccessfulIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle,
 				new Path("icons/build-successful-icon.png"), null));
 		registry.put(BUILD_SUCCESSFUL_ICON_ID, buildSuccessfulIconImage);
@@ -118,6 +132,7 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 		workbench.getActiveWorkbenchWindow().getPartService().addPartListener(reviewCommentAnnnotator);
 		workbench.addWindowListener(reviewCommentAnnnotator);
 		repositoryManager.addListener(reviewCommentAnnnotator);
+		addShelvesetItemRefreshListener(reviewCommentAnnnotator);
 
 		plugin = this;
 	}

@@ -50,7 +50,7 @@ public class DiscussionDialog extends TitleAreaDialog {
 		discussionViewer = createDiscussionViewer(container);
 
 		Tree discussionTree = discussionViewer.getTree();
-		FormData fdDiscussionTree = new FormData(750, 90);
+		FormData fdDiscussionTree = new FormData(900, 200);
 		fdDiscussionTree.top = new FormAttachment(null, 5, SWT.BOTTOM);
 		fdDiscussionTree.left = new FormAttachment(0, 5);
 		fdDiscussionTree.right = new FormAttachment(100, -5);
@@ -68,15 +68,19 @@ public class DiscussionDialog extends TitleAreaDialog {
 		reviewDiscussionTree.setLinesVisible(true);
 		column1.setAlignment(SWT.LEFT);
 		column1.setText("Comment");
-		column1.setWidth(160);
+		column1.setWidth(600);
 		TreeColumn column2 = new TreeColumn(reviewDiscussionTree, SWT.RIGHT);
 		column2.setAlignment(SWT.LEFT);
 		column2.setText("Author");
 		column2.setWidth(100);
 		TreeColumn column3 = new TreeColumn(reviewDiscussionTree, SWT.RIGHT);
 		column3.setAlignment(SWT.LEFT);
-		column3.setText("Last Updated Date");
-		column3.setWidth(35);
+		column3.setText("Line::Column");
+		column3.setWidth(75);
+		TreeColumn column4 = new TreeColumn(reviewDiscussionTree, SWT.RIGHT);
+		column4.setAlignment(SWT.LEFT);
+		column4.setText("Last Updated");
+		column4.setWidth(125);
 
 		discussionViewer.setContentProvider(new DiscussionContentProvider(input, lineNumber, columnNumber));
 		discussionViewer.setLabelProvider(new DiscussionLabelProvider());

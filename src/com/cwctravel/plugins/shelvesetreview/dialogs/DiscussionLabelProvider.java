@@ -42,7 +42,20 @@ public class DiscussionLabelProvider implements ITableLabelProvider {
 			} else if (columnIndex == 1) {
 				result = item.getAuthorDisplayName();
 			} else if (columnIndex == 2) {
-				result = DateUtil.formatDate(item.getLastUpdatedDate());
+				int startLine = item.getStartLine();
+				int startColumn = item.getStartColumn();
+				if (startLine > 0) {
+					if (startColumn > 0) {
+						result = startLine + "::" + startColumn;
+					} else {
+						result = startLine + "";
+					}
+				} else {
+					result = "";
+				}
+
+			} else if (columnIndex == 3) {
+				result = DateUtil.ageAsPrettyString(item.getLastUpdatedDate(), "ago");
 			}
 		}
 		return result;

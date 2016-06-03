@@ -61,7 +61,7 @@ public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
 			}
 		} else if (element instanceof ShelvesetItem) {
 			ShelvesetItem shelvesetItem = (ShelvesetItem) element;
-			if (!shelvesetItem.isInactive() && shelvesetItem.getReviewers().isEmpty()) {
+			if (!shelvesetItem.isInactive() && shelvesetItem.isCurrentUserOwner() && shelvesetItem.getReviewers().isEmpty()) {
 				decoration.addSuffix("[unassigned]");
 			}
 

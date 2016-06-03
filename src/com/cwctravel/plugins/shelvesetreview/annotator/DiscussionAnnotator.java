@@ -14,12 +14,14 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.source.Annotation;
+import org.eclipse.jface.text.source.CompositeRuler;
 import org.eclipse.jface.text.source.IAnnotationModel;
-import org.eclipse.jface.text.source.IVerticalRulerListener;
-import org.eclipse.jface.text.source.VerticalRulerEvent;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.jface.text.source.IVerticalRulerInfo;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.widgets.Canvas;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
@@ -34,7 +36,10 @@ import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
+import com.cwctravel.plugins.shelvesetreview.events.ShelvesetItemRefreshEvent;
 import com.cwctravel.plugins.shelvesetreview.filesystem.TFSFileStore;
+import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetItemRefreshListener;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.DiscussionService;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCommentInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
@@ -42,12 +47,47 @@ import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.Discuss
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadPropertiesInfo;
 import com.cwctravel.plugins.shelvesetreview.util.DateUtil;
 import com.cwctravel.plugins.shelvesetreview.util.DiscussionUtil;
+import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
+import com.cwctravel.plugins.shelvesetreview.util.StringUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.client.common.repository.RepositoryManagerEvent;
 import com.microsoft.tfs.client.common.repository.RepositoryManagerListener;
 import com.microsoft.tfs.core.TFSConnection;
 
-public class DiscussionAnnotator implements RepositoryManagerListener, IWindowListener, IPartListener, IVerticalRulerListener {
+public class DiscussionAnnotator implements RepositoryManagerListener, IWindowListener, IPartListener, IShelvesetItemRefreshListener {
+	private static class AnnotationMouseListener implements MouseListener {
+		private IEditorPart editorPart;
+
+		public AnnotationMouseListener(IEditorPart editorPart) {
+			this.editorPart = editorPart;
+		}
+
+		@Override
+		public void mouseDoubleClick(MouseEvent e) {
+			Object source = e.getSource();
+			if (source != null && source.getClass().getSimpleName().startsWith("AnnotationRulerColumn")) {
+				IVerticalRulerInfo verticalRulerInfo = (IVerticalRulerInfo) editorPart.getAdapter(IVerticalRulerInfo.class);
+				if (verticalRulerInfo instanceof CompositeRuler) {
+					CompositeRuler compositeRuler = (CompositeRuler) verticalRulerInfo;
+					int lineNumber = compositeRuler.toDocumentLineNumber(e.y);
+					if (EditorUtil.getDiscussionAnnotationAtLine(editorPart, lineNumber) != null) {
+						EditorUtil.showDiscussionDialog(editorPart, lineNumber);
+					}
+				}
+			}
+		}
+
+		@Override
+		public void mouseDown(MouseEvent e) {
+
+		}
+
+		@Override
+		public void mouseUp(MouseEvent e) {
+
+		}
+
+	}
 
 	private void annotate(TFSFileStore tfsFileStore, IDocument document, IAnnotationModel annotationModel, IProgressMonitor monitor) {
 		String shelvesetName = tfsFileStore.getShelvesetName();
@@ -103,6 +143,12 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 
 	@Override
 	public void onDefaultRepositoryChanged(RepositoryManagerEvent event) {
+		Display.getDefault().asyncExec(() -> {
+			refreshEditors(null);
+		});
+	}
+
+	private void refreshEditors(ShelvesetItem shelvesetItem) {
 		IWorkbenchWindow[] workbenchWIndows = PlatformUI.getWorkbench().getWorkbenchWindows();
 		if (workbenchWIndows != null) {
 			for (IWorkbenchWindow workbenchWIndow : workbenchWIndows) {
@@ -111,7 +157,42 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 					for (IWorkbenchPage workbenchPage : workbenchPages) {
 						for (IEditorReference editorReference : workbenchPage.getEditorReferences()) {
 							IEditorPart editorPart = editorReference.getEditor(false);
-							annotateEditorPart(editorPart);
+
+							IEditorInput editorInput = editorPart.getEditorInput();
+							if (editorInput instanceof FileStoreEditorInput) {
+								FileStoreEditorInput fileStoreEditorInput = (FileStoreEditorInput) editorInput;
+								try {
+									IFileStore fileStore = EFS.getStore(fileStoreEditorInput.getURI());
+									if (fileStore instanceof TFSFileStore) {
+										TFSFileStore tfsFileStore = (TFSFileStore) fileStore;
+
+										if (shelvesetItem == null
+												|| (StringUtil.equals(shelvesetItem.getName(), tfsFileStore.getShelvesetName()) && StringUtil.equals(
+														shelvesetItem.getOwnerName(), tfsFileStore.getShelvesetOwnerName()))) {
+
+											annotateEditorPart(editorPart);
+										}
+
+										IVerticalRulerInfo verticalRulerInfo = (IVerticalRulerInfo) editorPart.getAdapter(IVerticalRulerInfo.class);
+										if (verticalRulerInfo instanceof CompositeRuler) {
+											CompositeRuler compositeRuler = (CompositeRuler) verticalRulerInfo;
+											Control control = compositeRuler.getControl();
+											if (control instanceof Canvas) {
+												Canvas canvas = (Canvas) control;
+												AnnotationMouseListener discussionAnnotationMouseListener = (AnnotationMouseListener) canvas
+														.getData("discussionAnnotationMouseListener");
+												if (discussionAnnotationMouseListener == null) {
+													discussionAnnotationMouseListener = new AnnotationMouseListener(editorPart);
+													canvas.addMouseListener(discussionAnnotationMouseListener);
+													canvas.setData("discussionAnnotationMouseListener", discussionAnnotationMouseListener);
+												}
+											}
+										}
+									}
+								} catch (CoreException e) {
+									ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
+								}
+							}
 						}
 					}
 				}
@@ -195,21 +276,9 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 	}
 
 	@Override
-	public void annotationSelected(VerticalRulerEvent event) {
-		// TODO Auto-generated method stub
+	public void onShelvesetItemRefreshed(ShelvesetItemRefreshEvent event) {
+		refreshEditors(event.getShelvesetItem());
 
-	}
-
-	@Override
-	public void annotationDefaultSelected(VerticalRulerEvent event) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void annotationContextMenuAboutToShow(VerticalRulerEvent event, Menu menu) {
-		MenuItem menuItem = new MenuItem(menu, SWT.PUSH);
-		menuItem.setText("Edit Discussion");
 	}
 
 }

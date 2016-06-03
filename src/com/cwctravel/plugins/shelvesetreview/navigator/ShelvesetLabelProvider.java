@@ -1,5 +1,7 @@
 package com.cwctravel.plugins.shelvesetreview.navigator;
 
+import java.util.List;
+
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -15,6 +17,7 @@ import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetUserCategoryItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetUserItem;
 import com.microsoft.tfs.client.common.ui.framework.image.ImageHelper;
 
@@ -42,7 +45,20 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 					break;
 			}
 		} else if (element instanceof ShelvesetUserItem) {
-			image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.USER_ICON_ID);
+			ShelvesetUserItem shelvesetUserItem = (ShelvesetUserItem) element;
+			List<ShelvesetUserCategoryItem> userCategoryItems = shelvesetUserItem.getShelvesetUserCategoryItems();
+			int userCategoryCount = userCategoryItems.size();
+			if (userCategoryCount > 1) {
+				image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.MIXED_USER_ICON_ID);
+			} else if (userCategoryCount == 1) {
+				ShelvesetUserCategoryItem shelvesetUserCategoryItem = userCategoryItems.get(0);
+				image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(shelvesetUserCategoryItem.getIconId());
+			} else {
+				image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.USER_ICON_ID);
+			}
+		} else if (element instanceof ShelvesetUserCategoryItem) {
+			ShelvesetUserCategoryItem shelvesetUserCategoryItem = (ShelvesetUserCategoryItem) element;
+			image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(shelvesetUserCategoryItem.getIconId());
 		} else if (element instanceof ShelvesetItem) {
 			ShelvesetItem shelvesetItem = (ShelvesetItem) element;
 			if (shelvesetItem.isInactive()) {
@@ -73,6 +89,9 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 		} else if (element instanceof ShelvesetUserItem) {
 			ShelvesetUserItem shelvesetUserItem = (ShelvesetUserItem) element;
 			result = shelvesetUserItem.getShelvesetOwner();
+		} else if (element instanceof ShelvesetUserCategoryItem) {
+			ShelvesetUserCategoryItem shelvesetUserCategoryItem = (ShelvesetUserCategoryItem) element;
+			result = shelvesetUserCategoryItem.getCategoryName();
 		} else if (element instanceof ShelvesetItem) {
 			ShelvesetItem shelvesetItem = (ShelvesetItem) element;
 			result = shelvesetItem.getName();

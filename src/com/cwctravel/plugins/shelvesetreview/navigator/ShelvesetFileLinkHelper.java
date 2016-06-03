@@ -43,14 +43,14 @@ public class ShelvesetFileLinkHelper implements ILinkHelper {
 						tfsFileStore.getShelvesetOwnerName());
 				if (shelvesetItem != null) {
 					ShelvesetFileItem shelvesetFileItem = shelvesetItem.findFile(tfsFileStore.getPath());
-					List<Object> treePathSgementsList = new ArrayList<Object>();
+					List<Object> treePathSegmentsList = new ArrayList<Object>();
 					ShelvesetResourceItem current = shelvesetFileItem;
 					while (current != null) {
-						treePathSgementsList.add(0, current);
+						treePathSegmentsList.add(0, current);
 						current = current.getParentFolder();
 					}
-					treePathSgementsList.add(0, shelvesetItem);
-					result = new TreeSelection(new TreePath(treePathSgementsList.toArray(new Object[0])));
+					treePathSegmentsList.add(0, shelvesetItem);
+					result = new TreeSelection(new TreePath(treePathSegmentsList.toArray(new Object[0])));
 				}
 
 			}

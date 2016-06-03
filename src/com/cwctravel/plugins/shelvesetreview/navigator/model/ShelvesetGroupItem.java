@@ -4,12 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.runtime.IAdaptable;
+
+import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.util.ShelvesetUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
-public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem> {
+public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdaptable {
 
 	public static final int GROUP_TYPE_USER_SHELVESETS = 0;
 	public static final int GROUP_TYPE_REVIEWER_SHELVESETS = 1;
@@ -94,14 +97,42 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem> {
 						List<Shelveset> userShelvesetList = userShelvesetItemsMap.get(shelvesetOwner);
 						if (userShelvesetList != null) {
 							ShelvesetUserItem shelvesetUserItem = null;
-							List<ShelvesetItem> shelvesetItems = new ArrayList<ShelvesetItem>();
+							List<ShelvesetUserCategoryItem> shelvesetUserCategoryItems = null;
+							ShelvesetUserCategoryItem unassignedShelvesetUserCategoryItem = null;
+							ShelvesetUserCategoryItem pendingReviewShelvesetUserCategoryItem = null;
+							List<ShelvesetItem> unassignedShelvesetItems = null;
+							List<ShelvesetItem> pendingReviewShelvesetItems = null;
+
 							for (Shelveset shelveset : userShelvesetList) {
 								if (ShelvesetUtil.isCurrentUserReviewer(shelveset, reviewGroupMembers)) {
 									if (shelvesetUserItem == null) {
-										shelvesetUserItem = new ShelvesetUserItem(this, shelvesetOwner, shelvesetItems);
+										shelvesetUserCategoryItems = new ArrayList<ShelvesetUserCategoryItem>();
+										shelvesetUserItem = new ShelvesetUserItem(this, shelvesetOwner, shelvesetUserCategoryItems);
+
 										shelvesetUserItems.add(shelvesetUserItem);
 									}
-									shelvesetItems.add(new ShelvesetItem(parent, this, shelvesetUserItem, shelveset));
+
+									if (ShelvesetUtil.isCurrentUserReviewer(shelveset, null)) {
+										if (pendingReviewShelvesetUserCategoryItem == null) {
+											pendingReviewShelvesetItems = new ArrayList<ShelvesetItem>();
+											pendingReviewShelvesetUserCategoryItem = new ShelvesetUserCategoryItem("Pending Review",
+													ShelvesetReviewPlugin.PENDING_REVIEW_USER_CATEGORY_ICON_ID, shelvesetUserItem,
+													pendingReviewShelvesetItems);
+											shelvesetUserCategoryItems.add(pendingReviewShelvesetUserCategoryItem);
+										}
+										pendingReviewShelvesetItems.add(new ShelvesetItem(parent, this, shelvesetUserItem,
+												pendingReviewShelvesetUserCategoryItem, shelveset));
+									} else {
+										if (unassignedShelvesetUserCategoryItem == null) {
+											unassignedShelvesetItems = new ArrayList<ShelvesetItem>();
+											unassignedShelvesetUserCategoryItem = new ShelvesetUserCategoryItem("Unassigned",
+													ShelvesetReviewPlugin.UNASSIGNED_SHELVESET_USER_CATEGORY_ICON_ID, shelvesetUserItem,
+													unassignedShelvesetItems);
+											shelvesetUserCategoryItems.add(unassignedShelvesetUserCategoryItem);
+										}
+										unassignedShelvesetItems.add(new ShelvesetItem(parent, this, shelvesetUserItem,
+												unassignedShelvesetUserCategoryItem, shelveset));
+									}
 								}
 							}
 						}
@@ -131,6 +162,15 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem> {
 			if (shelvesetItem.getName().equals(shelvesetName) && shelvesetItem.getOwnerName().equals(shelvesetOwnerName)) {
 				result = shelvesetItem;
 				break;
+			}
+		}
+
+		if (shelvesetUserItems != null) {
+			for (ShelvesetUserItem shelvesetUserItem : shelvesetUserItems) {
+				result = shelvesetUserItem.findShelvesetItem(shelvesetName, shelvesetOwnerName);
+				if (result != null) {
+					break;
+				}
 			}
 		}
 		return result;
@@ -165,6 +205,16 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem> {
 	@Override
 	public int compareTo(ShelvesetGroupItem o) {
 		return groupType - o.groupType;
+	}
+
+	@Override
+	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
+		if (ShelvesetGroupItem.class.equals(adapter)) {
+			return this;
+		} else if (ShelvesetGroupItemContainer.class.equals(adapter)) {
+			return getParent();
+		}
+		return null;
 	}
 
 }
