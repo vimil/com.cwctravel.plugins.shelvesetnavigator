@@ -15,6 +15,11 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.source.IAnnotationModel;
+import org.eclipse.jface.text.source.IVerticalRulerListener;
+import org.eclipse.jface.text.source.VerticalRulerEvent;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
@@ -42,7 +47,7 @@ import com.microsoft.tfs.client.common.repository.RepositoryManagerEvent;
 import com.microsoft.tfs.client.common.repository.RepositoryManagerListener;
 import com.microsoft.tfs.core.TFSConnection;
 
-public class DiscussionAnnotator implements RepositoryManagerListener, IWindowListener, IPartListener {
+public class DiscussionAnnotator implements RepositoryManagerListener, IWindowListener, IPartListener, IVerticalRulerListener {
 
 	private void annotate(TFSFileStore tfsFileStore, IDocument document, IAnnotationModel annotationModel, IProgressMonitor monitor) {
 		String shelvesetName = tfsFileStore.getShelvesetName();
@@ -131,22 +136,6 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 							IDocumentProvider documentProvider = textEditor.getDocumentProvider();
 							IDocument document = documentProvider.getDocument(editorInput);
 
-							/*
-							 * ISourceViewer sourceViewer =
-							 * getSourceViewerFor(editorPart); if (sourceViewer
-							 * != null) { SourceViewerConfiguration
-							 * sourceViewerConfiguration =
-							 * getSourceViewerConfigurationFor(editorPart); if
-							 * (sourceViewerConfiguration != null) {
-							 * DiscussionAnnotationHover annotationHover = new
-							 * DiscussionAnnotationHover(sourceViewer); String[]
-							 * contentTypes = sourceViewerConfiguration.
-							 * getConfiguredContentTypes(sourceViewer); for
-							 * (String contentType : contentTypes) {
-							 * sourceViewer.setTextHover(annotationHover,
-							 * contentType); } } }
-							 */
-
 							IAnnotationModel annotationModel = documentProvider.getAnnotationModel(editorInput);
 							new Job("Updating Review Comments") {
 								@Override
@@ -163,31 +152,6 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 			}
 		}
 	}
-
-	/*
-	 * private ISourceViewer getSourceViewerFor(IEditorPart editorPart) {
-	 * ISourceViewer result = null; Class<?> clazz = editorPart.getClass();
-	 * outer: while (clazz != null) { Method[] methods =
-	 * clazz.getDeclaredMethods(); for (Method method : methods) { if
-	 * (method.getName().equals("getSourceViewer")) {
-	 * method.setAccessible(true); try { result = (ISourceViewer)
-	 * method.invoke(editorPart); break outer; } catch (IllegalAccessException |
-	 * IllegalArgumentException | InvocationTargetException e) {
-	 * e.printStackTrace(); } } } clazz = clazz.getSuperclass(); } return
-	 * result; }
-	 * 
-	 * private SourceViewerConfiguration
-	 * getSourceViewerConfigurationFor(IEditorPart editorPart) {
-	 * SourceViewerConfiguration result = null; Class<?> clazz =
-	 * editorPart.getClass(); outer: while (clazz != null) { Method[] methods =
-	 * clazz.getDeclaredMethods(); for (Method method : methods) { if
-	 * (method.getName().equals("getSourceViewerConfiguration")) {
-	 * method.setAccessible(true); try { result = (SourceViewerConfiguration)
-	 * method.invoke(editorPart); break outer; } catch (IllegalAccessException |
-	 * IllegalArgumentException | InvocationTargetException e) {
-	 * e.printStackTrace(); } } } clazz = clazz.getSuperclass(); } return
-	 * result; }
-	 */
 
 	@Override
 	public void partActivated(IWorkbenchPart part) {
@@ -228,6 +192,24 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 	@Override
 	public void windowOpened(IWorkbenchWindow window) {
 		window.getPartService().addPartListener(this);
+	}
+
+	@Override
+	public void annotationSelected(VerticalRulerEvent event) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void annotationDefaultSelected(VerticalRulerEvent event) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void annotationContextMenuAboutToShow(VerticalRulerEvent event, Menu menu) {
+		MenuItem menuItem = new MenuItem(menu, SWT.PUSH);
+		menuItem.setText("Edit Discussion");
 	}
 
 }
