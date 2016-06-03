@@ -45,6 +45,9 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 		if (!softRefresh) {
 			VersionControlClient vC = TFSUtil.getVersionControlClient();
 			if (vC != null) {
+				reviewGroupMembers.clear();
+				reviewGroupMembers.addAll(TFSUtil.getReviewGroupMembers());
+
 				userShelvesetItemsMap.clear();
 
 				Shelveset[] shelvesets = vC.queryShelvesets(null, null, null);
@@ -78,14 +81,12 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 					monitor.worked(1);
 				}
 
-				reviewGroupMembers.clear();
-				reviewGroupMembers.addAll(TFSUtil.getReviewGroupMembers());
 			}
 			monitor.done();
 		}
 
 		for (ShelvesetGroupItem shelvesetGroupItem : shelvesetGroupItems) {
-			shelvesetGroupItem.createShelvesetItems(userShelvesetItemsMap);
+			shelvesetGroupItem.createShelvesetItems(userShelvesetItemsMap, reviewGroupMembers);
 		}
 
 		new UIJob("Shelveset Container Refresh") {

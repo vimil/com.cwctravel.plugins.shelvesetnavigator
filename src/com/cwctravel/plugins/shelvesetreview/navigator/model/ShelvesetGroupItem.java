@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.cwctravel.plugins.shelvesetreview.constants.ShelvesetPropertyConstants;
 import com.cwctravel.plugins.shelvesetreview.util.ShelvesetUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
+import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
 public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem> {
 
@@ -69,7 +69,7 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem> {
 		return isChildrenRefreshed;
 	}
 
-	public void createShelvesetItems(Map<String, List<Shelveset>> userShelvesetItemsMap) {
+	public void createShelvesetItems(Map<String, List<Shelveset>> userShelvesetItemsMap, List<TeamFoundationIdentity> reviewGroupMembers) {
 		shelvesetItems.clear();
 		if (userShelvesetItemsMap != null) {
 			String currentUserId = TFSUtil.getCurrentUserId();
@@ -88,8 +88,7 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem> {
 				}
 				case GROUP_TYPE_REVIEWER_SHELVESETS: {
 					shelvesetUserItems = new ArrayList<ShelvesetUserItem>();
-					for (Map.Entry<String, List<Shelveset>> userShelvesetItemsMapEntry : userShelvesetItemsMap
-							.entrySet()) {
+					for (Map.Entry<String, List<Shelveset>> userShelvesetItemsMapEntry : userShelvesetItemsMap.entrySet()) {
 
 						String shelvesetOwner = userShelvesetItemsMapEntry.getKey();
 						List<Shelveset> userShelvesetList = userShelvesetItemsMap.get(shelvesetOwner);
@@ -97,25 +96,12 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem> {
 							ShelvesetUserItem shelvesetUserItem = null;
 							List<ShelvesetItem> shelvesetItems = new ArrayList<ShelvesetItem>();
 							for (Shelveset shelveset : userShelvesetList) {
-								if (!ShelvesetUtil.isShelvesetInactive(shelveset)) {
-									boolean isCurrentUserShelvesetReviewer = false;
-									String[] reviewerIds = ShelvesetUtil.getPropertyAsStringArray(shelveset,
-											ShelvesetPropertyConstants.SHELVESET_PROPERTY_REVIEWER_IDS);
-									for (String reviewerId : reviewerIds) {
-										if (TFSUtil.userIdsSame(currentUserId, reviewerId)) {
-											isCurrentUserShelvesetReviewer = true;
-											break;
-										}
+								if (ShelvesetUtil.isCurrentUserReviewer(shelveset, reviewGroupMembers)) {
+									if (shelvesetUserItem == null) {
+										shelvesetUserItem = new ShelvesetUserItem(this, shelvesetOwner, shelvesetItems);
+										shelvesetUserItems.add(shelvesetUserItem);
 									}
-									if (isCurrentUserShelvesetReviewer) {
-										if (shelvesetUserItem == null) {
-											shelvesetUserItem = new ShelvesetUserItem(this, shelvesetOwner,
-													shelvesetItems);
-											shelvesetUserItems.add(shelvesetUserItem);
-										}
-										shelvesetItems
-												.add(new ShelvesetItem(parent, this, shelvesetUserItem, shelveset));
-									}
+									shelvesetItems.add(new ShelvesetItem(parent, this, shelvesetUserItem, shelveset));
 								}
 							}
 						}
@@ -142,8 +128,7 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem> {
 		ShelvesetItem result = null;
 
 		for (ShelvesetItem shelvesetItem : shelvesetItems) {
-			if (shelvesetItem.getName().equals(shelvesetName)
-					&& shelvesetItem.getOwnerName().equals(shelvesetOwnerName)) {
+			if (shelvesetItem.getName().equals(shelvesetName) && shelvesetItem.getOwnerName().equals(shelvesetOwnerName)) {
 				result = shelvesetItem;
 				break;
 			}

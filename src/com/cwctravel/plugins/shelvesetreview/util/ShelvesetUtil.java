@@ -516,6 +516,12 @@ public class ShelvesetUtil {
 				&& !isApprovedbyUser(shelveset, currentUserId) && !TFSUtil.userIdsSame(currentUserId, shelveset.getOwnerName());
 	}
 
+	public static boolean isCurrentUserReviewer(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) {
+		String currentUserId = TFSUtil.getCurrentUserId();
+		return !isShelvesetInactive(shelveset) && isUserReviewer(currentUserId, shelveset, reviewGroupMembers)
+				&& !TFSUtil.userIdsSame(currentUserId, shelveset.getOwnerName());
+	}
+
 	public static boolean isApprovedbyUser(Shelveset shelveset, String userId) {
 		boolean result = false;
 		String[] approverIds = getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS);
