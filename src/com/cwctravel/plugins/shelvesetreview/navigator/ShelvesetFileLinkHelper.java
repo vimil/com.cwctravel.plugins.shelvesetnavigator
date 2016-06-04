@@ -8,6 +8,9 @@ import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeSelection;
@@ -15,11 +18,14 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.navigator.ILinkHelper;
+import org.eclipse.ui.texteditor.ITextEditor;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.filesystem.TFSFileStore;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
@@ -43,6 +49,7 @@ public class ShelvesetFileLinkHelper implements ILinkHelper {
 						tfsFileStore.getShelvesetOwnerName());
 				if (shelvesetItem != null) {
 					ShelvesetFileItem shelvesetFileItem = shelvesetItem.findFile(tfsFileStore.getPath());
+
 					List<Object> treePathSegmentsList = new ArrayList<Object>();
 					ShelvesetResourceItem current = shelvesetFileItem;
 					while (current != null) {
@@ -50,6 +57,30 @@ public class ShelvesetFileLinkHelper implements ILinkHelper {
 						current = current.getParentFolder();
 					}
 					treePathSegmentsList.add(0, shelvesetItem);
+
+					if (shelvesetFileItem != null) {
+						IEditorPart editorPart = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+						if (editorPart.getEditorInput() == editorInput && editorPart instanceof ITextEditor) {
+							ITextEditor textEditor = (ITextEditor) editorPart;
+							IDocument document = textEditor.getDocumentProvider().getDocument(uriEditorInput);
+							if (document != null) {
+								TextSelection selection = (TextSelection) textEditor.getSelectionProvider().getSelection();
+								try {
+									int startLine = selection.getStartLine();
+									int startCol = selection.getOffset() - document.getLineOffset(startLine);
+									int endLine = selection.getEndLine();
+									int endCol = selection.getOffset() + selection.getLength() - document.getLineOffset(endLine);
+									ShelvesetDiscussionItem shelvesetDiscussionItem = shelvesetFileItem.findDiscussionItem(startLine + 1,
+											startCol + 1, endLine + 1, endCol + 1);
+									if (shelvesetDiscussionItem != null) {
+										treePathSegmentsList.add(shelvesetDiscussionItem);
+									}
+								} catch (BadLocationException e) {
+								}
+							}
+						}
+					}
+
 					result = new TreeSelection(new TreePath(treePathSegmentsList.toArray(new Object[0])));
 				}
 

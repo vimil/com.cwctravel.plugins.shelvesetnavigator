@@ -1,6 +1,8 @@
 package com.cwctravel.plugins.shelvesetreview.util;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
@@ -18,6 +20,9 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorReference;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.texteditor.IDocumentProvider;
@@ -105,6 +110,37 @@ public class EditorUtil {
 				ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
 			}
 		}
+	}
 
+	public static List<IEditorPart> getTFSFileStoreEditors() {
+		List<IEditorPart> result = new ArrayList<IEditorPart>();
+		IWorkbenchWindow[] workbenchWIndows = PlatformUI.getWorkbench().getWorkbenchWindows();
+		if (workbenchWIndows != null) {
+			for (IWorkbenchWindow workbenchWIndow : workbenchWIndows) {
+				IWorkbenchPage[] workbenchPages = workbenchWIndow.getPages();
+				if (workbenchPages != null) {
+					for (IWorkbenchPage workbenchPage : workbenchPages) {
+						for (IEditorReference editorReference : workbenchPage.getEditorReferences()) {
+							IEditorPart editorPart = editorReference.getEditor(true);
+							if (editorPart != null) {
+								IEditorInput editorInput = editorPart.getEditorInput();
+								if (editorInput instanceof FileStoreEditorInput) {
+									FileStoreEditorInput fileStoreEditorInput = (FileStoreEditorInput) editorInput;
+									try {
+										IFileStore fileStore = EFS.getStore(fileStoreEditorInput.getURI());
+										if (fileStore instanceof TFSFileStore) {
+											result.add(editorPart);
+										}
+									} catch (CoreException e) {
+										ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return result;
 	}
 }

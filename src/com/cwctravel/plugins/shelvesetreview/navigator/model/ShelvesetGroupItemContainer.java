@@ -23,6 +23,8 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 	private final List<ShelvesetGroupItem> shelvesetGroupItems;
 	private final List<TeamFoundationIdentity> reviewGroupMembers;
 
+	private boolean initialRefreshComplete;
+
 	public ShelvesetGroupItemContainer() {
 		userShelvesetItemsMap = new HashMap<String, List<Shelveset>>();
 		shelvesetGroupItems = new ArrayList<>();
@@ -80,7 +82,7 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 					userShelvesetItemsMapEntry.setValue(userShelvesetItems);
 					monitor.worked(1);
 				}
-
+				initialRefreshComplete = true;
 			}
 			monitor.done();
 		}
@@ -118,6 +120,10 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 
 		return result;
 
+	}
+
+	public boolean isInitialRefreshComplete() {
+		return initialRefreshComplete;
 	}
 
 	public List<TeamFoundationIdentity> getReviewGroupMembers() {

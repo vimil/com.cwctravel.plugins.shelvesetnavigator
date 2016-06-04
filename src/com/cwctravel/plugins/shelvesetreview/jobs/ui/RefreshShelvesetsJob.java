@@ -1,7 +1,8 @@
 package com.cwctravel.plugins.shelvesetreview.jobs.ui;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -12,17 +13,17 @@ import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 
 public class RefreshShelvesetsJob extends UIJob {
-	private List<ShelvesetItem> shelvesetItems;
+	private Set<ShelvesetItem> shelvesetItems;
 
 	public RefreshShelvesetsJob(ShelvesetItem shelvesetItem) {
 		super("Shelveset Item Refresh");
-		shelvesetItems = new ArrayList<ShelvesetItem>();
+		shelvesetItems = new HashSet<ShelvesetItem>();
 		shelvesetItems.add(shelvesetItem);
 	}
 
-	public RefreshShelvesetsJob(List<ShelvesetItem> shelvesetItems) {
+	public RefreshShelvesetsJob(Collection<ShelvesetItem> shelvesetItems) {
 		super("Shelveset Items Refresh");
-		this.shelvesetItems = shelvesetItems;
+		this.shelvesetItems = new HashSet<>(shelvesetItems);
 	}
 
 	@Override

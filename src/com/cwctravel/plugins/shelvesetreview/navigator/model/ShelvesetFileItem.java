@@ -73,4 +73,25 @@ public class ShelvesetFileItem extends ShelvesetResourceItem {
 		return discussions != null && !discussions.isEmpty();
 	}
 
+	public ShelvesetDiscussionItem findDiscussionItem(int startLine, int startCol, int endLine, int endCol) {
+		ShelvesetDiscussionItem result = null;
+		if (discussions != null) {
+			for (ShelvesetResourceItem item : discussions) {
+				ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) item;
+				int dStartLine = shelvesetDiscussionItem.getStartLine();
+				int dStartColumn = shelvesetDiscussionItem.getStartColumn();
+				int dEndLine = shelvesetDiscussionItem.getEndLine();
+				int dEndColumn = shelvesetDiscussionItem.getEndColumn();
+
+				if (startLine >= dStartLine && endLine <= dEndLine && (startLine != endLine || (startCol >= dStartColumn && endCol <= dEndColumn))) {
+					result = shelvesetDiscussionItem;
+					if (dStartLine == startLine && dStartColumn == startCol && dEndLine == endLine && dEndColumn == endCol) {
+						break;
+					}
+				}
+			}
+		}
+		return result;
+	}
+
 }

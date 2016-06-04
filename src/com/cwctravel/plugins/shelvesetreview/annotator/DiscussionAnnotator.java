@@ -24,13 +24,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IPartListener;
 import org.eclipse.ui.IWindowListener;
-import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
@@ -149,60 +146,21 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 	}
 
 	private void refreshEditors(ShelvesetItem shelvesetItem) {
-		IWorkbenchWindow[] workbenchWIndows = PlatformUI.getWorkbench().getWorkbenchWindows();
-		if (workbenchWIndows != null) {
-			for (IWorkbenchWindow workbenchWIndow : workbenchWIndows) {
-				IWorkbenchPage[] workbenchPages = workbenchWIndow.getPages();
-				if (workbenchPages != null) {
-					for (IWorkbenchPage workbenchPage : workbenchPages) {
-						for (IEditorReference editorReference : workbenchPage.getEditorReferences()) {
-							IEditorPart editorPart = editorReference.getEditor(false);
-
-							IEditorInput editorInput = editorPart.getEditorInput();
-							if (editorInput instanceof FileStoreEditorInput) {
-								FileStoreEditorInput fileStoreEditorInput = (FileStoreEditorInput) editorInput;
-								try {
-									IFileStore fileStore = EFS.getStore(fileStoreEditorInput.getURI());
-									if (fileStore instanceof TFSFileStore) {
-										TFSFileStore tfsFileStore = (TFSFileStore) fileStore;
-
-										if (shelvesetItem == null
-												|| (StringUtil.equals(shelvesetItem.getName(), tfsFileStore.getShelvesetName()) && StringUtil.equals(
-														shelvesetItem.getOwnerName(), tfsFileStore.getShelvesetOwnerName()))) {
-
-											annotateEditorPart(editorPart);
-										}
-
-										IVerticalRulerInfo verticalRulerInfo = (IVerticalRulerInfo) editorPart.getAdapter(IVerticalRulerInfo.class);
-										if (verticalRulerInfo instanceof CompositeRuler) {
-											CompositeRuler compositeRuler = (CompositeRuler) verticalRulerInfo;
-											Control control = compositeRuler.getControl();
-											if (control instanceof Canvas) {
-												Canvas canvas = (Canvas) control;
-												AnnotationMouseListener discussionAnnotationMouseListener = (AnnotationMouseListener) canvas
-														.getData("discussionAnnotationMouseListener");
-												if (discussionAnnotationMouseListener == null) {
-													discussionAnnotationMouseListener = new AnnotationMouseListener(editorPart);
-													canvas.addMouseListener(discussionAnnotationMouseListener);
-													canvas.setData("discussionAnnotationMouseListener", discussionAnnotationMouseListener);
-												}
-											}
-										}
-									}
-								} catch (CoreException e) {
-									ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
-								}
-							}
-						}
-					}
+		List<IEditorPart> tfsFileStoreEditors = EditorUtil.getTFSFileStoreEditors();
+		for (IEditorPart editor : tfsFileStoreEditors) {
+			FileStoreEditorInput editorInput = (FileStoreEditorInput) editor.getEditorInput();
+			try {
+				TFSFileStore tfsFileStore = (TFSFileStore) EFS.getStore(editorInput.getURI());
+				if (shelvesetItem == null || (StringUtil.equals(shelvesetItem.getName(), tfsFileStore.getShelvesetName())
+						&& StringUtil.equals(shelvesetItem.getOwnerName(), tfsFileStore.getShelvesetOwnerName()))) {
+					annotateEditorPart(editor);
 				}
+			} catch (CoreException e) {
+				ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
 			}
 		}
 	}
 
-	/**
-	 * @param editorPart
-	 */
 	private void annotateEditorPart(IEditorPart editorPart) {
 		if (editorPart != null) {
 			IEditorInput editorInput = editorPart.getEditorInput();
@@ -225,6 +183,22 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 									return Status.OK_STATUS;
 								}
 							}.schedule();
+
+							IVerticalRulerInfo verticalRulerInfo = (IVerticalRulerInfo) editorPart.getAdapter(IVerticalRulerInfo.class);
+							if (verticalRulerInfo instanceof CompositeRuler) {
+								CompositeRuler compositeRuler = (CompositeRuler) verticalRulerInfo;
+								Control control = compositeRuler.getControl();
+								if (control instanceof Canvas) {
+									Canvas canvas = (Canvas) control;
+									AnnotationMouseListener discussionAnnotationMouseListener = (AnnotationMouseListener) canvas
+											.getData("discussionAnnotationMouseListener");
+									if (discussionAnnotationMouseListener == null) {
+										discussionAnnotationMouseListener = new AnnotationMouseListener(editorPart);
+										canvas.addMouseListener(discussionAnnotationMouseListener);
+										canvas.setData("discussionAnnotationMouseListener", discussionAnnotationMouseListener);
+									}
+								}
+							}
 						}
 					}
 				} catch (CoreException e) {

@@ -1,6 +1,6 @@
 package com.cwctravel.plugins.shelvesetreview.jobs;
 
-import java.util.List;
+import java.util.Collection;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -11,9 +11,9 @@ import com.cwctravel.plugins.shelvesetreview.jobs.ui.RefreshShelvesetsJob;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 
 public class ShelvesetItemsRefreshJob extends Job {
-	private List<ShelvesetItem> shelvesetItems;
+	private Collection<ShelvesetItem> shelvesetItems;
 
-	public ShelvesetItemsRefreshJob(List<ShelvesetItem> shelvesetItems) {
+	public ShelvesetItemsRefreshJob(Collection<ShelvesetItem> shelvesetItems) {
 		super("Refreshing Shelvesets");
 		this.shelvesetItems = shelvesetItems;
 	}
