@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.EventObject;
 
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnViewerEditor;
@@ -22,6 +23,7 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
@@ -49,12 +51,19 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 		this.lineNumber = lineNumber;
 		this.columnNumber = columnNumber;
 		ShelvesetReviewPlugin.getDefault().addShelvesetItemRefreshListener(this);
+
 	}
 
 	@Override
 	public void create() {
 		super.create();
 		setTitle("Add/Update Discussions");
+
+		Button cancelButton = getButton(IDialogConstants.CANCEL_ID);
+		cancelButton.setText("Close");
+
+		Button okButton = getButton(IDialogConstants.OK_ID);
+		okButton.setVisible(false);
 
 	}
 
@@ -104,9 +113,9 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 
 		discussionGrid.setAutoHeight(true);
 		discussionGrid.setHeaderVisible(false);
+		discussionGrid.setLinesVisible(false);
 		discussionViewer.setContentProvider(new DiscussionContentProvider(path, lineNumber, columnNumber));
 		discussionViewer.setLabelProvider(new DiscussionLabelProvider());
-		discussionViewer.setAutoPreferredHeight(true);
 		discussionViewer.setCellEditors(new CellEditor[] { new TextCellEditor(discussionGrid, SWT.MULTI | SWT.WRAP | SWT.V_SCROLL | SWT.H_SCROLL) });
 		discussionViewer.setCellModifier(new ICellModifier() {
 
