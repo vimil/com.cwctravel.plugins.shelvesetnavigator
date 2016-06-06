@@ -95,9 +95,21 @@ public class ShelvesetItem implements IAdaptable {
 	}
 
 	public void scheduleRefresh() {
+		scheduleRefresh(false);
+	}
+
+	public void scheduleRefresh(boolean waitForCompletion) {
 		List<ShelvesetItem> shelvesetItems = new ArrayList<ShelvesetItem>();
 		shelvesetItems.add(this);
-		new ShelvesetItemsRefreshJob(shelvesetItems).schedule();
+		ShelvesetItemsRefreshJob shelvesetItemsRefreshJob = new ShelvesetItemsRefreshJob(shelvesetItems);
+		shelvesetItemsRefreshJob.schedule();
+		if (waitForCompletion) {
+			try {
+				shelvesetItemsRefreshJob.join();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}
 	}
 
 	public void refresh(IProgressMonitor monitor) {

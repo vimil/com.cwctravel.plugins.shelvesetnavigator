@@ -1,14 +1,17 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.DiscussionService;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionAuthorInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCommentInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadPropertiesInfo;
 import com.cwctravel.plugins.shelvesetreview.util.StringUtil;
+import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 
 public class ShelvesetDiscussionItem extends ShelvesetResourceItem {
 	private final DiscussionThreadInfo discussionThreadInfo;
@@ -36,6 +39,10 @@ public class ShelvesetDiscussionItem extends ShelvesetResourceItem {
 			result = StringUtil.truncateTo(discussionCommentInfo.getContent(), 25);
 		}
 		return result;
+	}
+
+	public String getComment() {
+		return discussionCommentInfo.getContent();
 	}
 
 	@Override
@@ -162,4 +169,28 @@ public class ShelvesetDiscussionItem extends ShelvesetResourceItem {
 		}
 		return result;
 	}
+
+	public String getAuthorName() {
+		String result = null;
+		if (discussionCommentInfo != null) {
+			DiscussionAuthorInfo discussionAuthorInfo = discussionCommentInfo.getAuthor();
+			if (discussionAuthorInfo != null) {
+				result = discussionAuthorInfo.getUniqueName();
+			}
+		}
+		return result;
+	}
+
+	public boolean updateComment(String updatedComment) throws IOException {
+		boolean result = false;
+		String oldContent = discussionCommentInfo.getContent();
+		String newContent = StringUtil.normalizeNewLines(updatedComment);
+		if (!StringUtil.equals(oldContent, newContent)) {
+			discussionCommentInfo.setContent(newContent);
+			DiscussionService.updateShelvesetDiscussionComment(TFSUtil.getTFSConnection(), discussionCommentInfo);
+			result = true;
+		}
+		return result;
+	}
+
 }

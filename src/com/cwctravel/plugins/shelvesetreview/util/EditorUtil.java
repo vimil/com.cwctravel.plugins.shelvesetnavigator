@@ -95,7 +95,8 @@ public class EditorUtil {
 								if (shelvesetFileItem != null) {
 									Display.getDefault().asyncExec(() -> {
 										Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-										DiscussionDialog discussionDialog = new DiscussionDialog(shelvesetFileItem, lineNumber, -1, shell);
+										DiscussionDialog discussionDialog = new DiscussionDialog(shelvesetItem, shelvesetFileItem.getPath(),
+												lineNumber, -1, shell);
 										discussionDialog.create();
 										discussionDialog.open();
 									});

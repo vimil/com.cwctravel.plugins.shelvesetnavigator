@@ -19,7 +19,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.resources,
  org.eclipse.jface.text,
  org.eclipse.ui.workbench,
- org.eclipse.jdt.ui
+ org.eclipse.jdt.ui,
+ org.eclipse.nebula.widgets.grid
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: libs/boon-0.33.jar,

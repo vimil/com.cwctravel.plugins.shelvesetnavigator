@@ -5,7 +5,6 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
-import com.cwctravel.plugins.shelvesetreview.util.DateUtil;
 
 public class DiscussionLabelProvider implements ITableLabelProvider {
 
@@ -38,24 +37,7 @@ public class DiscussionLabelProvider implements ITableLabelProvider {
 		if (element instanceof ShelvesetDiscussionItem) {
 			ShelvesetDiscussionItem item = (ShelvesetDiscussionItem) element;
 			if (columnIndex == 0) {
-				result = item.getName();
-			} else if (columnIndex == 1) {
-				result = item.getAuthorDisplayName();
-			} else if (columnIndex == 2) {
-				int startLine = item.getStartLine();
-				int startColumn = item.getStartColumn();
-				if (startLine > 0) {
-					if (startColumn > 0) {
-						result = startLine + "::" + startColumn;
-					} else {
-						result = startLine + "";
-					}
-				} else {
-					result = "";
-				}
-
-			} else if (columnIndex == 3) {
-				result = DateUtil.ageAsPrettyString(item.getLastUpdatedDate(), "ago");
+				result = item.getComment();
 			}
 		}
 		return result;

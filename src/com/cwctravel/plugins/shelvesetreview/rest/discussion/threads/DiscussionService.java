@@ -19,14 +19,32 @@ import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.Discuss
 import com.cwctravel.plugins.shelvesetreview.util.DateUtil;
 import com.microsoft.tfs.core.TFSConnection;
 import com.microsoft.tfs.core.httpclient.HttpClient;
-import com.microsoft.tfs.core.httpclient.HttpException;
 import com.microsoft.tfs.core.httpclient.NameValuePair;
 import com.microsoft.tfs.core.httpclient.methods.GetMethod;
+import com.microsoft.tfs.core.httpclient.methods.PatchMethod;
+import com.microsoft.tfs.core.httpclient.methods.StringRequestEntity;
 
 public class DiscussionService {
 
-	public static DiscussionInfo getShelvesetDiscussion(TFSConnection tfsConnection, String shelvesetName, String shelvesetOwner)
-			throws HttpException, IOException {
+	public static DiscussionCommentInfo updateShelvesetDiscussionComment(TFSConnection tfsConnection, DiscussionCommentInfo discussionCommentInfo)
+			throws IOException {
+		DiscussionCommentInfo result = null;
+		HttpClient httpClient = tfsConnection.getHTTPClient();
+		String baseURI = tfsConnection.getBaseURI().toString();
+
+		PatchMethod patchMethod = new PatchMethod(baseURI + "/_apis/discussion/threads/" + discussionCommentInfo.getThreadId() + "/comments/"
+				+ discussionCommentInfo.getId() + "?api-version=3.0-preview.1");
+
+		Map<String, Object> jsonRequestBody = toJSONMap(discussionCommentInfo);
+		patchMethod.setRequestEntity(new StringRequestEntity(Boon.toJson(jsonRequestBody), "application/json", "UTF-8"));
+
+		httpClient.executeMethod(patchMethod);
+		String response = patchMethod.getResponseBodyAsString();
+		result = parseDiscussionCommentInfoResponse(response);
+		return result;
+	}
+
+	public static DiscussionInfo getShelvesetDiscussion(TFSConnection tfsConnection, String shelvesetName, String shelvesetOwner) throws IOException {
 		DiscussionInfo result = null;
 		HttpClient httpClient = tfsConnection.getHTTPClient();
 		String baseURI = tfsConnection.getBaseURI().toString();
@@ -42,13 +60,24 @@ public class DiscussionService {
 		httpClient.executeMethod(getMethod);
 
 		String response = getMethod.getResponseBodyAsString();
-		result = parseResponse(response);
+		result = parseDiscussionInfoResponse(response);
 
 		return result;
 	}
 
 	@SuppressWarnings("unchecked")
-	private static DiscussionInfo parseResponse(String response) {
+	private static DiscussionCommentInfo parseDiscussionCommentInfoResponse(String response) {
+		DiscussionCommentInfo result = null;
+		Object responseObj = Boon.fromJson(response);
+		if (responseObj instanceof Map<?, ?>) {
+			Map<String, Object> root = (Map<String, Object>) responseObj;
+			result = toDiscussionCommentInfo(root);
+		}
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static DiscussionInfo parseDiscussionInfoResponse(String response) {
 		DiscussionInfo result = new DiscussionInfo();
 		Object responseObj = Boon.fromJson(response);
 		if (responseObj instanceof Map<?, ?>) {
@@ -79,8 +108,8 @@ public class DiscussionService {
 									discussionCommentInfo.setParentId((int) discussionCommentObj.getOrDefault("parentId", 0));
 									discussionCommentInfo.setThreadId((int) discussionCommentObj.get("threadId"));
 									discussionCommentInfo.setContent((String) discussionCommentObj.get("content"));
-									discussionCommentInfo.setPublishedDate(toCalendar(discussionThreadObj, "publishedDate"));
-									discussionCommentInfo.setLastUpdatedDate(toCalendar(discussionThreadObj, "lastUpdatedDate"));
+									discussionCommentInfo.setPublishedDate(toCalendar(discussionCommentObj, "publishedDate"));
+									discussionCommentInfo.setLastUpdatedDate(toCalendar(discussionCommentObj, "lastUpdatedDate"));
 									discussionCommentInfo.setCanDelete((boolean) discussionCommentObj.get("canDelete"));
 
 									Map<String, ?> discussionAuthorObj = (Map<String, ?>) discussionCommentObj.get("author");
@@ -170,6 +199,67 @@ public class DiscussionService {
 			result.setTime((Date) dateObj);
 		} else if (dateObj instanceof String) {
 			result = DateUtil.toCalendar((String) dateObj);
+		}
+		return result;
+	}
+
+	private static Map<String, Object> toJSONMap(DiscussionCommentInfo discussionCommentInfo) {
+		Map<String, Object> result = null;
+		if (discussionCommentInfo != null) {
+			result = new HashMap<String, Object>();
+			result.put("id", discussionCommentInfo.getId());
+			int parentId = discussionCommentInfo.getParentId();
+			if (parentId > 0) {
+				result.put("parentId", parentId);
+			}
+
+			result.put("threadId", discussionCommentInfo.getThreadId());
+			result.put("author", toJSONMap(discussionCommentInfo.getAuthor()));
+			result.put("content", discussionCommentInfo.getContent());
+			result.put("publishedDate", DateUtil.formatDate(discussionCommentInfo.getPublishedDate(), DateUtil.DATE_FORMAT_1));
+			result.put("lastUpdatedDate", DateUtil.formatDate(discussionCommentInfo.getLastUpdatedDate(), DateUtil.DATE_FORMAT_1));
+			result.put("canDelete", discussionCommentInfo.isCanDelete());
+			result.put("isEditable", true);
+		}
+		return result;
+	}
+
+	private static DiscussionCommentInfo toDiscussionCommentInfo(Map<String, Object> discussionCommentObj) {
+		DiscussionCommentInfo discussionCommentInfo = new DiscussionCommentInfo();
+		discussionCommentInfo.setId((int) discussionCommentObj.get("id"));
+		discussionCommentInfo.setParentId((int) discussionCommentObj.getOrDefault("parentId", 0));
+		discussionCommentInfo.setThreadId((int) discussionCommentObj.get("threadId"));
+		discussionCommentInfo.setContent((String) discussionCommentObj.get("content"));
+		discussionCommentInfo.setPublishedDate(toCalendar(discussionCommentObj, "publishedDate"));
+		discussionCommentInfo.setLastUpdatedDate(toCalendar(discussionCommentObj, "lastUpdatedDate"));
+		discussionCommentInfo.setCanDelete((boolean) discussionCommentObj.get("canDelete"));
+
+		@SuppressWarnings("unchecked")
+		Map<String, ?> discussionAuthorObj = (Map<String, ?>) discussionCommentObj.get("author");
+		if (discussionAuthorObj != null) {
+			String authorId = (String) discussionAuthorObj.get("id");
+			DiscussionAuthorInfo discussionAuthorInfo = new DiscussionAuthorInfo();
+			discussionAuthorInfo.setId(authorId);
+			discussionAuthorInfo.setDisplayName((String) discussionAuthorObj.get("displayName"));
+			discussionAuthorInfo.setUniqueName((String) discussionAuthorObj.get("uniqueName"));
+			discussionAuthorInfo.setUrl((String) discussionAuthorObj.get("url"));
+			discussionAuthorInfo.setImageUrl((String) discussionAuthorObj.get("imageUrl"));
+			discussionCommentInfo.setAuthor(discussionAuthorInfo);
+		}
+
+		return discussionCommentInfo;
+	}
+
+	private static Map<String, Object> toJSONMap(DiscussionAuthorInfo discussionAuthorInfo) {
+		Map<String, Object> result = null;
+		if (discussionAuthorInfo != null) {
+			result = new HashMap<String, Object>();
+			result.put("id", discussionAuthorInfo.getId());
+			result.put("displayName", discussionAuthorInfo.getDisplayName());
+			result.put("uniqueName", discussionAuthorInfo.getUniqueName());
+			result.put("url", discussionAuthorInfo.getUrl());
+			result.put("imageUrl", discussionAuthorInfo.getImageUrl());
+
 		}
 		return result;
 	}

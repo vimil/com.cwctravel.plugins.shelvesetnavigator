@@ -47,14 +47,18 @@ public class DateUtil {
 		return result;
 	}
 
-	public static String formatDate(Calendar date) {
+	public static String formatDate(Calendar date, String pattern) {
 		String result = null;
 		if (date != null) {
-			SimpleDateFormat sDF = new SimpleDateFormat("MM/dd/YYYY hh:mm:ss a");
+			SimpleDateFormat sDF = new SimpleDateFormat(pattern);
 			sDF.setTimeZone(TimeZone.getTimeZone("GMT"));
 			result = sDF.format(date.getTime());
 		}
 		return result;
+	}
+
+	public static String formatDate(Calendar date) {
+		return formatDate(date, "MM/dd/YYYY hh:mm:ss a");
 	}
 
 	public static String ageAsPrettyString(Calendar date) {
@@ -120,7 +124,7 @@ public class DateUtil {
 	}
 
 	public static float differenceInDaysBetweenDates(Calendar date1, Calendar date2) {
-		return (((date1.getTimeInMillis() + date1.getTimeZone().getOffset(date1.getTimeInMillis())) - (date2.getTimeInMillis() + date2.getTimeZone()
-				.getOffset(date2.getTimeInMillis()))) / MILLIS_PER_DAY);
+		return (((date1.getTimeInMillis() + date1.getTimeZone().getOffset(date1.getTimeInMillis()))
+				- (date2.getTimeInMillis() + date2.getTimeZone().getOffset(date2.getTimeInMillis()))) / MILLIS_PER_DAY);
 	}
 }

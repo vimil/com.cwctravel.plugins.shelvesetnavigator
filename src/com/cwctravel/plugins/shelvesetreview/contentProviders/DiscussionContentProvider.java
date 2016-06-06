@@ -6,20 +6,22 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.util.DiscussionUtil;
 
 public class DiscussionContentProvider implements ITreeContentProvider {
+	private String path;
 	private int lineNumber;
 	private int columnNumber;
 
-	public DiscussionContentProvider(Object inputItem, int lineNumber, int columnNumber) {
+	public DiscussionContentProvider(String path, int lineNumber, int columnNumber) {
+		this.path = path;
 		this.lineNumber = lineNumber;
 		this.columnNumber = columnNumber;
 	}
 
 	@Override
 	public void dispose() {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -29,6 +31,10 @@ public class DiscussionContentProvider implements ITreeContentProvider {
 
 	@Override
 	public Object[] getElements(Object inputElement) {
+		if (inputElement instanceof ShelvesetItem && path != null) {
+			ShelvesetItem shelvesetItem = (ShelvesetItem) inputElement;
+			inputElement = shelvesetItem.findFile(path);
+		}
 		List<ShelvesetDiscussionItem> shelvesetDiscussionItems = DiscussionUtil.getTopLevelDiscussionItems(inputElement, lineNumber, columnNumber);
 		return shelvesetDiscussionItems.toArray(new ShelvesetDiscussionItem[0]);
 	}
