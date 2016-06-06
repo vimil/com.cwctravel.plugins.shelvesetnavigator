@@ -259,7 +259,7 @@ public class ShelvesetUtil {
 
 	public static boolean canAssignReviewers(Shelveset shelveset) {
 		boolean isShelvesetInactive = isShelvesetInactive(shelveset);
-		boolean shelvesetBelongsToCurrentUser = TFSUtil.userIdsSame(TFSUtil.getCurrentUserId(), shelveset.getOwnerName());
+		boolean shelvesetBelongsToCurrentUser = TFSUtil.userNamesSame(TFSUtil.getCurrentUserName(), shelveset.getOwnerName());
 		return !isShelvesetInactive && shelvesetBelongsToCurrentUser;
 	}
 
@@ -352,12 +352,12 @@ public class ShelvesetUtil {
 
 		Map<String, Boolean> reviewerIdMap = new HashMap<String, Boolean>();
 		for (String reviewerId : reviewerIds) {
-			reviewerId = TFSUtil.normalizeUserId(reviewerId);
+			reviewerId = TFSUtil.normalizeUserName(reviewerId);
 			reviewerIdMap.put(reviewerId, false);
 		}
 
 		for (String approverId : approverIds) {
-			approverId = TFSUtil.normalizeUserId(approverId);
+			approverId = TFSUtil.normalizeUserName(approverId);
 			if (reviewerIdMap.containsKey(approverId)) {
 				reviewerIdMap.put(approverId, true);
 			}
@@ -464,7 +464,7 @@ public class ShelvesetUtil {
 
 	public static void approve(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) throws ApproveException {
 		if (!isShelvesetInactive(shelveset)) {
-			String currentUserId = TFSUtil.getCurrentUserId();
+			String currentUserId = TFSUtil.getCurrentUserName();
 			if (isUserReviewer(currentUserId, shelveset, reviewGroupMembers)) {
 				String[] approverIds = getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS);
 				Set<String> approverIdsSet = new HashSet<String>();
@@ -490,7 +490,7 @@ public class ShelvesetUtil {
 		List<ReviewerInfo> reviewerInfos = getShelvesetReviewers(shelveset);
 		if (reviewerInfos != null) {
 			for (ReviewerInfo reviewerInfo : reviewerInfos) {
-				if (TFSUtil.userIdsSame(userId, reviewerInfo.getReviewerId())) {
+				if (TFSUtil.userNamesSame(userId, reviewerInfo.getReviewerId())) {
 					result = true;
 					break;
 				}
@@ -499,7 +499,7 @@ public class ShelvesetUtil {
 
 		if (!result && reviewGroupMembers != null) {
 			for (TeamFoundationIdentity reviewGroupMember : reviewGroupMembers) {
-				if (TFSUtil.userIdsSame(userId, reviewGroupMember.getUniqueName())) {
+				if (TFSUtil.userNamesSame(userId, reviewGroupMember.getUniqueName())) {
 					result = true;
 					break;
 				}
@@ -510,24 +510,24 @@ public class ShelvesetUtil {
 	}
 
 	public static boolean canApprove(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) {
-		String currentUserId = TFSUtil.getCurrentUserId();
+		String currentUserId = TFSUtil.getCurrentUserName();
 		return !isShelvesetInactive(shelveset) && isUserReviewer(currentUserId, shelveset, reviewGroupMembers)
-				&& !isApprovedbyUser(shelveset, currentUserId) && !TFSUtil.userIdsSame(currentUserId, shelveset.getOwnerName());
+				&& !isApprovedbyUser(shelveset, currentUserId) && !TFSUtil.userNamesSame(currentUserId, shelveset.getOwnerName());
 	}
 
 	public static boolean isCurrentUserReviewer(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) {
-		String currentUserId = TFSUtil.getCurrentUserId();
+		String currentUserId = TFSUtil.getCurrentUserName();
 		return !isShelvesetInactive(shelveset) && isUserReviewer(currentUserId, shelveset, reviewGroupMembers)
-				&& !TFSUtil.userIdsSame(currentUserId, shelveset.getOwnerName());
+				&& !TFSUtil.userNamesSame(currentUserId, shelveset.getOwnerName());
 	}
 
 	public static boolean isApprovedbyUser(Shelveset shelveset, String userId) {
 		boolean result = false;
 		String[] approverIds = getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS);
 		if (approverIds != null) {
-			String currentUserId = TFSUtil.getCurrentUserId();
+			String currentUserId = TFSUtil.getCurrentUserName();
 			for (String approverId : approverIds) {
-				if (TFSUtil.userIdsSame(currentUserId, approverId)) {
+				if (TFSUtil.userNamesSame(currentUserId, approverId)) {
 					result = true;
 					break;
 				}
@@ -538,7 +538,7 @@ public class ShelvesetUtil {
 
 	public static void unapprove(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) throws ApproveException {
 		if (!isShelvesetInactive(shelveset)) {
-			String currentUserId = TFSUtil.getCurrentUserId();
+			String currentUserId = TFSUtil.getCurrentUserName();
 			if (isUserReviewer(currentUserId, shelveset, reviewGroupMembers)) {
 				String[] approverIds = getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS);
 				Set<String> approverIdsSet = new HashSet<String>();
@@ -559,9 +559,9 @@ public class ShelvesetUtil {
 	}
 
 	public static Boolean canUnapprove(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) {
-		String currentUserId = TFSUtil.getCurrentUserId();
+		String currentUserId = TFSUtil.getCurrentUserName();
 		return !isShelvesetInactive(shelveset) && isUserReviewer(currentUserId, shelveset, reviewGroupMembers)
-				&& isApprovedbyUser(shelveset, currentUserId) && !TFSUtil.userIdsSame(currentUserId, shelveset.getOwnerName());
+				&& isApprovedbyUser(shelveset, currentUserId) && !TFSUtil.userNamesSame(currentUserId, shelveset.getOwnerName());
 
 	}
 }

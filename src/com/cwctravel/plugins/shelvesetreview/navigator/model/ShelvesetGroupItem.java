@@ -75,7 +75,7 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 	public void createShelvesetItems(Map<String, List<Shelveset>> userShelvesetItemsMap, List<TeamFoundationIdentity> reviewGroupMembers) {
 		shelvesetItems.clear();
 		if (userShelvesetItemsMap != null) {
-			String currentUserId = TFSUtil.getCurrentUserId();
+			String currentUserId = TFSUtil.getCurrentUserName();
 			switch (groupType) {
 				case GROUP_TYPE_USER_SHELVESETS: {
 					shelvesetItems = new ArrayList<ShelvesetItem>();

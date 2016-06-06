@@ -16,12 +16,12 @@ import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.Discuss
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadPropertiesInfo;
+import com.cwctravel.plugins.shelvesetreview.rest.httpmethods.PatchMethod;
 import com.cwctravel.plugins.shelvesetreview.util.DateUtil;
 import com.microsoft.tfs.core.TFSConnection;
 import com.microsoft.tfs.core.httpclient.HttpClient;
 import com.microsoft.tfs.core.httpclient.NameValuePair;
 import com.microsoft.tfs.core.httpclient.methods.GetMethod;
-import com.microsoft.tfs.core.httpclient.methods.PatchMethod;
 import com.microsoft.tfs.core.httpclient.methods.StringRequestEntity;
 
 public class DiscussionService {
@@ -117,13 +117,7 @@ public class DiscussionService {
 										String authorId = (String) discussionAuthorObj.get("id");
 										DiscussionAuthorInfo discussionAuthorInfo = discussionAuthorsMap.get(authorId);
 										if (discussionAuthorInfo == null) {
-											discussionAuthorInfo = new DiscussionAuthorInfo();
-											discussionAuthorInfo.setId(authorId);
-											discussionAuthorInfo.setDisplayName((String) discussionAuthorObj.get("displayName"));
-											discussionAuthorInfo.setUniqueName((String) discussionAuthorObj.get("uniqueName"));
-											discussionAuthorInfo.setUrl((String) discussionAuthorObj.get("url"));
-											discussionAuthorInfo.setImageUrl((String) discussionAuthorObj.get("imageUrl"));
-											discussionAuthorsMap.put(authorId, discussionAuthorInfo);
+											discussionAuthorInfo = toDiscussionAuthorInfo(discussionAuthorObj);
 										}
 										discussionCommentInfo.setAuthor(discussionAuthorInfo);
 									}
@@ -236,18 +230,23 @@ public class DiscussionService {
 
 		@SuppressWarnings("unchecked")
 		Map<String, ?> discussionAuthorObj = (Map<String, ?>) discussionCommentObj.get("author");
+		DiscussionAuthorInfo discussionAuthorInfo = toDiscussionAuthorInfo(discussionAuthorObj);
+		discussionCommentInfo.setAuthor(discussionAuthorInfo);
+		return discussionCommentInfo;
+	}
+
+	private static DiscussionAuthorInfo toDiscussionAuthorInfo(Map<String, ?> discussionAuthorObj) {
+		DiscussionAuthorInfo result = null;
 		if (discussionAuthorObj != null) {
 			String authorId = (String) discussionAuthorObj.get("id");
-			DiscussionAuthorInfo discussionAuthorInfo = new DiscussionAuthorInfo();
-			discussionAuthorInfo.setId(authorId);
-			discussionAuthorInfo.setDisplayName((String) discussionAuthorObj.get("displayName"));
-			discussionAuthorInfo.setUniqueName((String) discussionAuthorObj.get("uniqueName"));
-			discussionAuthorInfo.setUrl((String) discussionAuthorObj.get("url"));
-			discussionAuthorInfo.setImageUrl((String) discussionAuthorObj.get("imageUrl"));
-			discussionCommentInfo.setAuthor(discussionAuthorInfo);
+			result = new DiscussionAuthorInfo();
+			result.setId(authorId);
+			result.setDisplayName((String) discussionAuthorObj.get("displayName"));
+			result.setUniqueName((String) discussionAuthorObj.get("uniqueName"));
+			result.setUrl((String) discussionAuthorObj.get("url"));
+			result.setImageUrl((String) discussionAuthorObj.get("imageUrl"));
 		}
-
-		return discussionCommentInfo;
+		return result;
 	}
 
 	private static Map<String, Object> toJSONMap(DiscussionAuthorInfo discussionAuthorInfo) {

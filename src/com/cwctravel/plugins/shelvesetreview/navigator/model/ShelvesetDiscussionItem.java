@@ -170,6 +170,17 @@ public class ShelvesetDiscussionItem extends ShelvesetResourceItem {
 		return result;
 	}
 
+	public String getAuthorId() {
+		String result = null;
+		if (discussionCommentInfo != null) {
+			DiscussionAuthorInfo discussionAuthorInfo = discussionCommentInfo.getAuthor();
+			if (discussionAuthorInfo != null) {
+				result = discussionAuthorInfo.getId();
+			}
+		}
+		return result;
+	}
+
 	public String getAuthorName() {
 		String result = null;
 		if (discussionCommentInfo != null) {

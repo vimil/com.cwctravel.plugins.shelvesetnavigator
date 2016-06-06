@@ -113,7 +113,7 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 
 	public boolean removeShelveset(Shelveset shelveset) {
 		boolean result = false;
-		List<Shelveset> shelvesets = userShelvesetItemsMap.get(TFSUtil.getCurrentUserId());
+		List<Shelveset> shelvesets = userShelvesetItemsMap.get(TFSUtil.getCurrentUserName());
 		if (shelvesets != null) {
 			result = shelvesets.remove(shelveset);
 		}

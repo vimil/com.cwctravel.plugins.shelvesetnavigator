@@ -48,9 +48,14 @@ public class TFSUtil {
 		return userIdentity.getDisplayName();
 	}
 
-	public static String getCurrentUserId() {
+	public static String getCurrentUserName() {
 		final TeamFoundationIdentity userIdentity = getVersionControlClient().getConnection().getAuthorizedIdentity();
 		return userIdentity.getUniqueName();
+	}
+
+	public static String getCurrentUserId() {
+		final TeamFoundationIdentity userIdentity = getVersionControlClient().getConnection().getAuthorizedIdentity();
+		return userIdentity.getTeamFoundationID().toString();
 	}
 
 	public static URI encodeURI(String path, String shelvesetName, String shelvesetOwnerName, String downloadURL) {
@@ -91,31 +96,31 @@ public class TFSUtil {
 		return result;
 	}
 
-	public static boolean userIdsSame(String userId1, String userId2) {
-		if (userId1 == userId2) {
+	public static boolean userNamesSame(String username1, String username2) {
+		if (username1 == username2) {
 			return true;
 		}
-		if (userId1 == null) {
+		if (username1 == null) {
 			return false;
 		}
 
-		if (userId2 == null) {
+		if (username2 == null) {
 			return false;
 		}
 
-		if (userId1.equals(userId2)) {
+		if (username1.equals(username2)) {
 			return true;
 		}
 
-		String[] userId1Parts = userId1.split("\\\\");
-		String[] userId2Parts = userId2.split("\\\\");
+		String[] userId1Parts = username1.split("\\\\");
+		String[] userId2Parts = username2.split("\\\\");
 
 		String currentDomain = System.getenv("userdomain");
 
 		String domain1 = currentDomain;
 		if (userId1Parts.length == 2) {
 			domain1 = userId1Parts[0];
-			userId1 = userId1Parts[1];
+			username1 = userId1Parts[1];
 		} else {
 			domain1 = currentDomain;
 		}
@@ -123,21 +128,21 @@ public class TFSUtil {
 		String domain2 = currentDomain;
 		if (userId2Parts.length == 2) {
 			domain2 = userId2Parts[0];
-			userId2 = userId2Parts[1];
+			username2 = userId2Parts[1];
 		}
 
-		return domain1.equalsIgnoreCase(domain2) && userId1.equalsIgnoreCase(userId2);
+		return domain1.equalsIgnoreCase(domain2) && username1.equalsIgnoreCase(username2);
 	}
 
-	public static String findUserId(String userId) {
+	public static String findUserName(String username) {
 		String result = null;
-		if (userId != null && !userId.isEmpty()) {
+		if (username != null && !username.isEmpty()) {
 			TFSConnection tfsConnection = getTFSConnection();
 			if (tfsConnection != null) {
 				IIdentityManagementService2 identitySvc = (IIdentityManagementService2) tfsConnection.getClient(IIdentityManagementService2.class);
 
 				if (identitySvc != null) {
-					TeamFoundationIdentity teamFoundationIdentity = identitySvc.readIdentity(IdentitySearchFactor.GENERAL, userId,
+					TeamFoundationIdentity teamFoundationIdentity = identitySvc.readIdentity(IdentitySearchFactor.GENERAL, username,
 							MembershipQuery.DIRECT, ReadIdentityOptions.NONE);
 					if (teamFoundationIdentity != null && teamFoundationIdentity.isActive() && !teamFoundationIdentity.isContainer()) {
 						result = teamFoundationIdentity.getUniqueName();
@@ -175,7 +180,7 @@ public class TFSUtil {
 		return result;
 	}
 
-	public static String normalizeUserId(String userId) {
+	public static String normalizeUserName(String userId) {
 		String result = userId;
 		if (result != null) {
 			String[] userIdParts = userId.split("\\\\");

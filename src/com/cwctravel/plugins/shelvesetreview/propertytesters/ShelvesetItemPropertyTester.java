@@ -17,7 +17,7 @@ public class ShelvesetItemPropertyTester extends PropertyTester {
 			} else if ("canAssignReviewers".equals(property)) {
 				result = shelvesetItem.canAssignReviewers() == (Boolean) expectedValue;
 			} else if ("belongsToCurrentUser".equals(property)) {
-				result = TFSUtil.userIdsSame(TFSUtil.getCurrentUserId(), shelvesetItem.getOwnerName()) == (Boolean) expectedValue;
+				result = TFSUtil.userNamesSame(TFSUtil.getCurrentUserName(), shelvesetItem.getOwnerName()) == (Boolean) expectedValue;
 			} else if ("canApprove".equals(property)) {
 				result = shelvesetItem.canApprove() == (Boolean) expectedValue;
 			} else if ("canUnapprove".equals(property)) {

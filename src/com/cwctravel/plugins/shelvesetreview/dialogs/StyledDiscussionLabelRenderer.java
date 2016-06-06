@@ -2,10 +2,14 @@ package com.cwctravel.plugins.shelvesetreview.dialogs;
 
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.StyledString.Styler;
+import org.eclipse.nebula.widgets.grid.Grid;
 import org.eclipse.nebula.widgets.grid.GridItem;
 import org.eclipse.nebula.widgets.grid.internal.DefaultCellRenderer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.TextLayout;
@@ -24,8 +28,10 @@ public class StyledDiscussionLabelRenderer extends DefaultCellRenderer {
 	private Font boldFont;
 	private Font plainFont;
 	private Font italicFont;
+	private Color selectionColor;
+	private Grid grid;
 
-	public StyledDiscussionLabelRenderer() {
+	public StyledDiscussionLabelRenderer(Grid grid) {
 		display = Display.getCurrent();
 		plainFont = display.getSystemFont();
 		FontData[] boldFontData = getModifiedFontData(plainFont.getFontData(), SWT.BOLD);
@@ -60,6 +66,23 @@ public class StyledDiscussionLabelRenderer extends DefaultCellRenderer {
 				textStyle.font = plainFont;
 			}
 		};
+
+		selectionColor = new Color(display, 255, 255, 128);
+
+		this.grid = grid;
+		this.grid.addDisposeListener(new DisposeListener() {
+
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				selectionColor.dispose();
+				boldFont.dispose();
+				italicFont.dispose();
+			}
+		});
+	}
+
+	protected Color getSelectionBackground() {
+		return selectionColor;
 	}
 
 	protected void updateTextLayout(GridItem gridItem, TextLayout textLayout) {

@@ -76,7 +76,7 @@ public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
 				decoration.addSuffix(" [" + DateUtil.ageAsPrettyString(shelvesetItem.getCreationDate()) + "]");
 			}
 
-			if (shelvesetItem.isApprovedByUser(TFSUtil.getCurrentUserId())) {
+			if (shelvesetItem.isApprovedByUser(TFSUtil.getCurrentUserName())) {
 				ImageDescriptor approvedImageDescriptor = ShelvesetReviewPlugin.getDefault().getImageRegistry()
 						.getDescriptor(ShelvesetReviewPlugin.APPROVED_OVR_ICON_ID);
 				decoration.addOverlay(approvedImageDescriptor);

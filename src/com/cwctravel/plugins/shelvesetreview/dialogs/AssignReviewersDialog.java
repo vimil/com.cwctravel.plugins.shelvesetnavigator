@@ -271,8 +271,8 @@ public class AssignReviewersDialog extends TitleAreaDialog {
 
 	private boolean validateUserId(String reviewerId) {
 		boolean result = false;
-		if (TFSUtil.findUserId(reviewerId) != null) {
-			if (!TFSUtil.userIdsSame(reviewerId, TFSUtil.getCurrentUserId())) {
+		if (TFSUtil.findUserName(reviewerId) != null) {
+			if (!TFSUtil.userNamesSame(reviewerId, TFSUtil.getCurrentUserName())) {
 				ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer
 						.getContentProvider();
 				if (!reviewerContentProvider.reviewerIdExists(reviewerId)) {

@@ -34,6 +34,7 @@ import com.cwctravel.plugins.shelvesetreview.events.ShelvesetItemRefreshEvent;
 import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetItemRefreshListener;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
+import com.cwctravel.plugins.shelvesetreview.util.StringUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 
 public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemRefreshListener {
@@ -109,7 +110,7 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 		gridCommentColumn.setWidth(900);
 		gridCommentColumn.setText("Comment");
 		gridCommentColumn.setTree(true);
-		gridCommentColumn.setCellRenderer(new StyledDiscussionLabelRenderer());
+		gridCommentColumn.setCellRenderer(new StyledDiscussionLabelRenderer(discussionGrid));
 
 		discussionGrid.setAutoHeight(true);
 		discussionGrid.setHeaderVisible(false);
@@ -125,7 +126,7 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 				Object data = gridItem.getData();
 				if ("comment".equals(property) && data instanceof ShelvesetDiscussionItem) {
 					ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) data;
-					boolean isCurrentUserAuthor = TFSUtil.userIdsSame(shelvesetDiscussionItem.getAuthorName(), TFSUtil.getCurrentUserId());
+					boolean isCurrentUserAuthor = StringUtil.equals(shelvesetDiscussionItem.getAuthorId(), TFSUtil.getCurrentUserId());
 					if (isCurrentUserAuthor) {
 						try {
 							if (shelvesetDiscussionItem.updateComment((String) value)) {
@@ -154,7 +155,7 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 				boolean result = false;
 				if ("comment".equals(property) && element instanceof ShelvesetDiscussionItem) {
 					ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) element;
-					result = TFSUtil.userIdsSame(shelvesetDiscussionItem.getAuthorName(), TFSUtil.getCurrentUserId());
+					result = StringUtil.equals(shelvesetDiscussionItem.getAuthorId(), TFSUtil.getCurrentUserId());
 				}
 				return result;
 			}

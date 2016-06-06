@@ -277,7 +277,7 @@ public class ShelvesetItem implements IAdaptable {
 	}
 
 	public boolean isCurrentUserOwner() {
-		return TFSUtil.userIdsSame(TFSUtil.getCurrentUserId(), shelveset.getOwnerName());
+		return TFSUtil.userNamesSame(TFSUtil.getCurrentUserName(), shelveset.getOwnerName());
 	}
 
 	@Override
