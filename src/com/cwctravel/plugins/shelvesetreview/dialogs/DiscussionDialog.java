@@ -97,6 +97,34 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 		fdDiscussionTree.left = new FormAttachment(0, 5);
 		fdDiscussionTree.right = new FormAttachment(100, -5);
 		discussionTree.setLayoutData(fdDiscussionTree);
+
+		Button editButton = new Button(container, SWT.PUSH);
+		editButton.setText("Edit");
+		FormData fdEditButton = new FormData(convertWidthInCharsToPixels(18), 25);
+		fdEditButton.top = new FormAttachment(discussionTree, 5, SWT.BOTTOM);
+		fdEditButton.left = new FormAttachment(0, 5);
+		editButton.setLayoutData(fdEditButton);
+
+		Button newDiscussionButton = new Button(container, SWT.PUSH);
+		newDiscussionButton.setText("New Discussion...");
+		FormData fdNewDiscussionButton = new FormData(convertWidthInCharsToPixels(18), 25);
+		fdNewDiscussionButton.top = new FormAttachment(discussionTree, 5, SWT.BOTTOM);
+		fdNewDiscussionButton.left = new FormAttachment(editButton, 10, SWT.RIGHT);
+		newDiscussionButton.setLayoutData(fdNewDiscussionButton);
+
+		Button replyButton = new Button(container, SWT.PUSH);
+		replyButton.setText("Reply...");
+		FormData fdReplyButton = new FormData(convertWidthInCharsToPixels(18), 25);
+		fdReplyButton.top = new FormAttachment(discussionTree, 5, SWT.BOTTOM);
+		fdReplyButton.left = new FormAttachment(newDiscussionButton, 10, SWT.RIGHT);
+		replyButton.setLayoutData(fdReplyButton);
+
+		Button deleteButton = new Button(container, SWT.PUSH);
+		deleteButton.setText("Delete...");
+		FormData fdDeleteButton = new FormData(convertWidthInCharsToPixels(18), 25);
+		fdDeleteButton.top = new FormAttachment(discussionTree, 5, SWT.BOTTOM);
+		fdDeleteButton.left = new FormAttachment(replyButton, 10, SWT.RIGHT);
+		deleteButton.setLayoutData(fdDeleteButton);
 	}
 
 	private GridTreeViewer createDiscussionViewer(Composite parent) {
@@ -107,7 +135,7 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 
 		GridViewerColumn gridViewerCommentColumn = new GridViewerColumn(discussionViewer, SWT.NONE);
 		GridColumn gridCommentColumn = gridViewerCommentColumn.getColumn();
-		gridCommentColumn.setWidth(900);
+		gridCommentColumn.setWidth(895);
 		gridCommentColumn.setText("Comment");
 		gridCommentColumn.setTree(true);
 		gridCommentColumn.setCellRenderer(new StyledDiscussionLabelRenderer(discussionGrid));

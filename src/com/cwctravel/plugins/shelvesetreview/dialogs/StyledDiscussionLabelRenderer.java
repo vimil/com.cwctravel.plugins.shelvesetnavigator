@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Display;
 
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
 import com.cwctravel.plugins.shelvesetreview.util.DateUtil;
+import com.cwctravel.plugins.shelvesetreview.util.RenderUtil;
 
 @SuppressWarnings("restriction")
 public class StyledDiscussionLabelRenderer extends DefaultCellRenderer {
@@ -34,10 +35,10 @@ public class StyledDiscussionLabelRenderer extends DefaultCellRenderer {
 	public StyledDiscussionLabelRenderer(Grid grid) {
 		display = Display.getCurrent();
 		plainFont = display.getSystemFont();
-		FontData[] boldFontData = getModifiedFontData(plainFont.getFontData(), SWT.BOLD);
+		FontData[] boldFontData = RenderUtil.getModifiedFontData(plainFont.getFontData(), SWT.BOLD);
 		boldFont = new Font(display, boldFontData);
 
-		FontData[] italicFontData = getModifiedFontData(plainFont.getFontData(), SWT.ITALIC);
+		FontData[] italicFontData = RenderUtil.getModifiedFontData(plainFont.getFontData(), SWT.ITALIC);
 		italicFont = new Font(display, italicFontData);
 
 		boldStyler = new Styler() {
@@ -79,6 +80,7 @@ public class StyledDiscussionLabelRenderer extends DefaultCellRenderer {
 				italicFont.dispose();
 			}
 		});
+
 	}
 
 	protected Color getSelectionBackground() {
@@ -112,15 +114,6 @@ public class StyledDiscussionLabelRenderer extends DefaultCellRenderer {
 			}
 		}
 		return result;
-	}
-
-	private static FontData[] getModifiedFontData(FontData[] originalData, int additionalStyle) {
-		FontData[] styleData = new FontData[originalData.length];
-		for (int i = 0; i < styleData.length; i++) {
-			FontData base = originalData[i];
-			styleData[i] = new FontData(base.getName(), base.getHeight(), base.getStyle() | additionalStyle);
-		}
-		return styleData;
 	}
 
 	public boolean isWordWrap() {
