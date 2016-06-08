@@ -64,7 +64,7 @@ public class ShelvesetPropertyPage extends PropertyPage {
 		fdShelvesetOwnerNameTitleLabel.left = new FormAttachment(0, 10);
 		shelvesetOwnerNameTitleLabel.setLayoutData(fdShelvesetOwnerNameTitleLabel);
 
-		Label shelvesetOwnerNameLabel = new Label(parent, SWT.NONE);
+		Text shelvesetOwnerNameLabel = new Text(parent, SWT.WRAP | SWT.READ_ONLY);
 		shelvesetOwnerNameLabel.setText(shelvesetItem.getOwnerName());
 		FormData fdShelvesetOwnerNameLabel = new FormData(convertWidthInCharsToPixels(50), convertHeightInCharsToPixels(1));
 		fdShelvesetOwnerNameLabel.top = new FormAttachment(shelvesetNameLabel, 3, SWT.BOTTOM);
@@ -83,7 +83,7 @@ public class ShelvesetPropertyPage extends PropertyPage {
 		fdShelvesetCommentsTitleLabel.left = new FormAttachment(0, 10);
 		shelvesetCommentsTitleLabel.setLayoutData(fdShelvesetCommentsTitleLabel);
 
-		Label shelvesetCommentsLabel = new Label(parent, SWT.NONE);
+		Text shelvesetCommentsLabel = new Text(parent, SWT.WRAP | SWT.READ_ONLY);
 
 		shelvesetCommentsLabel.setText(comment);
 		FormData fdShelvesetCommentsLabel = new FormData(convertWidthInCharsToPixels(50), convertHeightInCharsToPixels(1));
@@ -103,7 +103,7 @@ public class ShelvesetPropertyPage extends PropertyPage {
 		fdShelvesetBuildIdTitleLabel.left = new FormAttachment(0, 10);
 		shelvesetBuildIdTitleLabel.setLayoutData(fdShelvesetBuildIdTitleLabel);
 
-		Label shelvesetBuildIdLabel = new Label(parent, SWT.NONE);
+		Text shelvesetBuildIdLabel = new Text(parent, SWT.WRAP | SWT.READ_ONLY);
 		shelvesetBuildIdLabel.setText(buildId);
 		FormData fdShelvesetBuildIdLabel = new FormData(convertWidthInCharsToPixels(50), convertHeightInCharsToPixels(1));
 		fdShelvesetBuildIdLabel.top = new FormAttachment(shelvesetCommentsLabel, 3, SWT.BOTTOM);
@@ -122,7 +122,7 @@ public class ShelvesetPropertyPage extends PropertyPage {
 		fdShelvesetChangesetNumberTitleLabel.left = new FormAttachment(0, 10);
 		shelvesetChangesetNumberTitleLabel.setLayoutData(fdShelvesetChangesetNumberTitleLabel);
 
-		Label shelvesetChangesetNumberLabel = new Label(parent, SWT.NONE);
+		Text shelvesetChangesetNumberLabel = new Text(parent, SWT.WRAP | SWT.READ_ONLY);
 		shelvesetChangesetNumberLabel.setText(changesetNumber);
 		FormData fdShelvesetChangesetNumberLabel = new FormData(convertWidthInCharsToPixels(50), convertHeightInCharsToPixels(1));
 		fdShelvesetChangesetNumberLabel.top = new FormAttachment(shelvesetBuildIdLabel, 3, SWT.BOTTOM);
@@ -138,7 +138,7 @@ public class ShelvesetPropertyPage extends PropertyPage {
 		fdShelvesetStatusTitleLabel.left = new FormAttachment(0, 10);
 		shelvesetStatusTitleLabel.setLayoutData(fdShelvesetStatusTitleLabel);
 
-		Label shelvesetStatusLabel = new Label(parent, SWT.NONE);
+		Text shelvesetStatusLabel = new Text(parent, SWT.WRAP | SWT.READ_ONLY);
 		shelvesetStatusLabel.setText(shelvesetStatus);
 		FormData fdShelvesetStatusLabel = new FormData(convertWidthInCharsToPixels(50), convertHeightInCharsToPixels(1));
 		fdShelvesetStatusLabel.top = new FormAttachment(shelvesetChangesetNumberLabel, 3, SWT.BOTTOM);

@@ -107,7 +107,7 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 
 		Button newDiscussionButton = new Button(container, SWT.PUSH);
 		newDiscussionButton.setText("New Discussion...");
-		FormData fdNewDiscussionButton = new FormData(convertWidthInCharsToPixels(18), 25);
+		FormData fdNewDiscussionButton = new FormData(convertWidthInCharsToPixels(20), 25);
 		fdNewDiscussionButton.top = new FormAttachment(discussionTree, 5, SWT.BOTTOM);
 		fdNewDiscussionButton.left = new FormAttachment(editButton, 10, SWT.RIGHT);
 		newDiscussionButton.setLayoutData(fdNewDiscussionButton);
