@@ -11,7 +11,10 @@ import org.eclipse.jface.viewers.ColumnViewerEditor;
 import org.eclipse.jface.viewers.ColumnViewerEditorActivationEvent;
 import org.eclipse.jface.viewers.ColumnViewerEditorActivationStrategy;
 import org.eclipse.jface.viewers.ICellModifier;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TextCellEditor;
+import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.nebula.jface.gridviewer.GridTreeViewer;
 import org.eclipse.nebula.jface.gridviewer.GridViewerColumn;
 import org.eclipse.nebula.jface.gridviewer.GridViewerEditor;
@@ -26,7 +29,10 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.contentProviders.DiscussionContentProvider;
@@ -34,8 +40,6 @@ import com.cwctravel.plugins.shelvesetreview.events.ShelvesetItemRefreshEvent;
 import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetItemRefreshListener;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
-import com.cwctravel.plugins.shelvesetreview.util.StringUtil;
-import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 
 public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemRefreshListener {
 	private ShelvesetItem input;
@@ -44,6 +48,10 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 	private int columnNumber;
 
 	private GridTreeViewer discussionViewer;
+	private Button editButton;
+	private Button newDiscussionButton;
+	private Button replyButton;
+	private Button deleteButton;
 
 	public DiscussionDialog(ShelvesetItem input, String path, int lineNumber, int columnNumber, Shell parentShell) {
 		super(parentShell);
@@ -98,33 +106,74 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 		fdDiscussionTree.right = new FormAttachment(100, -5);
 		discussionTree.setLayoutData(fdDiscussionTree);
 
-		Button editButton = new Button(container, SWT.PUSH);
-		editButton.setText("Edit");
+		editButton = createEditButton(container);
+
 		FormData fdEditButton = new FormData(convertWidthInCharsToPixels(18), 25);
 		fdEditButton.top = new FormAttachment(discussionTree, 5, SWT.BOTTOM);
 		fdEditButton.left = new FormAttachment(0, 5);
 		editButton.setLayoutData(fdEditButton);
 
-		Button newDiscussionButton = new Button(container, SWT.PUSH);
-		newDiscussionButton.setText("New Discussion...");
+		createNewDiscussionButton(container);
+
 		FormData fdNewDiscussionButton = new FormData(convertWidthInCharsToPixels(20), 25);
 		fdNewDiscussionButton.top = new FormAttachment(discussionTree, 5, SWT.BOTTOM);
 		fdNewDiscussionButton.left = new FormAttachment(editButton, 10, SWT.RIGHT);
 		newDiscussionButton.setLayoutData(fdNewDiscussionButton);
 
-		Button replyButton = new Button(container, SWT.PUSH);
+		replyButton = new Button(container, SWT.PUSH);
 		replyButton.setText("Reply...");
 		FormData fdReplyButton = new FormData(convertWidthInCharsToPixels(18), 25);
 		fdReplyButton.top = new FormAttachment(discussionTree, 5, SWT.BOTTOM);
 		fdReplyButton.left = new FormAttachment(newDiscussionButton, 10, SWT.RIGHT);
 		replyButton.setLayoutData(fdReplyButton);
+		replyButton.setEnabled(false);
 
-		Button deleteButton = new Button(container, SWT.PUSH);
-		deleteButton.setText("Delete...");
+		deleteButton = new Button(container, SWT.PUSH);
+		deleteButton.setText("Delete");
 		FormData fdDeleteButton = new FormData(convertWidthInCharsToPixels(18), 25);
 		fdDeleteButton.top = new FormAttachment(discussionTree, 5, SWT.BOTTOM);
 		fdDeleteButton.left = new FormAttachment(replyButton, 10, SWT.RIGHT);
 		deleteButton.setLayoutData(fdDeleteButton);
+		deleteButton.setEnabled(false);
+	}
+
+	private void createNewDiscussionButton(Composite container) {
+		newDiscussionButton = new Button(container, SWT.PUSH);
+		newDiscussionButton.setText("New Discussion...");
+
+		newDiscussionButton.addListener(SWT.Selection, new Listener() {
+
+			@Override
+			public void handleEvent(Event event) {
+				Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+				DiscussionCommentDialog discussionCommentDialog = new DiscussionCommentDialog(shell);
+				discussionCommentDialog.create();
+				discussionCommentDialog.open();
+			}
+
+		});
+	}
+
+	private Button createEditButton(Composite container) {
+		Button editButton = new Button(container, SWT.PUSH);
+		editButton.setText("Edit");
+		editButton.setEnabled(false);
+		editButton.addListener(SWT.Selection, new Listener() {
+
+			@Override
+			public void handleEvent(Event event) {
+				TreeSelection treeSelection = (TreeSelection) discussionViewer.getSelection();
+				if (treeSelection != null) {
+					ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) treeSelection.getFirstElement();
+					if (shelvesetDiscussionItem != null && shelvesetDiscussionItem.canEdit()) {
+						discussionViewer.editElement(shelvesetDiscussionItem, 0);
+					}
+				}
+			}
+
+		});
+
+		return editButton;
 	}
 
 	private GridTreeViewer createDiscussionViewer(Composite parent) {
@@ -154,8 +203,7 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 				Object data = gridItem.getData();
 				if ("comment".equals(property) && data instanceof ShelvesetDiscussionItem) {
 					ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) data;
-					boolean isCurrentUserAuthor = StringUtil.equals(shelvesetDiscussionItem.getAuthorId(), TFSUtil.getCurrentUserId());
-					if (isCurrentUserAuthor) {
+					if (shelvesetDiscussionItem.canEdit()) {
 						try {
 							if (shelvesetDiscussionItem.updateComment((String) value)) {
 								shelvesetDiscussionItem.getParent().scheduleRefresh();
@@ -183,7 +231,7 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 				boolean result = false;
 				if ("comment".equals(property) && element instanceof ShelvesetDiscussionItem) {
 					ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) element;
-					result = StringUtil.equals(shelvesetDiscussionItem.getAuthorId(), TFSUtil.getCurrentUserId());
+					result = shelvesetDiscussionItem.canEdit();
 				}
 				return result;
 			}
@@ -203,12 +251,29 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 					return true;
 				}
 
-				return false;
+				return event.eventType == ColumnViewerEditorActivationEvent.PROGRAMMATIC;
 			}
 		};
 
 		GridViewerEditor.create(discussionViewer, activationSupport, ColumnViewerEditor.TABBING_HORIZONTAL
 				| ColumnViewerEditor.TABBING_MOVE_TO_ROW_NEIGHBOR | ColumnViewerEditor.TABBING_VERTICAL | ColumnViewerEditor.KEYBOARD_ACTIVATION);
+
+		discussionViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				TreeSelection treeSelection = (TreeSelection) discussionViewer.getSelection();
+				if (treeSelection != null) {
+					ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) treeSelection.getFirstElement();
+					if (shelvesetDiscussionItem != null && shelvesetDiscussionItem.canEdit()) {
+						editButton.setEnabled(true);
+					} else {
+						editButton.setEnabled(false);
+					}
+				}
+
+			}
+		});
 
 		return discussionViewer;
 	}

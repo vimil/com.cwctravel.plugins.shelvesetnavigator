@@ -204,4 +204,8 @@ public class ShelvesetDiscussionItem extends ShelvesetResourceItem {
 		return result;
 	}
 
+	public boolean canEdit() {
+		return StringUtil.equals(getAuthorId(), TFSUtil.getCurrentUserId());
+	}
+
 }

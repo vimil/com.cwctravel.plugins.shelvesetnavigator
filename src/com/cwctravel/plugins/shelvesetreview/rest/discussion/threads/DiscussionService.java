@@ -13,6 +13,7 @@ import org.boon.Boon;
 
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionAuthorInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCommentInfo;
+import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCreateRequestInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadPropertiesInfo;
@@ -22,6 +23,7 @@ import com.microsoft.tfs.core.TFSConnection;
 import com.microsoft.tfs.core.httpclient.HttpClient;
 import com.microsoft.tfs.core.httpclient.NameValuePair;
 import com.microsoft.tfs.core.httpclient.methods.GetMethod;
+import com.microsoft.tfs.core.httpclient.methods.PostMethod;
 import com.microsoft.tfs.core.httpclient.methods.StringRequestEntity;
 
 public class DiscussionService {
@@ -260,6 +262,98 @@ public class DiscussionService {
 			result.put("imageUrl", discussionAuthorInfo.getImageUrl());
 
 		}
+		return result;
+	}
+
+	public static void createDiscussion(TFSConnection tfsConnection, DiscussionCreateRequestInfo discussionCreateRequestInfo) throws IOException {
+		HttpClient httpClient = tfsConnection.getHTTPClient();
+		String baseURI = tfsConnection.getBaseURI().toString();
+
+		PostMethod postMethod = new PostMethod(baseURI + "/_apis/discussion/threads" + "?api-version=3.0-preview.1");
+		Map<String, Object> jsonRequestBody = toJSONMap(discussionCreateRequestInfo);
+
+		postMethod.setRequestEntity(new StringRequestEntity(Boon.toJson(jsonRequestBody), "application/json", "UTF-8"));
+
+		httpClient.executeMethod(postMethod);
+	}
+
+	private static Map<String, Object> toJSONMap(DiscussionCreateRequestInfo discussionCreateRequestInfo) {
+		Map<String, Object> result = null;
+		if (discussionCreateRequestInfo != null) {
+			result = new HashMap<String, Object>();
+			result.put("id", -1);
+			result.put("artifactUri", "vstfs:///VersionControl/Shelveset/" + discussionCreateRequestInfo.getShelvesetName() + "&shelvesetOwner="
+					+ discussionCreateRequestInfo.getShelvesetOwnerName());
+			result.put("status", 1);
+			String path = discussionCreateRequestInfo.getPath();
+			if (path != null) {
+				result.put("itemPath", path);
+
+				Map<String, Object> propertiesMap = new HashMap<String, Object>();
+				Map<String, Object> pathPropertyValueMap = new HashMap<String, Object>();
+				pathPropertyValueMap.put("type", "System.String");
+				pathPropertyValueMap.put("value", path);
+				propertiesMap.put("Microsoft.TeamFoundation.Discussion.ItemPath", pathPropertyValueMap);
+
+				int startLine = discussionCreateRequestInfo.getStartLine();
+				if (startLine > 0) {
+					int startCol = discussionCreateRequestInfo.getStartCol();
+					int endLine = discussionCreateRequestInfo.getEndLine();
+					int endCol = discussionCreateRequestInfo.getEndCol();
+
+					Map<String, Object> positionMap = new HashMap<String, Object>();
+					positionMap.put("positionContext", "RightBuffer");
+					positionMap.put("startLine", startLine);
+					positionMap.put("startColumn", startCol);
+					positionMap.put("endLine", endLine);
+					positionMap.put("endColumn", endCol);
+					result.put("position", positionMap);
+
+					Map<String, Object> startLinePropertyValueMap = new HashMap<String, Object>();
+					startLinePropertyValueMap.put("type", "System.Int32");
+					startLinePropertyValueMap.put("value", startLine);
+					propertiesMap.put("Microsoft.TeamFoundation.Discussion.Position.StartLine", startLinePropertyValueMap);
+
+					Map<String, Object> startColumnPropertyValueMap = new HashMap<String, Object>();
+					startColumnPropertyValueMap.put("type", "System.Int32");
+					startColumnPropertyValueMap.put("value", startCol);
+					propertiesMap.put("Microsoft.TeamFoundation.Discussion.Position.StartColumn", startColumnPropertyValueMap);
+
+					Map<String, Object> endLinePropertyValueMap = new HashMap<String, Object>();
+					endLinePropertyValueMap.put("type", "System.Int32");
+					endLinePropertyValueMap.put("value", endLine);
+					propertiesMap.put("Microsoft.TeamFoundation.Discussion.Position.EndLine", endLinePropertyValueMap);
+
+					Map<String, Object> endColumnPropertyValueMap = new HashMap<String, Object>();
+					endColumnPropertyValueMap.put("type", "System.Int32");
+					endColumnPropertyValueMap.put("value", endCol);
+					propertiesMap.put("Microsoft.TeamFoundation.Discussion.Position.EndColumn", endColumnPropertyValueMap);
+
+					result.put("properties", propertiesMap);
+				}
+
+			}
+
+			List<Map<String, Object>> commentsList = new ArrayList<Map<String, Object>>();
+			Map<String, Object> commentMap = new HashMap<String, Object>();
+			commentMap.put("id", -1);
+			commentMap.put("parentId", discussionCreateRequestInfo.getParentId());
+			commentMap.put("threadId", discussionCreateRequestInfo.getThreadId());
+			Map<String, Object> authorMap = new HashMap<String, Object>();
+			authorMap.put("id", discussionCreateRequestInfo.getAuthorId());
+			commentMap.put("author", authorMap);
+			commentMap.put("isEditable", true);
+			commentMap.put("originalId", -1);
+			commentMap.put("originalThreadId", -1);
+			commentMap.put("isActive", false);
+			commentMap.put("content", discussionCreateRequestInfo.getComment());
+			commentsList.add(commentMap);
+			result.put("comments", commentsList);
+			result.put("supportsMarkdown", true);
+			result.put("originalId", -1);
+
+		}
+
 		return result;
 	}
 }
