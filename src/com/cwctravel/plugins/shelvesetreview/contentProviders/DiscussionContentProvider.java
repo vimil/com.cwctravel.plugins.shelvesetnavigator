@@ -11,13 +11,21 @@ import com.cwctravel.plugins.shelvesetreview.util.DiscussionUtil;
 
 public class DiscussionContentProvider implements ITreeContentProvider {
 	private String path;
-	private int lineNumber;
-	private int columnNumber;
+	private int startLine;
+	private int startColumn;
+	private int endLine;
+	private int endColumn;
 
-	public DiscussionContentProvider(String path, int lineNumber, int columnNumber) {
+	public DiscussionContentProvider(String path, int startLine, int startColumn) {
+		this(path, startLine, startColumn, startLine, startColumn);
+	}
+
+	public DiscussionContentProvider(String path, int startLine, int startColumn, int endLine, int endColumn) {
 		this.path = path;
-		this.lineNumber = lineNumber;
-		this.columnNumber = columnNumber;
+		this.startLine = startLine;
+		this.startColumn = startColumn;
+		this.endLine = endLine;
+		this.endColumn = endColumn;
 	}
 
 	@Override
@@ -35,7 +43,8 @@ public class DiscussionContentProvider implements ITreeContentProvider {
 			ShelvesetItem shelvesetItem = (ShelvesetItem) inputElement;
 			inputElement = shelvesetItem.findFile(path);
 		}
-		List<ShelvesetDiscussionItem> shelvesetDiscussionItems = DiscussionUtil.getTopLevelDiscussionItems(inputElement, lineNumber, columnNumber);
+		List<ShelvesetDiscussionItem> shelvesetDiscussionItems = DiscussionUtil.getTopLevelDiscussionItems(inputElement, startLine, startColumn,
+				endLine, endColumn);
 		return shelvesetDiscussionItems.toArray(new ShelvesetDiscussionItem[0]);
 	}
 

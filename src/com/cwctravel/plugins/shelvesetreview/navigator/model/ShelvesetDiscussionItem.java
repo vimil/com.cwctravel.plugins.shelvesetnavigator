@@ -208,4 +208,22 @@ public class ShelvesetDiscussionItem extends ShelvesetResourceItem {
 		return StringUtil.equals(getAuthorId(), TFSUtil.getCurrentUserId());
 	}
 
+	public boolean canReply() {
+		boolean result = false;
+		if (childDiscussions == null || childDiscussions.isEmpty()) {
+			if (parentDiscussion != null) {
+				List<ShelvesetResourceItem> childDiscussions = parentDiscussion.getChildDiscussions();
+				if (childDiscussions.get(childDiscussions.size() - 1) == this) {
+					result = true;
+				}
+			} else {
+				result = true;
+			}
+		}
+		return result;
+	}
+
+	public boolean canDelete() {
+		return StringUtil.equals(getAuthorId(), TFSUtil.getCurrentUserId());
+	}
 }

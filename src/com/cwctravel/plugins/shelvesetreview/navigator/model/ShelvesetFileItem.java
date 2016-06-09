@@ -105,9 +105,9 @@ public class ShelvesetFileItem extends ShelvesetResourceItem {
 		discussionCreateRequestInfo.setPath(getPath());
 		discussionCreateRequestInfo.setAuthorId(TFSUtil.getCurrentUserId());
 		discussionCreateRequestInfo.setStartLine(startLine);
-		discussionCreateRequestInfo.setStartCol(startCol);
+		discussionCreateRequestInfo.setStartColumn(startCol);
 		discussionCreateRequestInfo.setEndLine(endLine);
-		discussionCreateRequestInfo.setEndCol(endCol);
+		discussionCreateRequestInfo.setEndColumn(endCol);
 		discussionCreateRequestInfo.setComment(comment);
 
 		DiscussionService.createDiscussion(TFSUtil.getTFSConnection(), discussionCreateRequestInfo);

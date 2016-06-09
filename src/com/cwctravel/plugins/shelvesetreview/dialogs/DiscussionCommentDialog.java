@@ -1,5 +1,8 @@
 package com.cwctravel.plugins.shelvesetreview.dialogs;
 
+import java.io.IOException;
+
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
@@ -15,12 +18,52 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
+import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.DiscussionService;
+import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCreateRequestInfo;
+import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionReplyRequestInfo;
+import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
+
 public class DiscussionCommentDialog extends Dialog {
+	private static final int CREATE_MODE = 0;
+	private static final int REPLY_MODE = 1;
+
+	private final ShelvesetItem shelvesetItem;
+	private final String path;
+	private final int startLine;
+	private final int startColumn;
+	private final int endLine;
+	private final int endColumn;
+	private final int threadId;
+	private final int mode;
+
 	private Text txtComment;
 	private String comment;
 
-	public DiscussionCommentDialog(Shell parentShell) {
-		super(parentShell);
+	public DiscussionCommentDialog(ShelvesetItem shelvesetItem, int threadId, Shell shell) {
+		super(shell);
+		this.mode = REPLY_MODE;
+		this.shelvesetItem = shelvesetItem;
+		this.threadId = threadId;
+		this.path = null;
+		this.startLine = -1;
+		this.startColumn = -1;
+		this.endLine = -1;
+		this.endColumn = -1;
+
+	}
+
+	public DiscussionCommentDialog(ShelvesetItem shelvesetItem, String path, int startLine, int startColumn, int endLine, int endColumn, Shell shell) {
+		super(shell);
+		this.mode = CREATE_MODE;
+		this.shelvesetItem = shelvesetItem;
+		this.path = path;
+		this.startLine = startLine;
+		this.startColumn = startColumn;
+		this.endLine = endLine;
+		this.endColumn = endColumn;
+		this.threadId = -1;
 	}
 
 	@Override
@@ -41,8 +84,9 @@ public class DiscussionCommentDialog extends Dialog {
 		FormData fdTxtComment = new FormData(390, 170);
 		fdTxtComment.top = new FormAttachment(lblComment, 5, SWT.BOTTOM);
 		fdTxtComment.left = new FormAttachment(0, 5);
+		fdTxtComment.right = new FormAttachment(100, -5);
+		fdTxtComment.bottom = new FormAttachment(100, -5);
 		txtComment.setLayoutData(fdTxtComment);
-
 		txtComment.addModifyListener(new ModifyListener() {
 
 			@Override
@@ -73,7 +117,37 @@ public class DiscussionCommentDialog extends Dialog {
 
 	@Override
 	protected void okPressed() {
+		try {
+			if (mode == CREATE_MODE) {
+				DiscussionCreateRequestInfo discussionCreateRequestInfo = new DiscussionCreateRequestInfo();
+				discussionCreateRequestInfo.setAuthorId(TFSUtil.getCurrentUserId());
+				discussionCreateRequestInfo.setComment(comment);
+				discussionCreateRequestInfo.setShelvesetName(shelvesetItem.getName());
+				discussionCreateRequestInfo.setShelvesetOwnerName(shelvesetItem.getOwnerName());
+				discussionCreateRequestInfo.setPath(path);
+				discussionCreateRequestInfo.setStartLine(startLine);
+				discussionCreateRequestInfo.setStartColumn(startColumn);
+				discussionCreateRequestInfo.setEndLine(endLine);
+				discussionCreateRequestInfo.setEndColumn(endColumn);
+
+				DiscussionService.createDiscussion(TFSUtil.getTFSConnection(), discussionCreateRequestInfo);
+
+				shelvesetItem.scheduleRefresh();
+			} else if (mode == REPLY_MODE) {
+				DiscussionReplyRequestInfo discussionReplyRequestInfo = new DiscussionReplyRequestInfo();
+				discussionReplyRequestInfo.setAuthorId(TFSUtil.getCurrentUserId());
+				discussionReplyRequestInfo.setThreadId(threadId);
+				discussionReplyRequestInfo.setComment(comment);
+
+				DiscussionService.replyDiscussion(TFSUtil.getTFSConnection(), discussionReplyRequestInfo);
+				shelvesetItem.scheduleRefresh();
+			}
+		} catch (IOException iE) {
+			ShelvesetReviewPlugin.log(Status.ERROR, iE.getMessage(), iE);
+		}
+
 		super.okPressed();
+
 	}
 
 	public String getComment() {

@@ -9,9 +9,9 @@ public class DiscussionCreateRequestInfo {
 	private int parentId;
 	private int threadId;
 	private int startLine;
-	private int startCol;
+	private int startColumn;
 	private int endLine;
-	private int endCol;
+	private int endColumn;
 
 	public String getShelvesetName() {
 		return shelvesetName;
@@ -77,12 +77,12 @@ public class DiscussionCreateRequestInfo {
 		this.startLine = startLine;
 	}
 
-	public int getStartCol() {
-		return startCol;
+	public int getStartColumn() {
+		return startColumn;
 	}
 
-	public void setStartCol(int startCol) {
-		this.startCol = startCol;
+	public void setStartColumn(int startColumn) {
+		this.startColumn = startColumn;
 	}
 
 	public int getEndLine() {
@@ -93,12 +93,12 @@ public class DiscussionCreateRequestInfo {
 		this.endLine = endLine;
 	}
 
-	public int getEndCol() {
-		return endCol;
+	public int getEndColumn() {
+		return endColumn;
 	}
 
-	public void setEndCol(int endCol) {
-		this.endCol = endCol;
+	public void setEndColumn(int endColumn) {
+		this.endColumn = endColumn;
 	}
 
 }

@@ -67,8 +67,10 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 				if (verticalRulerInfo instanceof CompositeRuler) {
 					CompositeRuler compositeRuler = (CompositeRuler) verticalRulerInfo;
 					int lineNumber = compositeRuler.toDocumentLineNumber(e.y);
-					if (EditorUtil.getDiscussionAnnotationAtLine(editorPart, lineNumber) != null) {
-						EditorUtil.showDiscussionDialog(editorPart, lineNumber);
+					DiscussionAnnotation discussionAnnotation = EditorUtil.getDiscussionAnnotationAtLine(editorPart, lineNumber);
+					if (discussionAnnotation != null) {
+						EditorUtil.showDiscussionDialog(editorPart, discussionAnnotation.getStartLine(), discussionAnnotation.getStartColumn(),
+								discussionAnnotation.getEndLine(), discussionAnnotation.getEndColumn());
 					}
 				}
 			}
@@ -114,8 +116,9 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 									commentsBuilder.append(": ");
 									commentsBuilder.append(discussionCommentInfo.getContent());
 
-									Annotation annotation = new DiscussionAnnotation(discussionCommentInfo.getThreadId(),
-											discussionCommentInfo.getId(), commentsBuilder.toString());
+									Annotation annotation = new DiscussionAnnotation(discussionThreadInfo, discussionCommentInfo,
+											commentsBuilder.toString());
+
 									Position position = new Position(startOffset, endOffset - startOffset);
 									annotationModel.addAnnotation(annotation, position);
 								}
@@ -151,8 +154,9 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 			FileStoreEditorInput editorInput = (FileStoreEditorInput) editor.getEditorInput();
 			try {
 				TFSFileStore tfsFileStore = (TFSFileStore) EFS.getStore(editorInput.getURI());
-				if (shelvesetItem == null || (StringUtil.equals(shelvesetItem.getName(), tfsFileStore.getShelvesetName())
-						&& StringUtil.equals(shelvesetItem.getOwnerName(), tfsFileStore.getShelvesetOwnerName()))) {
+				if (shelvesetItem == null
+						|| (StringUtil.equals(shelvesetItem.getName(), tfsFileStore.getShelvesetName()) && StringUtil.equals(
+								shelvesetItem.getOwnerName(), tfsFileStore.getShelvesetOwnerName()))) {
 					annotateEditorPart(editor);
 				}
 			} catch (CoreException e) {

@@ -12,9 +12,11 @@ import java.util.Map;
 import org.boon.Boon;
 
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionAuthorInfo;
+import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCommentDeleteRequestInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCommentInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCreateRequestInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
+import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionReplyRequestInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadPropertiesInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.httpmethods.PatchMethod;
@@ -22,11 +24,22 @@ import com.cwctravel.plugins.shelvesetreview.util.DateUtil;
 import com.microsoft.tfs.core.TFSConnection;
 import com.microsoft.tfs.core.httpclient.HttpClient;
 import com.microsoft.tfs.core.httpclient.NameValuePair;
+import com.microsoft.tfs.core.httpclient.methods.DeleteMethod;
 import com.microsoft.tfs.core.httpclient.methods.GetMethod;
 import com.microsoft.tfs.core.httpclient.methods.PostMethod;
 import com.microsoft.tfs.core.httpclient.methods.StringRequestEntity;
 
 public class DiscussionService {
+
+	public static void deleteDiscussionComment(TFSConnection tfsConnection, DiscussionCommentDeleteRequestInfo discussionCommentDeleteRequestInfo)
+			throws IOException {
+		HttpClient httpClient = tfsConnection.getHTTPClient();
+		String baseURI = tfsConnection.getBaseURI().toString();
+		DeleteMethod deleteMethod = new DeleteMethod(baseURI + "/_apis/discussion/threads/" + discussionCommentDeleteRequestInfo.getThreadId()
+				+ "/comments/" + discussionCommentDeleteRequestInfo.getCommentId() + "?api-version=3.0-preview.1");
+
+		httpClient.executeMethod(deleteMethod);
+	}
 
 	public static DiscussionCommentInfo updateShelvesetDiscussionComment(TFSConnection tfsConnection, DiscussionCommentInfo discussionCommentInfo)
 			throws IOException {
@@ -265,6 +278,45 @@ public class DiscussionService {
 		return result;
 	}
 
+	public static void replyDiscussion(TFSConnection tfsConnection, DiscussionReplyRequestInfo discussionReplyRequestInfo) throws IOException {
+		HttpClient httpClient = tfsConnection.getHTTPClient();
+		String baseURI = tfsConnection.getBaseURI().toString();
+
+		PostMethod postMethod = new PostMethod(baseURI + "/_apis/discussion/threads/" + discussionReplyRequestInfo.getThreadId()
+				+ "/comments?api-version=3.0-preview.1");
+
+		Map<String, Object> jsonRequestBody = toJSONMap(discussionReplyRequestInfo);
+
+		postMethod.setRequestEntity(new StringRequestEntity(Boon.toJson(jsonRequestBody), "application/json", "UTF-8"));
+
+		httpClient.executeMethod(postMethod);
+		postMethod.getResponseBodyAsString();
+	}
+
+	private static Map<String, Object> toJSONMap(DiscussionReplyRequestInfo discussionReplyRequestInfo) {
+		Map<String, Object> result = null;
+		if (discussionReplyRequestInfo != null) {
+			int threadId = discussionReplyRequestInfo.getThreadId();
+
+			result = new HashMap<String, Object>();
+			result.put("id", -1);
+			result.put("parentId", 1);
+			result.put("threadId", threadId);
+
+			Map<String, Object> authorMap = new HashMap<String, Object>();
+			authorMap.put("id", discussionReplyRequestInfo.getAuthorId());
+			result.put("author", authorMap);
+
+			result.put("isEditable", true);
+			result.put("originalId", -1);
+			result.put("originalThreadId", threadId);
+			result.put("isActive", true);
+			result.put("content", discussionReplyRequestInfo.getComment());
+		}
+
+		return result;
+	}
+
 	public static void createDiscussion(TFSConnection tfsConnection, DiscussionCreateRequestInfo discussionCreateRequestInfo) throws IOException {
 		HttpClient httpClient = tfsConnection.getHTTPClient();
 		String baseURI = tfsConnection.getBaseURI().toString();
@@ -297,9 +349,9 @@ public class DiscussionService {
 
 				int startLine = discussionCreateRequestInfo.getStartLine();
 				if (startLine > 0) {
-					int startCol = discussionCreateRequestInfo.getStartCol();
+					int startCol = discussionCreateRequestInfo.getStartColumn();
 					int endLine = discussionCreateRequestInfo.getEndLine();
-					int endCol = discussionCreateRequestInfo.getEndCol();
+					int endCol = discussionCreateRequestInfo.getEndColumn();
 
 					Map<String, Object> positionMap = new HashMap<String, Object>();
 					positionMap.put("positionContext", "RightBuffer");

@@ -2,24 +2,28 @@ package com.cwctravel.plugins.shelvesetreview.annotator;
 
 import org.eclipse.jface.text.source.Annotation;
 
+import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCommentInfo;
+import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadInfo;
+import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadPropertiesInfo;
+
 public class DiscussionAnnotation extends Annotation implements Comparable<DiscussionAnnotation> {
 	static final String DISCUSSION_MARKER = "com.cwctravel.plugins.shelvesetreview.discussionMarker";
 
-	private int threadId;
-	private int commentd;
+	private DiscussionThreadInfo discussionThreadInfo;
+	private DiscussionCommentInfo discussionCommentInfo;
 
-	public DiscussionAnnotation(int threadId, int commentId, String text) {
+	public DiscussionAnnotation(DiscussionThreadInfo discussionThreadInfo, DiscussionCommentInfo discussionCommentInfo, String text) {
 		super(DISCUSSION_MARKER, false, text);
-		this.threadId = threadId;
-		this.commentd = commentId;
+		this.discussionThreadInfo = discussionThreadInfo;
+		this.discussionCommentInfo = discussionCommentInfo;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + commentd;
-		result = prime * result + threadId;
+		result = prime * result + discussionCommentInfo.getId();
+		result = prime * result + discussionThreadInfo.getId();
 		return result;
 	}
 
@@ -32,9 +36,9 @@ public class DiscussionAnnotation extends Annotation implements Comparable<Discu
 		if (getClass() != obj.getClass())
 			return false;
 		DiscussionAnnotation other = (DiscussionAnnotation) obj;
-		if (commentd != other.commentd)
+		if (discussionCommentInfo.getId() != other.discussionCommentInfo.getId())
 			return false;
-		if (threadId != other.threadId)
+		if (discussionThreadInfo.getId() != other.discussionThreadInfo.getId())
 			return false;
 		return true;
 	}
@@ -44,11 +48,47 @@ public class DiscussionAnnotation extends Annotation implements Comparable<Discu
 		if (other == null) {
 			return 1;
 		}
-		int result = threadId - other.threadId;
+		int result = discussionThreadInfo.getId() - other.discussionThreadInfo.getId();
 		if (result == 0) {
-			result = commentd - other.commentd;
+			result = discussionCommentInfo.getId() - other.discussionCommentInfo.getId();
 		}
 
+		return result;
+	}
+
+	public int getStartLine() {
+		int result = -1;
+		DiscussionThreadPropertiesInfo threadProperties = discussionThreadInfo.getThreadProperties();
+		if (threadProperties != null) {
+			result = threadProperties.getStartLine();
+		}
+		return result;
+	}
+
+	public int getStartColumn() {
+		int result = -1;
+		DiscussionThreadPropertiesInfo threadProperties = discussionThreadInfo.getThreadProperties();
+		if (threadProperties != null) {
+			result = threadProperties.getStartColumn();
+		}
+		return result;
+	}
+
+	public int getEndColumn() {
+		int result = -1;
+		DiscussionThreadPropertiesInfo threadProperties = discussionThreadInfo.getThreadProperties();
+		if (threadProperties != null) {
+			result = threadProperties.getEndColumn();
+		}
+		return result;
+	}
+
+	public int getEndLine() {
+		int result = -1;
+		DiscussionThreadPropertiesInfo threadProperties = discussionThreadInfo.getThreadProperties();
+		if (threadProperties != null) {
+			result = threadProperties.getEndLine();
+		}
 		return result;
 	}
 

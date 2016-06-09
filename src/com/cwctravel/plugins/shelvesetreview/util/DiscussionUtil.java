@@ -94,20 +94,45 @@ public class DiscussionUtil {
 		return result;
 	}
 
-	public static List<ShelvesetDiscussionItem> getTopLevelDiscussionItems(Object inputItem, int lineNumber, int columnNumber) {
+	public static List<ShelvesetDiscussionItem> getTopLevelDiscussionItems(Object inputItem, int startLine, int startColumn) {
+		return getTopLevelDiscussionItems(inputItem, startLine, startColumn, startLine, startColumn);
+	}
+
+	public static List<ShelvesetDiscussionItem> getTopLevelDiscussionItems(Object inputItem, int startLine, int startColumn, int endLine,
+			int endColumn) {
+		if (endLine < 0) {
+			endLine = startLine;
+		}
+		if (endColumn < 0) {
+			endColumn = startColumn;
+		}
+
+		return getTopLevelDiscussionItemsInternal(inputItem, startLine, startColumn, startLine, startColumn);
+	}
+
+	private static List<ShelvesetDiscussionItem> getTopLevelDiscussionItemsInternal(Object inputItem, int startLine, int startColumn, int endLine,
+			int endColumn) {
 		List<ShelvesetDiscussionItem> result = new ArrayList<ShelvesetDiscussionItem>();
 		VisitorUtil.visit(inputItem, (item) -> {
 			if (item instanceof ShelvesetDiscussionItem) {
 				ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) item;
-				if (lineNumber < 0 && columnNumber < 0) {
+				if (startLine < 0 && startColumn < 0) {
 					result.add(shelvesetDiscussionItem);
-				} else if (lineNumber >= 0) {
-					if (shelvesetDiscussionItem.getStartLine() == lineNumber + 1) {
-						if (columnNumber < 0) {
+				} else if (startLine >= 0) {
+					int discussionStartLine = shelvesetDiscussionItem.getStartLine();
+					int discussionEndLine = shelvesetDiscussionItem.getEndLine();
+					if (discussionEndLine < 0) {
+						discussionEndLine = discussionStartLine;
+					}
+					if (discussionStartLine >= startLine && discussionEndLine <= endLine) {
+						if (startColumn < 0) {
 							result.add(shelvesetDiscussionItem);
-						} else if (shelvesetDiscussionItem.getStartColumn() <= columnNumber
-								&& shelvesetDiscussionItem.getEndColumn() >= columnNumber) {
-							result.add(shelvesetDiscussionItem);
+						} else {
+							int discussionStartColumn = shelvesetDiscussionItem.getStartColumn();
+							int discussionEndcolumn = shelvesetDiscussionItem.getEndColumn();
+							if (discussionStartColumn <= startColumn && discussionEndcolumn >= endColumn) {
+								result.add(shelvesetDiscussionItem);
+							}
 						}
 					}
 				}

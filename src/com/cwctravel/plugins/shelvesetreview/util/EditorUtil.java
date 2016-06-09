@@ -73,7 +73,7 @@ public class EditorUtil {
 		return result;
 	}
 
-	public static void showDiscussionDialog(IEditorPart editor, int lineNumber) {
+	public static void showDiscussionDialog(IEditorPart editor, int startLine, int startColumn, int endLine, int endColumn) {
 
 		IEditorInput editorInput = editor.getEditorInput();
 		if (editorInput instanceof FileStoreEditorInput) {
@@ -93,13 +93,14 @@ public class EditorUtil {
 								shelvesetItem.refresh(monitor);
 								ShelvesetFileItem shelvesetFileItem = shelvesetItem.findFile(tfsFileStore.getPath());
 								if (shelvesetFileItem != null) {
-									Display.getDefault().asyncExec(() -> {
-										Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-										DiscussionDialog discussionDialog = new DiscussionDialog(shelvesetItem, shelvesetFileItem.getPath(),
-												lineNumber, -1, shell);
-										discussionDialog.create();
-										discussionDialog.open();
-									});
+									Display.getDefault().asyncExec(
+											() -> {
+												Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+												DiscussionDialog discussionDialog = new DiscussionDialog(shelvesetItem, shelvesetFileItem.getPath(),
+														startLine, startColumn, endLine, endColumn, shell);
+												discussionDialog.create();
+												discussionDialog.open();
+											});
 								}
 								return Status.OK_STATUS;
 							}

@@ -27,8 +27,8 @@ public class DiscussionAnnotationMenuContribution extends ContributionItem {
 	@Override
 	// Create a menu item for each marker on the line clicked on
 	public void fill(Menu menu, int index) {
-		DiscussionAnnotation discussionAnnotation = EditorUtil.getDiscussionAnnotationAtLine(editor, getRulerInfo()
-				.getLineOfLastMouseButtonActivity());
+		int lineOfLastMouseButtonActivity = getRulerInfo().getLineOfLastMouseButtonActivity();
+		DiscussionAnnotation discussionAnnotation = EditorUtil.getDiscussionAnnotationAtLine(editor, lineOfLastMouseButtonActivity);
 		if (discussionAnnotation != null) {
 			MenuItem menuItem = new MenuItem(menu, SWT.CHECK, index);
 			menuItem.setText("Edit Discussion(s)...");
@@ -40,7 +40,8 @@ public class DiscussionAnnotationMenuContribution extends ContributionItem {
 	private SelectionAdapter createDynamicSelectionListener(DiscussionAnnotation discussionAnnotation) {
 		return new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent event) {
-				EditorUtil.showDiscussionDialog(editor, rulerInfo.getLineOfLastMouseButtonActivity());
+				EditorUtil.showDiscussionDialog(editor, discussionAnnotation.getStartLine(), discussionAnnotation.getStartColumn(),
+						discussionAnnotation.getEndLine(), discussionAnnotation.getEndColumn());
 			}
 		};
 	}
