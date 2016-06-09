@@ -35,13 +35,13 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 			ShelvesetGroupItem shelvesetGroupItem = (ShelvesetGroupItem) element;
 			switch (shelvesetGroupItem.getGroupType()) {
 				case ShelvesetGroupItem.GROUP_TYPE_USER_SHELVESETS:
-					image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.USER_GROUP_ICON_ID);
+					image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.USER_GROUP_ICON_ID);
 					break;
 				case ShelvesetGroupItem.GROUP_TYPE_REVIEWER_SHELVESETS:
-					image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.REVIEW_GROUP_ICON_ID);
+					image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.REVIEW_GROUP_ICON_ID);
 					break;
 				case ShelvesetGroupItem.GROUP_TYPE_INACTIVE_SHELVESETS:
-					image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.INACTIVE_GROUP_ICON_ID);
+					image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.INACTIVE_GROUP_ICON_ID);
 					break;
 			}
 		} else if (element instanceof ShelvesetUserItem) {
@@ -49,22 +49,22 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 			List<ShelvesetUserCategoryItem> userCategoryItems = shelvesetUserItem.getShelvesetUserCategoryItems();
 			int userCategoryCount = userCategoryItems.size();
 			if (userCategoryCount > 1) {
-				image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.MIXED_USER_ICON_ID);
+				image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.MIXED_USER_ICON_ID);
 			} else if (userCategoryCount == 1) {
 				ShelvesetUserCategoryItem shelvesetUserCategoryItem = userCategoryItems.get(0);
-				image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(shelvesetUserCategoryItem.getIconId());
+				image = ShelvesetReviewPlugin.getImage(shelvesetUserCategoryItem.getIconId());
 			} else {
-				image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.USER_ICON_ID);
+				image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.USER_ICON_ID);
 			}
 		} else if (element instanceof ShelvesetUserCategoryItem) {
 			ShelvesetUserCategoryItem shelvesetUserCategoryItem = (ShelvesetUserCategoryItem) element;
-			image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(shelvesetUserCategoryItem.getIconId());
+			image = ShelvesetReviewPlugin.getImage(shelvesetUserCategoryItem.getIconId());
 		} else if (element instanceof ShelvesetItem) {
 			ShelvesetItem shelvesetItem = (ShelvesetItem) element;
 			if (shelvesetItem.isInactive()) {
-				image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.INACTIVE_SHELVESET_ICON_ID);
+				image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.INACTIVE_SHELVESET_ICON_ID);
 			} else {
-				image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.SHELVESET_ICON_ID);
+				image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.SHELVESET_ICON_ID);
 			}
 
 		} else if (element instanceof ShelvesetFileItem) {
@@ -73,7 +73,7 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 		} else if (element instanceof ShelvesetFolderItem) {
 			image = getImageForFolder();
 		} else if (element instanceof ShelvesetDiscussionItem) {
-			image = ShelvesetReviewPlugin.getDefault().getImageRegistry().get(ShelvesetReviewPlugin.DISCUSSION_ICON_ID);
+			image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.DISCUSSION_ICON_ID);
 		}
 
 		result = image;

@@ -49,6 +49,27 @@ public class EditorUtil {
 					ITextEditor textEditor = (ITextEditor) editor;
 					IDocumentProvider documentProvider = textEditor.getDocumentProvider();
 					IDocument document = documentProvider.getDocument(editorInput);
+					int lineOffset = document.getLineOffset(lineNumber);
+					int lineLength = document.getLineLength(lineNumber);
+					result = getDiscussionAnnotationAtOffset(editor, lineOffset, lineLength, true);
+				}
+			}
+		} catch (CoreException | BadLocationException e) {
+			ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
+		}
+		return result;
+	}
+
+	public static DiscussionAnnotation getDiscussionAnnotationAtOffset(IEditorPart editor, int offset, int length, boolean isContained) {
+		DiscussionAnnotation result = null;
+		try {
+			IEditorInput editorInput = editor.getEditorInput();
+			if (editorInput instanceof FileStoreEditorInput) {
+				FileStoreEditorInput fileStoreEditorInput = (FileStoreEditorInput) editorInput;
+				IFileStore fileStore = EFS.getStore(fileStoreEditorInput.getURI());
+				if (editor instanceof ITextEditor && fileStore instanceof TFSFileStore) {
+					ITextEditor textEditor = (ITextEditor) editor;
+					IDocumentProvider documentProvider = textEditor.getDocumentProvider();
 					IAnnotationModel annotationModel = documentProvider.getAnnotationModel(editorInput);
 
 					Iterator<?> itr = annotationModel.getAnnotationIterator();
@@ -57,10 +78,13 @@ public class EditorUtil {
 						if (annotation instanceof DiscussionAnnotation) {
 							Position position = annotationModel.getPosition(annotation);
 							if (position != null) {
-								int offset = position.getOffset();
-								int annotationLineNumber = document.getLineOfOffset(offset);
+								int annotationOffset = position.getOffset();
+								int annotationLength = position.getLength();
 
-								if (lineNumber == annotationLineNumber) {
+								if (isContained && annotationOffset >= offset && annotationOffset + annotationLength <= offset + length) {
+									result = (DiscussionAnnotation) annotation;
+									break;
+								} else if (!isContained && annotationOffset <= offset && annotationOffset + annotationLength >= offset + length) {
 									result = (DiscussionAnnotation) annotation;
 									break;
 								}
@@ -69,7 +93,7 @@ public class EditorUtil {
 					}
 				}
 			}
-		} catch (CoreException | BadLocationException e) {
+		} catch (CoreException e) {
 			ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
 		}
 		return result;
@@ -114,13 +138,14 @@ public class EditorUtil {
 								shelvesetItem.refresh(monitor);
 								ShelvesetFileItem shelvesetFileItem = shelvesetItem.findFile(tfsFileStore.getPath());
 								if (shelvesetFileItem != null) {
-									Display.getDefault().asyncExec(() -> {
-										Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-										DiscussionDialog discussionDialog = new DiscussionDialog(shelvesetItem, shelvesetFileItem.getPath(),
-												startLine, startColumn, endLine, endColumn, shell);
-										discussionDialog.create();
-										discussionDialog.open();
-									});
+									Display.getDefault().asyncExec(
+											() -> {
+												Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+												DiscussionDialog discussionDialog = new DiscussionDialog(shelvesetItem, shelvesetFileItem.getPath(),
+														startLine, startColumn, endLine, endColumn, shell);
+												discussionDialog.create();
+												discussionDialog.open();
+											});
 								}
 								return Status.OK_STATUS;
 							}

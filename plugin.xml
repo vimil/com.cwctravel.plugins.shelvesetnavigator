@@ -114,13 +114,6 @@
             name="Shelveset Navigator"
             restorable="true">
       </view>
-      <view
-            category="com.microsoft.tfs.client.common.ui.views"
-            class="com.cwctravel.plugins.shelvesetreview.views.ReviewDiscussionView"
-            icon="icons/discussion-icon.png"
-            id="com.cwctravel.plugins.shelvesetreview.views.ReviewCommentsView"
-            name="Review Discussion">
-      </view>
    </extension>
    <extension
          point="org.eclipse.core.filesystem.filesystems">
@@ -178,6 +171,14 @@
       <command
             id="com.cwctravel.plugins.shelvesetreview.navigator.commands.UnapproveShelvesetCommand"
             name="Unapprove Shelveset">
+      </command>
+      <command
+            id="com.cwctravel.plugins.shelvesetreview.editor.commands.EditDiscussionCommand"
+            name="Edit Discussion(s)...">
+      </command>
+      <command
+            id="com.cwctravel.plugins.shelvesetreview.editor.commands.AddCommentCommand"
+            name="Add Comment...">
       </command>
    </extension>
    <extension
@@ -363,6 +364,14 @@
          </enabledWhen>
       </handler>
       <handler
+            class="com.cwctravel.plugins.shelvesetreview.handlers.editor.EditDiscussionHandler"
+            commandId="com.cwctravel.plugins.shelvesetreview.editor.commands.EditDiscussionCommand">
+      </handler>
+      <handler
+            class="com.cwctravel.plugins.shelvesetreview.handlers.editor.AddCommentHandler"
+            commandId="com.cwctravel.plugins.shelvesetreview.editor.commands.AddCommentCommand">
+      </handler>
+      <handler
             class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.RefreshHandler"
             commandId="org.eclipse.ui.file.refresh">
          <activeWhen>
@@ -485,6 +494,28 @@
             allPopups="false"
             class="com.cwctravel.plugins.shelvesetreview.annotator.DiscussionAnnotationMenuContributionFactory"
             locationURI="popup:#AbstractTextEditorRulerContext?after=additions">
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any?after=additions?after=additions">
+         <command
+               commandId="com.cwctravel.plugins.shelvesetreview.editor.commands.EditDiscussionCommand"
+               icon="icons/discussion-icon.png"
+               label="Edit Discussion(s)..."
+               style="push">
+            <visibleWhen
+                  checkEnabled="true">
+            </visibleWhen>
+         </command>
+         <command
+               commandId="com.cwctravel.plugins.shelvesetreview.editor.commands.AddCommentCommand"
+               icon="icons/discussion-icon.png"
+               label="Add Comment..."
+               style="push">
+            <visibleWhen
+                  checkEnabled="true">
+            </visibleWhen>
+         </command>
       </menuContribution>
    </extension>
    <extension

@@ -11,6 +11,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.texteditor.ITextEditor;
 
+import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
 
 public class DiscussionAnnotationMenuContribution extends ContributionItem {
@@ -29,18 +30,20 @@ public class DiscussionAnnotationMenuContribution extends ContributionItem {
 	@Override
 	// Create a menu item for each marker on the line clicked on
 	public void fill(Menu menu, int index) {
-		int lineOfLastMouseButtonActivity = getRulerInfo().getLineOfLastMouseButtonActivity();
+		int lineOfLastMouseButtonActivity = rulerInfo.getLineOfLastMouseButtonActivity();
 		if (lineOfLastMouseButtonActivity >= 0) {
 			DiscussionAnnotation discussionAnnotation = EditorUtil.getDiscussionAnnotationAtLine(editor, lineOfLastMouseButtonActivity);
 			if (discussionAnnotation != null) {
 				MenuItem menuItem = new MenuItem(menu, SWT.CHECK, index);
 				menuItem.setText("Edit Discussion(s)...");
+				menuItem.setImage(ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.DISCUSSION_ICON_ID));
 				menuItem.addSelectionListener(createEditDiscussionSelectionListener(discussionAnnotation));
 			} else {
 				IRegion region = EditorUtil.getLineInfo(editor, lineOfLastMouseButtonActivity);
 				if (region != null) {
 					MenuItem menuItem = new MenuItem(menu, SWT.CHECK, index);
 					menuItem.setText("Add Comment...");
+					menuItem.setImage(ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.DISCUSSION_ICON_ID));
 					menuItem.addSelectionListener(createAddCommentSelectionListener(lineOfLastMouseButtonActivity, region));
 				}
 			}
