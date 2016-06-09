@@ -92,4 +92,12 @@ public class DiscussionAnnotation extends Annotation implements Comparable<Discu
 		return result;
 	}
 
+	public int getThreadId() {
+		return discussionThreadInfo.getId();
+	}
+
+	public int getCommentId() {
+		return discussionCommentInfo.getId();
+	}
+
 }

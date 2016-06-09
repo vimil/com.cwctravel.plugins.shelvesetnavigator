@@ -1,7 +1,10 @@
 package com.cwctravel.plugins.shelvesetreview.annotator;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
@@ -94,17 +97,22 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 		try {
 			TFSConnection tfsConnection = TFSUtil.getTFSConnection();
 			if (tfsConnection != null) {
+				Map<String, Annotation> discussionAnnotationsMap = getAllDiscussionAnnotations(annotationModel);
+
 				DiscussionInfo discussionInfo = DiscussionService.getShelvesetDiscussion(tfsConnection, shelvesetName, shelvesetOwner);
 				List<DiscussionThreadInfo> discussionThreadInfos = DiscussionUtil.findAllDiscussionThreads(discussionInfo, tfsFileStore.getPath());
 				for (DiscussionThreadInfo discussionThreadInfo : discussionThreadInfos) {
 					DiscussionThreadPropertiesInfo discussionThreadPropertiesInfo = discussionThreadInfo.getThreadProperties();
 					if (discussionThreadPropertiesInfo != null) {
 						try {
-							int startOffset = document.getLineOffset(discussionThreadPropertiesInfo.getStartLine() - 1)
-									+ discussionThreadPropertiesInfo.getStartColumn() - 1;
+							int startLine = discussionThreadPropertiesInfo.getStartLine();
+							int startColumn = discussionThreadPropertiesInfo.getStartColumn();
+							int endLine = discussionThreadPropertiesInfo.getEndLine();
+							int endColumn = discussionThreadPropertiesInfo.getEndColumn();
 
-							int endOffset = document.getLineOffset(discussionThreadPropertiesInfo.getEndLine() - 1)
-									+ discussionThreadPropertiesInfo.getEndColumn() - 1;
+							int startOffset = document.getLineOffset(startLine - 1) + startColumn - 1;
+
+							int endOffset = document.getLineOffset(endLine - 1) + endColumn - 1;
 							List<DiscussionCommentInfo> discussionComments = discussionThreadInfo.getComments();
 
 							if (discussionComments != null) {
@@ -116,21 +124,69 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 									commentsBuilder.append(": ");
 									commentsBuilder.append(discussionCommentInfo.getContent());
 
-									Annotation annotation = new DiscussionAnnotation(discussionThreadInfo, discussionCommentInfo,
-											commentsBuilder.toString());
-
-									Position position = new Position(startOffset, endOffset - startOffset);
-									annotationModel.addAnnotation(annotation, position);
+									String comment = commentsBuilder.toString();
+									int threadId = discussionCommentInfo.getThreadId();
+									int commentId = discussionCommentInfo.getId();
+									String annotationKey = buildAnnotationKey(threadId, commentId, startLine, startColumn, endLine, endColumn);
+									Annotation annotation = discussionAnnotationsMap.remove(annotationKey);
+									if (annotation != null) {
+										annotation.setText(comment);
+									} else {
+										annotation = new DiscussionAnnotation(discussionThreadInfo, discussionCommentInfo, comment);
+										Position position = new Position(startOffset, endOffset - startOffset);
+										annotationModel.addAnnotation(annotation, position);
+									}
 								}
 							}
 						} catch (BadLocationException e) {
 						}
 					}
 				}
+
+				for (Annotation annotation : discussionAnnotationsMap.values()) {
+					annotationModel.removeAnnotation(annotation);
+				}
 			}
 		} catch (IOException e) {
 			ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
 		}
+	}
+
+	private String buildAnnotationKey(int threadId, int commentId, int startLine, int startColumn, int endLine, int endColumn) {
+		StringBuilder keyBuilder = new StringBuilder();
+		keyBuilder.append(threadId);
+		keyBuilder.append(",");
+		keyBuilder.append(commentId);
+		keyBuilder.append(",");
+		keyBuilder.append(startLine);
+		keyBuilder.append(",");
+		keyBuilder.append(startColumn);
+		keyBuilder.append(",");
+		keyBuilder.append(endLine);
+		keyBuilder.append(",");
+		keyBuilder.append(endColumn);
+		return keyBuilder.toString();
+	}
+
+	private Map<String, Annotation> getAllDiscussionAnnotations(IAnnotationModel annotationModel) {
+		Map<String, Annotation> result = new HashMap<String, Annotation>();
+		@SuppressWarnings("unchecked")
+		Iterator<Annotation> annotationIterator = annotationModel.getAnnotationIterator();
+		while (annotationIterator.hasNext()) {
+			Annotation annotation = annotationIterator.next();
+			if (annotation instanceof DiscussionAnnotation) {
+				DiscussionAnnotation discussionAnnotation = (DiscussionAnnotation) annotation;
+				int threadId = discussionAnnotation.getThreadId();
+				int commentId = discussionAnnotation.getCommentId();
+				int startLine = discussionAnnotation.getStartLine();
+				int startColumn = discussionAnnotation.getStartColumn();
+				int endLine = discussionAnnotation.getEndLine();
+				int endColumn = discussionAnnotation.getEndColumn();
+				String annotationKey = buildAnnotationKey(threadId, commentId, startLine, startColumn, endLine, endColumn);
+				result.put(annotationKey, annotation);
+			}
+		}
+		return result;
 	}
 
 	@Override
@@ -154,9 +210,8 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 			FileStoreEditorInput editorInput = (FileStoreEditorInput) editor.getEditorInput();
 			try {
 				TFSFileStore tfsFileStore = (TFSFileStore) EFS.getStore(editorInput.getURI());
-				if (shelvesetItem == null
-						|| (StringUtil.equals(shelvesetItem.getName(), tfsFileStore.getShelvesetName()) && StringUtil.equals(
-								shelvesetItem.getOwnerName(), tfsFileStore.getShelvesetOwnerName()))) {
+				if (shelvesetItem == null || (StringUtil.equals(shelvesetItem.getName(), tfsFileStore.getShelvesetName())
+						&& StringUtil.equals(shelvesetItem.getOwnerName(), tfsFileStore.getShelvesetOwnerName()))) {
 					annotateEditorPart(editor);
 				}
 			} catch (CoreException e) {
@@ -256,7 +311,6 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 	@Override
 	public void onShelvesetItemRefreshed(ShelvesetItemRefreshEvent event) {
 		refreshEditors(event.getShelvesetItem());
-
 	}
 
 }

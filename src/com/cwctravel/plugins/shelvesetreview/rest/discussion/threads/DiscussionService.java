@@ -139,6 +139,7 @@ public class DiscussionService {
 									discussionCommentInfos.add(discussionCommentInfo);
 								}
 							}
+							reparentComments(discussionCommentInfos);
 							discussionThreadInfo.setComments(discussionCommentInfos);
 
 							Map<String, ?> discussionThreadProperties = (Map<String, ?>) discussionThreadObj.get("properties");
@@ -198,6 +199,27 @@ public class DiscussionService {
 		}
 
 		return result;
+	}
+
+	private static void reparentComments(List<DiscussionCommentInfo> discussionCommentInfos) {
+		if (discussionCommentInfos != null) {
+			Map<Integer, DiscussionCommentInfo> discussionCommentInfoMap = new HashMap<Integer, DiscussionCommentInfo>();
+			for (DiscussionCommentInfo discussionCommentInfo : discussionCommentInfos) {
+				discussionCommentInfoMap.put(discussionCommentInfo.getId(), discussionCommentInfo);
+			}
+
+			for (DiscussionCommentInfo discussionCommentInfo : discussionCommentInfos) {
+				int parentId = discussionCommentInfo.getParentId();
+				DiscussionCommentInfo parentDiscussionCommentInfo = discussionCommentInfoMap.get(parentId);
+				if (parentDiscussionCommentInfo == null) {
+					discussionCommentInfoMap.put(parentId, discussionCommentInfo);
+					discussionCommentInfo.setParentId(0);
+				} else {
+					discussionCommentInfo.setParentId(parentDiscussionCommentInfo.getId());
+				}
+			}
+		}
+
 	}
 
 	private static Calendar toCalendar(Map<String, ?> obj, String dateProperty) {
@@ -282,8 +304,8 @@ public class DiscussionService {
 		HttpClient httpClient = tfsConnection.getHTTPClient();
 		String baseURI = tfsConnection.getBaseURI().toString();
 
-		PostMethod postMethod = new PostMethod(baseURI + "/_apis/discussion/threads/" + discussionReplyRequestInfo.getThreadId()
-				+ "/comments?api-version=3.0-preview.1");
+		PostMethod postMethod = new PostMethod(
+				baseURI + "/_apis/discussion/threads/" + discussionReplyRequestInfo.getThreadId() + "/comments?api-version=3.0-preview.1");
 
 		Map<String, Object> jsonRequestBody = toJSONMap(discussionReplyRequestInfo);
 
