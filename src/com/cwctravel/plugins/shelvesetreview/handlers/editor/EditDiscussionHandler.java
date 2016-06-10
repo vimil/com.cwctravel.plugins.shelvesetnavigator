@@ -9,6 +9,7 @@ import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.text.TextSelection;
+import org.eclipse.jface.text.source.IVerticalRulerInfo;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -24,12 +25,14 @@ import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
 public class EditDiscussionHandler extends AbstractHandler {
 	private DiscussionAnnotation discussionAnnotation;
 	private boolean isEditorClicked;
+	private boolean isRulerClicked;
 
 	public void setEnabled(Object evaluationContext) {
 		if (evaluationContext instanceof IEvaluationContext) {
 			IEvaluationContext context = (IEvaluationContext) evaluationContext;
 			String contextId = (String) context.getVariable("debugString");
 			isEditorClicked = contextId != null && contextId.endsWith("EditorContext");
+			isRulerClicked = contextId != null && contextId.endsWith("RulerContext");
 		}
 	}
 
@@ -37,7 +40,7 @@ public class EditDiscussionHandler extends AbstractHandler {
 		discussionAnnotation = null;
 
 		boolean result = false;
-		if (isEditorClicked) {
+		if (isEditorClicked || isRulerClicked) {
 			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 			IEditorPart editorPart = activeWorkbenchWindow.getActivePage().getActiveEditor();
 			if (editorPart instanceof AbstractTextEditor) {
@@ -48,11 +51,20 @@ public class EditDiscussionHandler extends AbstractHandler {
 						IFileStore fileStore = EFS.getStore(fileStoreEditorInput.getURI());
 						if (fileStore instanceof TFSFileStore) {
 							AbstractTextEditor textEditor = (AbstractTextEditor) editorPart;
-							TextSelection selection = (TextSelection) textEditor.getSelectionProvider().getSelection();
-							if (selection != null) {
-								discussionAnnotation = EditorUtil.getDiscussionAnnotationAtOffset(editorPart, selection.getOffset(),
-										selection.getLength(), false);
-								result = discussionAnnotation != null;
+							if (isEditorClicked) {
+								TextSelection selection = (TextSelection) textEditor.getSelectionProvider().getSelection();
+								if (selection != null) {
+									discussionAnnotation = EditorUtil.getDiscussionAnnotationAtOffset(editorPart, selection.getOffset(),
+											selection.getLength(), false);
+									result = discussionAnnotation != null;
+								}
+							} else {
+								IVerticalRulerInfo rulerInfo = (IVerticalRulerInfo) textEditor.getAdapter(IVerticalRulerInfo.class);
+								if (rulerInfo != null) {
+									int rulerLineNumber = rulerInfo.getLineOfLastMouseButtonActivity();
+									discussionAnnotation = EditorUtil.getDiscussionAnnotationAtLine(textEditor, rulerLineNumber);
+									result = discussionAnnotation != null;
+								}
 							}
 						}
 

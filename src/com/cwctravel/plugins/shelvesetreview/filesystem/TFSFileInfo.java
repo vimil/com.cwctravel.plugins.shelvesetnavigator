@@ -11,7 +11,7 @@ public class TFSFileInfo implements IFileInfo {
 	}
 
 	@Override
-	public int compareTo(Object o) {
+	public int compareTo(IFileInfo o) {
 		return 0;
 	}
 
@@ -35,7 +35,6 @@ public class TFSFileInfo implements IFileInfo {
 
 	@Override
 	public String getStringAttribute(int attribute) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

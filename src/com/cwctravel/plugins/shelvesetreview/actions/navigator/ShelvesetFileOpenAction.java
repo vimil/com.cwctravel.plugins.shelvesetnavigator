@@ -27,6 +27,7 @@ import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.ide.IDE;
+import org.eclipse.ui.internal.ErrorEditorPart;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 
@@ -70,6 +71,7 @@ public class ShelvesetFileOpenAction extends Action implements ISelectionChanged
 		return result;
 	}
 
+	@SuppressWarnings("restriction")
 	public void run() {
 		try {
 			if (shelvesetDiscussionItem != null) {
@@ -81,6 +83,10 @@ public class ShelvesetFileOpenAction extends Action implements ISelectionChanged
 				IEditorPart editorPart = null;
 				try {
 					editorPart = IDE.openEditorOnFileStore(page, fileStore);
+					if (editorPart instanceof ErrorEditorPart) {
+						page.closeEditor(editorPart, false);
+						editorPart = page.openEditor(new FileStoreEditorInput(fileStore), "org.eclipse.ui.DefaultTextEditor");
+					}
 				} catch (CoreException e) {
 					IContentType contentType = null;
 					String fileName = fileStore.fetchInfo().getName();
@@ -104,6 +110,8 @@ public class ShelvesetFileOpenAction extends Action implements ISelectionChanged
 					IEditorDescriptor defaultEditor = editorReg.getDefaultEditor(fileName, contentType);
 					if (defaultEditor != null) {
 						editorPart = page.openEditor(new FileStoreEditorInput(fileStore), defaultEditor.getId());
+					} else {
+						editorPart = page.openEditor(new FileStoreEditorInput(fileStore), "org.eclipse.ui.DefaultTextEditor");
 					}
 				}
 				if (shelvesetDiscussionItem != null && editorPart instanceof ITextEditor) {
