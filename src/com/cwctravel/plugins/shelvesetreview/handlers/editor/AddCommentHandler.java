@@ -122,7 +122,7 @@ public class AddCommentHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		if (isEditorClicked) {
+		if (isEditorClicked || isRulerClicked) {
 			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 			IEditorPart editorPart = activeWorkbenchWindow.getActivePage().getActiveEditor();
 			AbstractTextEditor textEditor = (AbstractTextEditor) editorPart;
