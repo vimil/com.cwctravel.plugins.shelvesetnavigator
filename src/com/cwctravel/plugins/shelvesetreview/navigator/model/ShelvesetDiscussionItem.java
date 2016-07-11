@@ -32,6 +32,10 @@ public class ShelvesetDiscussionItem extends ShelvesetResourceItem {
 		this.parentDiscussion = parentDiscussion;
 	}
 
+	public boolean isOverallDiscussion() {
+		return discussionCommentInfo == null;
+	}
+
 	@Override
 	public String getName() {
 		String result = "<Overall Discussion>";
@@ -211,7 +215,7 @@ public class ShelvesetDiscussionItem extends ShelvesetResourceItem {
 	public boolean canReply() {
 		boolean result = false;
 		if (childDiscussions == null || childDiscussions.isEmpty()) {
-			if (parentDiscussion != null) {
+			if (parentDiscussion != null && !parentDiscussion.isOverallDiscussion()) {
 				List<ShelvesetResourceItem> childDiscussions = parentDiscussion.getChildDiscussions();
 				if (childDiscussions.get(childDiscussions.size() - 1) == this) {
 					result = true;

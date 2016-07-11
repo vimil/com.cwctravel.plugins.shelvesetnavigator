@@ -130,32 +130,54 @@ public class EditorUtil {
 					TFSFileStore tfsFileStore = (TFSFileStore) fileStore;
 					ShelvesetItem shelvesetItem = ShelvesetReviewPlugin.getDefault().getShelvesetGroupItemContainer()
 							.findShelvesetItem(tfsFileStore.getShelvesetName(), tfsFileStore.getShelvesetOwnerName());
-					if (shelvesetItem != null) {
-						new Job("") {
-
-							@Override
-							protected IStatus run(IProgressMonitor monitor) {
-								shelvesetItem.refresh(monitor);
-								ShelvesetFileItem shelvesetFileItem = shelvesetItem.findFile(tfsFileStore.getPath());
-								if (shelvesetFileItem != null) {
-									Display.getDefault().asyncExec(
-											() -> {
-												Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-												DiscussionDialog discussionDialog = new DiscussionDialog(shelvesetItem, shelvesetFileItem.getPath(),
-														startLine, startColumn, endLine, endColumn, shell);
-												discussionDialog.create();
-												discussionDialog.open();
-											});
-								}
-								return Status.OK_STATUS;
-							}
-						}.schedule();
-
-					}
+					String shelvesetFileItemPath = tfsFileStore.getPath();
+					showDiscussionDialog(shelvesetItem, shelvesetFileItemPath, startLine, startColumn, endLine, endColumn);
 				}
 			} catch (CoreException e) {
 				ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
 			}
+		}
+	}
+
+	public static void showDiscussionDialog(ShelvesetItem shelvesetItem, String shelvesetFileItemPath, int startLine, int startColumn, int endLine,
+			int endColumn) {
+		if (shelvesetItem != null) {
+			new Job("") {
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+					shelvesetItem.refresh(monitor);
+
+					Display.getDefault().asyncExec(() -> {
+						Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+						DiscussionDialog discussionDialog = new DiscussionDialog(shelvesetItem, shelvesetFileItemPath, startLine, startColumn,
+								endLine, endColumn, shell);
+						discussionDialog.create();
+						discussionDialog.open();
+					});
+					return Status.OK_STATUS;
+				}
+			}.schedule();
+
+		}
+	}
+
+	public static void showDiscussionDialog(ShelvesetItem shelvesetItem, int threadId) {
+		if (shelvesetItem != null) {
+			new Job("") {
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+					shelvesetItem.refresh(monitor);
+
+					Display.getDefault().asyncExec(() -> {
+						Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+						DiscussionDialog discussionDialog = new DiscussionDialog(shelvesetItem, threadId, shell);
+						discussionDialog.create();
+						discussionDialog.open();
+					});
+					return Status.OK_STATUS;
+				}
+			}.schedule();
+
 		}
 	}
 
@@ -172,18 +194,27 @@ public class EditorUtil {
 							.findShelvesetItem(tfsFileStore.getShelvesetName(), tfsFileStore.getShelvesetOwnerName());
 					if (shelvesetItem != null) {
 						ShelvesetFileItem shelvesetFileItem = shelvesetItem.findFile(tfsFileStore.getPath());
-						if (shelvesetFileItem != null) {
-							Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-							DiscussionCommentDialog discussionCommentDialog = new DiscussionCommentDialog(shelvesetItem, shelvesetFileItem.getPath(),
-									startLine, startColumn, endLine, endColumn, shell);
-							discussionCommentDialog.create();
-							discussionCommentDialog.open();
-						}
+						showDiscussionCommentDialog(shelvesetFileItem, startLine, startColumn, endLine, endColumn);
 					}
 				}
 			} catch (CoreException e) {
 				ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
 			}
+		}
+	}
+
+	public static void showDiscussionCommentDialog(ShelvesetFileItem shelvesetFileItem) {
+		showDiscussionCommentDialog(shelvesetFileItem, -1, -1, -1, -1);
+	}
+
+	public static void showDiscussionCommentDialog(ShelvesetFileItem shelvesetFileItem, int startLine, int startColumn, int endLine, int endColumn) {
+		if (shelvesetFileItem != null) {
+			ShelvesetItem shelvesetItem = shelvesetFileItem.getParent();
+			Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+			DiscussionCommentDialog discussionCommentDialog = new DiscussionCommentDialog(shelvesetItem, shelvesetFileItem.getPath(), startLine,
+					startColumn, endLine, endColumn, shell);
+			discussionCommentDialog.create();
+			discussionCommentDialog.open();
 		}
 	}
 

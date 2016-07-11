@@ -10,8 +10,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.text.source.IVerticalRulerInfo;
+import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.ISources;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
@@ -20,20 +22,41 @@ import org.eclipse.ui.texteditor.AbstractTextEditor;
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.annotator.DiscussionAnnotation;
 import com.cwctravel.plugins.shelvesetreview.filesystem.TFSFileStore;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
 
 public class EditDiscussionHandler extends AbstractHandler {
 	private DiscussionAnnotation discussionAnnotation;
 	private boolean isEditorClicked;
+
+	private ShelvesetDiscussionItem shelvesetDiscussionItem;
+
 	private boolean isRulerClicked;
 
 	public void setEnabled(Object evaluationContext) {
+		shelvesetDiscussionItem = null;
 		if (evaluationContext instanceof IEvaluationContext) {
 			IEvaluationContext context = (IEvaluationContext) evaluationContext;
 			String contextId = (String) context.getVariable("debugString");
 			isEditorClicked = contextId != null && contextId.endsWith("EditorContext");
 			isRulerClicked = contextId != null && contextId.endsWith("RulerContext");
+
+			if (!isEditorClicked && !isRulerClicked) {
+				Object selection = context.getVariable(ISources.ACTIVE_CURRENT_SELECTION_NAME);
+				if (selection instanceof TreeSelection) {
+					TreeSelection treeSelection = (TreeSelection) selection;
+					if (treeSelection.size() == 1) {
+						Object firstElement = treeSelection.getFirstElement();
+						if (firstElement instanceof ShelvesetDiscussionItem) {
+							shelvesetDiscussionItem = (ShelvesetDiscussionItem) firstElement;
+						}
+					}
+				}
+			}
+
 		}
+
 	}
 
 	public boolean isEnabled() {
@@ -73,6 +96,11 @@ public class EditDiscussionHandler extends AbstractHandler {
 					}
 				}
 			}
+		} else {
+			ShelvesetDiscussionItem parentDiscussion = shelvesetDiscussionItem.getParentDiscussion();
+			if (shelvesetDiscussionItem != null && parentDiscussion == null) {
+				result = true;
+			}
 		}
 		return result;
 	}
@@ -84,6 +112,18 @@ public class EditDiscussionHandler extends AbstractHandler {
 			IEditorPart editorPart = activeWorkbenchWindow.getActivePage().getActiveEditor();
 			EditorUtil.showDiscussionDialog(editorPart, discussionAnnotation.getStartLine(), discussionAnnotation.getStartColumn(),
 					discussionAnnotation.getEndLine(), discussionAnnotation.getEndColumn());
+		} else {
+			ShelvesetDiscussionItem parentDiscussion = shelvesetDiscussionItem.getParentDiscussion();
+			if (shelvesetDiscussionItem != null && parentDiscussion == null) {
+				ShelvesetFileItem shelvesetFileItem = shelvesetDiscussionItem.getParentFile();
+				if (shelvesetFileItem != null) {
+					EditorUtil.showDiscussionDialog(shelvesetDiscussionItem.getParent(), shelvesetFileItem.getPath(),
+							shelvesetDiscussionItem.getStartLine(), shelvesetDiscussionItem.getStartColumn(), shelvesetDiscussionItem.getEndLine(),
+							shelvesetDiscussionItem.getEndColumn());
+				} else {
+					EditorUtil.showDiscussionDialog(shelvesetDiscussionItem.getParent(), null, -1, -1, -1, -1);
+				}
+			}
 		}
 		return null;
 	}

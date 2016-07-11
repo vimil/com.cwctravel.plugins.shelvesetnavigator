@@ -265,7 +265,11 @@ public class ShelvesetItem implements IAdaptable {
 	}
 
 	public boolean isApprovedByUser(String userId) {
-		return ShelvesetUtil.isApprovedbyUser(shelveset, userId);
+		return ShelvesetUtil.isApprovedByUser(shelveset, userId);
+	}
+
+	public boolean isApproved() {
+		return ShelvesetUtil.isApproved(shelveset);
 	}
 
 	public void unapprove() throws ApproveException {

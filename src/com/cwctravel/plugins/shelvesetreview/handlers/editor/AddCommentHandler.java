@@ -12,8 +12,10 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.text.source.IVerticalRulerInfo;
+import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.ISources;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
@@ -23,6 +25,7 @@ import org.eclipse.ui.texteditor.IDocumentProvider;
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.annotator.DiscussionAnnotation;
 import com.cwctravel.plugins.shelvesetreview.filesystem.TFSFileStore;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
 
 public class AddCommentHandler extends AbstractHandler {
@@ -32,13 +35,30 @@ public class AddCommentHandler extends AbstractHandler {
 	private int endLine;
 	private int startColumn;
 	private int endColumn;
+	private ShelvesetFileItem shelvesetFileItem;
 
 	public void setEnabled(Object evaluationContext) {
+		shelvesetFileItem = null;
+
 		if (evaluationContext instanceof IEvaluationContext) {
 			IEvaluationContext context = (IEvaluationContext) evaluationContext;
 			String contextId = (String) context.getVariable("debugString");
 			isEditorClicked = contextId != null && contextId.endsWith("EditorContext");
 			isRulerClicked = contextId != null && contextId.endsWith("RulerContext");
+
+			if (!isEditorClicked && !isRulerClicked) {
+				Object selection = context.getVariable(ISources.ACTIVE_CURRENT_SELECTION_NAME);
+				if (selection instanceof TreeSelection) {
+					TreeSelection treeSelection = (TreeSelection) selection;
+					if (treeSelection.size() == 1) {
+						Object firstElement = treeSelection.getFirstElement();
+						if (firstElement instanceof ShelvesetFileItem) {
+							shelvesetFileItem = (ShelvesetFileItem) firstElement;
+						}
+					}
+				}
+			}
+
 		}
 	}
 
@@ -94,16 +114,22 @@ public class AddCommentHandler extends AbstractHandler {
 					}
 				}
 			}
+		} else if (shelvesetFileItem != null) {
+			result = true;
 		}
 		return result;
 	}
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-		IEditorPart editorPart = activeWorkbenchWindow.getActivePage().getActiveEditor();
-		AbstractTextEditor textEditor = (AbstractTextEditor) editorPart;
-		EditorUtil.showDiscussionCommentDialog(textEditor, startLine, startColumn, endLine, endColumn);
+		if (isEditorClicked || isRulerClicked) {
+			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+			IEditorPart editorPart = activeWorkbenchWindow.getActivePage().getActiveEditor();
+			AbstractTextEditor textEditor = (AbstractTextEditor) editorPart;
+			EditorUtil.showDiscussionCommentDialog(textEditor, startLine, startColumn, endLine, endColumn);
+		} else {
+			EditorUtil.showDiscussionCommentDialog(shelvesetFileItem);
+		}
 		return null;
 	}
 }

@@ -512,7 +512,7 @@ public class ShelvesetUtil {
 	public static boolean canApprove(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) {
 		String currentUserId = TFSUtil.getCurrentUserName();
 		return !isShelvesetInactive(shelveset) && isUserReviewer(currentUserId, shelveset, reviewGroupMembers)
-				&& !isApprovedbyUser(shelveset, currentUserId) && !TFSUtil.userNamesSame(currentUserId, shelveset.getOwnerName());
+				&& !isApprovedByUser(shelveset, currentUserId) && !TFSUtil.userNamesSame(currentUserId, shelveset.getOwnerName());
 	}
 
 	public static boolean isCurrentUserReviewer(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) {
@@ -521,7 +521,7 @@ public class ShelvesetUtil {
 				&& !TFSUtil.userNamesSame(currentUserId, shelveset.getOwnerName());
 	}
 
-	public static boolean isApprovedbyUser(Shelveset shelveset, String userId) {
+	public static boolean isApprovedByUser(Shelveset shelveset, String userId) {
 		boolean result = false;
 		String[] approverIds = getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS);
 		if (approverIds != null) {
@@ -534,6 +534,11 @@ public class ShelvesetUtil {
 			}
 		}
 		return result;
+	}
+
+	public static boolean isApproved(Shelveset shelveset) {
+		String[] approverIds = getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS);
+		return approverIds != null && approverIds.length > 0;
 	}
 
 	public static void unapprove(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) throws ApproveException {
@@ -561,7 +566,7 @@ public class ShelvesetUtil {
 	public static Boolean canUnapprove(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) {
 		String currentUserId = TFSUtil.getCurrentUserName();
 		return !isShelvesetInactive(shelveset) && isUserReviewer(currentUserId, shelveset, reviewGroupMembers)
-				&& isApprovedbyUser(shelveset, currentUserId) && !TFSUtil.userNamesSame(currentUserId, shelveset.getOwnerName());
+				&& isApprovedByUser(shelveset, currentUserId) && !TFSUtil.userNamesSame(currentUserId, shelveset.getOwnerName());
 
 	}
 }
