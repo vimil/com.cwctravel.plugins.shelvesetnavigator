@@ -146,6 +146,8 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 	}
 
 	public static Image getImage(String key) {
+		// Bundle b =
+		// Platform.getBundle("com.cwctravel.plugins.shelvesetreview");
 		return getDefault().getImageRegistry().get(key);
 	}
 
