@@ -402,10 +402,8 @@ public class DiscussionService {
 					endColumnPropertyValueMap.put("type", "System.Int32");
 					endColumnPropertyValueMap.put("value", endCol);
 					propertiesMap.put("Microsoft.TeamFoundation.Discussion.Position.EndColumn", endColumnPropertyValueMap);
-
-					result.put("properties", propertiesMap);
 				}
-
+				result.put("properties", propertiesMap);
 			}
 
 			List<Map<String, Object>> commentsList = new ArrayList<Map<String, Object>>();

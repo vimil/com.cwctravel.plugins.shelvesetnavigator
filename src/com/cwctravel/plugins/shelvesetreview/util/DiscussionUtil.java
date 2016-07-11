@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCommentInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadInfo;
@@ -137,6 +140,48 @@ public class DiscussionUtil {
 					}
 				}
 				return false;
+			}
+			return true;
+		});
+		return result;
+	}
+
+	public static List<ShelvesetDiscussionItem> getTopLevelDiscussionItems(Object inputItem, int threadId) {
+		return getTopLevelDiscussionItemsInternal(inputItem, threadId);
+	}
+
+	private static List<ShelvesetDiscussionItem> getTopLevelDiscussionItemsInternal(Object inputItem, int threadId) {
+		List<ShelvesetDiscussionItem> result = new ArrayList<ShelvesetDiscussionItem>();
+		VisitorUtil.visit(inputItem, (item) -> {
+			if (item instanceof ShelvesetDiscussionItem) {
+				ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) item;
+				if (shelvesetDiscussionItem.getThreadId() == threadId) {
+					result.add(shelvesetDiscussionItem);
+				}
+				return shelvesetDiscussionItem.isOverallDiscussion();
+			}
+			return true;
+		});
+		return result;
+	}
+
+	public static List<ShelvesetDiscussionItem> getTopLevelDiscussionItems(ShelvesetItem shelvesetItem) {
+		return getTopLevelDiscussionItemsInternal(shelvesetItem);
+	}
+
+	private static List<ShelvesetDiscussionItem> getTopLevelDiscussionItemsInternal(ShelvesetItem shelvesetItem) {
+		List<ShelvesetDiscussionItem> result = new ArrayList<ShelvesetDiscussionItem>();
+		VisitorUtil.visit(shelvesetItem, (item) -> {
+			if (item instanceof ShelvesetFolderItem || item instanceof ShelvesetFileItem) {
+				return false;
+			}
+			if (item instanceof ShelvesetDiscussionItem) {
+				ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) item;
+				if (!shelvesetDiscussionItem.isOverallDiscussion()) {
+					result.add(shelvesetDiscussionItem);
+					return false;
+				}
+				return true;
 			}
 			return true;
 		});

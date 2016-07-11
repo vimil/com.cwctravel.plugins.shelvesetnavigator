@@ -229,7 +229,7 @@
                               value="true">
                         </test>
                         <test
-                              property="com.cwctravel.plugins.shelvesetreview.belongsToCurrentUser"
+                              property="com.cwctravel.plugins.shelvesetreview.shelvesetitem.belongsToCurrentUser"
                               value="true">
                         </test>
                      </and>
@@ -366,10 +366,30 @@
       <handler
             class="com.cwctravel.plugins.shelvesetreview.handlers.editor.EditDiscussionHandler"
             commandId="com.cwctravel.plugins.shelvesetreview.editor.commands.EditDiscussionCommand">
+         <enabledWhen>
+            <with
+                  variable="org.eclipse.core.runtime.Platform">
+               <test
+                     args="com.cwctravel.plugins.shelvesetreview"
+                     property="org.eclipse.core.runtime.bundleState"
+                     value="ACTIVE">
+               </test>
+            </with>
+         </enabledWhen>
       </handler>
       <handler
             class="com.cwctravel.plugins.shelvesetreview.handlers.editor.AddCommentHandler"
             commandId="com.cwctravel.plugins.shelvesetreview.editor.commands.AddCommentCommand">
+         <enabledWhen>
+            <with
+                  variable="org.eclipse.core.runtime.Platform">
+               <test
+                     args="com.cwctravel.plugins.shelvesetreview"
+                     property="org.eclipse.core.runtime.bundleState"
+                     value="ACTIVE">
+               </test>
+            </with>
+         </enabledWhen>
       </handler>
       <handler
             class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.RefreshHandler"

@@ -47,6 +47,8 @@ import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 
 public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemRefreshListener {
 	private ShelvesetItem input;
+	private int threadId;
+
 	private String path;
 	private int startLine;
 	private int startColumn;
@@ -60,23 +62,32 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 	private Button deleteButton;
 
 	public DiscussionDialog(ShelvesetItem input, String path, int startLine, Shell parentShell) {
-		this(input, path, startLine, -1, startLine, -1, parentShell);
+		this(input, -1, path, startLine, -1, startLine, -1, parentShell);
 	}
 
 	public DiscussionDialog(ShelvesetItem input, String path, int startLine, int startColumn, Shell parentShell) {
-		this(input, path, startLine, startColumn, startLine, startColumn, parentShell);
+		this(input, -1, path, startLine, startColumn, startLine, startColumn, parentShell);
+	}
+
+	public DiscussionDialog(ShelvesetItem input, int threadId, Shell parentShell) {
+		this(input, threadId, null, -1, -1, -1, -1, parentShell);
 	}
 
 	public DiscussionDialog(ShelvesetItem input, String path, int startLine, int startColumn, int endLine, int endColumn, Shell parentShell) {
+		this(input, -1, path, startLine, startColumn, endLine, endColumn, parentShell);
+	}
+
+	protected DiscussionDialog(ShelvesetItem input, int threadId, String path, int startLine, int startColumn, int endLine, int endColumn,
+			Shell parentShell) {
 		super(parentShell);
 		this.input = input;
+		this.threadId = threadId;
 		this.path = path;
 		this.startLine = startLine;
 		this.startColumn = startColumn;
 		this.endLine = endLine;
 		this.endColumn = endColumn;
 		ShelvesetReviewPlugin.getDefault().addShelvesetItemRefreshListener(this);
-
 	}
 
 	@Override
@@ -212,8 +223,8 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 			@Override
 			public void handleEvent(Event event) {
 				Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-				DiscussionCommentDialog discussionCommentDialog = new DiscussionCommentDialog(input, path, startLine, startColumn, endLine,
-						endColumn, shell);
+				DiscussionCommentDialog discussionCommentDialog = new DiscussionCommentDialog(input, path, startLine, startColumn, endLine, endColumn,
+						shell);
 				discussionCommentDialog.create();
 				discussionCommentDialog.open();
 			}
@@ -259,7 +270,10 @@ public class DiscussionDialog extends TitleAreaDialog implements IShelvesetItemR
 		discussionGrid.setAutoHeight(true);
 		discussionGrid.setHeaderVisible(false);
 		discussionGrid.setLinesVisible(false);
-		discussionViewer.setContentProvider(new DiscussionContentProvider(path, startLine, startColumn, endLine, endColumn));
+
+		DiscussionContentProvider discussionContentProvider = threadId >= 0 ? new DiscussionContentProvider(threadId)
+				: new DiscussionContentProvider(path, startLine, startColumn, endLine, endColumn);
+		discussionViewer.setContentProvider(discussionContentProvider);
 		discussionViewer.setLabelProvider(new DiscussionLabelProvider());
 		discussionViewer.setCellEditors(new CellEditor[] { new TextCellEditor(discussionGrid, SWT.MULTI | SWT.WRAP | SWT.V_SCROLL | SWT.H_SCROLL) });
 		discussionViewer.setCellModifier(new ICellModifier() {
