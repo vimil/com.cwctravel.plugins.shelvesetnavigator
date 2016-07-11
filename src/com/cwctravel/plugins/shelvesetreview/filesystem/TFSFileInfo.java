@@ -35,7 +35,6 @@ public class TFSFileInfo implements IFileInfo {
 
 	@Override
 	public String getStringAttribute(int attribute) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

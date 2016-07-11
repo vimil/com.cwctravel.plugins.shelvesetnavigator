@@ -11,6 +11,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.TextSelection;
+import org.eclipse.jface.text.source.IVerticalRulerInfo;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -29,6 +30,7 @@ import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
 
 public class AddCommentHandler extends AbstractHandler {
 	private boolean isEditorClicked;
+	private boolean isRulerClicked;
 	private int startLine;
 	private int endLine;
 	private int startColumn;
@@ -42,8 +44,9 @@ public class AddCommentHandler extends AbstractHandler {
 			IEvaluationContext context = (IEvaluationContext) evaluationContext;
 			String contextId = (String) context.getVariable("debugString");
 			isEditorClicked = contextId != null && contextId.endsWith("EditorContext");
+			isRulerClicked = contextId != null && contextId.endsWith("RulerContext");
 
-			if (!isEditorClicked) {
+			if (!isEditorClicked && !isRulerClicked) {
 				Object selection = context.getVariable(ISources.ACTIVE_CURRENT_SELECTION_NAME);
 				if (selection instanceof TreeSelection) {
 					TreeSelection treeSelection = (TreeSelection) selection;
@@ -55,12 +58,13 @@ public class AddCommentHandler extends AbstractHandler {
 					}
 				}
 			}
+
 		}
 	}
 
 	public boolean isEnabled() {
 		boolean result = false;
-		if (isEditorClicked) {
+		if (isEditorClicked || isRulerClicked) {
 			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 			IEditorPart editorPart = activeWorkbenchWindow.getActivePage().getActiveEditor();
 			if (editorPart instanceof AbstractTextEditor) {
@@ -71,19 +75,36 @@ public class AddCommentHandler extends AbstractHandler {
 						IFileStore fileStore = EFS.getStore(fileStoreEditorInput.getURI());
 						if (fileStore instanceof TFSFileStore) {
 							AbstractTextEditor textEditor = (AbstractTextEditor) editorPart;
-							TextSelection selection = (TextSelection) textEditor.getSelectionProvider().getSelection();
-							if (selection != null) {
-								DiscussionAnnotation discussionAnnotation = EditorUtil.getDiscussionAnnotationAtOffset(editorPart,
-										selection.getOffset(), selection.getLength(), false);
-								if (discussionAnnotation == null) {
-									IDocumentProvider documentProvider = textEditor.getDocumentProvider();
-									IDocument document = documentProvider.getDocument(editorInput);
+							if (isEditorClicked) {
+								TextSelection selection = (TextSelection) textEditor.getSelectionProvider().getSelection();
+								if (selection != null) {
+									DiscussionAnnotation discussionAnnotation = EditorUtil.getDiscussionAnnotationAtOffset(editorPart,
+											selection.getOffset(), selection.getLength(), false);
+									if (discussionAnnotation == null) {
+										IDocumentProvider documentProvider = textEditor.getDocumentProvider();
+										IDocument document = documentProvider.getDocument(editorInput);
 
-									startLine = selection.getStartLine() + 1;
-									endLine = selection.getEndLine() + 1;
-									startColumn = selection.getOffset() - document.getLineOffset(startLine - 1) + 1;
-									endColumn = selection.getOffset() + selection.getLength() - document.getLineOffset(endLine - 1) + 1;
-									result = true;
+										startLine = selection.getStartLine() + 1;
+										endLine = selection.getEndLine() + 1;
+										startColumn = selection.getOffset() - document.getLineOffset(startLine - 1) + 1;
+										endColumn = selection.getOffset() + selection.getLength() - document.getLineOffset(endLine - 1) + 1;
+										result = true;
+									}
+								}
+							} else {
+								IVerticalRulerInfo rulerInfo = (IVerticalRulerInfo) textEditor.getAdapter(IVerticalRulerInfo.class);
+								if (rulerInfo != null) {
+									int rulerLineNumber = rulerInfo.getLineOfLastMouseButtonActivity();
+									DiscussionAnnotation discussionAnnotation = EditorUtil.getDiscussionAnnotationAtLine(textEditor, rulerLineNumber);
+									if (discussionAnnotation == null) {
+										IDocumentProvider documentProvider = textEditor.getDocumentProvider();
+										IDocument document = documentProvider.getDocument(editorInput);
+										startLine = rulerLineNumber + 1;
+										endLine = startLine;
+										startColumn = 1;
+										endColumn = document.getLineLength(rulerLineNumber) + 1;
+										result = true;
+									}
 								}
 							}
 						}

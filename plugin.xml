@@ -512,11 +512,6 @@
       </menuContribution>
       <menuContribution
             allPopups="false"
-            class="com.cwctravel.plugins.shelvesetreview.annotator.DiscussionAnnotationMenuContributionFactory"
-            locationURI="popup:#AbstractTextEditorRulerContext?after=additions">
-      </menuContribution>
-      <menuContribution
-            allPopups="false"
             locationURI="popup:org.eclipse.ui.popup.any?after=additions?after=additions">
          <command
                commandId="com.cwctravel.plugins.shelvesetreview.editor.commands.EditDiscussionCommand"

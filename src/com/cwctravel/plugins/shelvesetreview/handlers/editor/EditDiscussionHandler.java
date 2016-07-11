@@ -9,6 +9,7 @@ import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.text.TextSelection;
+import org.eclipse.jface.text.source.IVerticalRulerInfo;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -28,7 +29,10 @@ import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
 public class EditDiscussionHandler extends AbstractHandler {
 	private DiscussionAnnotation discussionAnnotation;
 	private boolean isEditorClicked;
+
 	private ShelvesetDiscussionItem shelvesetDiscussionItem;
+
+	private boolean isRulerClicked;
 
 	public void setEnabled(Object evaluationContext) {
 		shelvesetDiscussionItem = null;
@@ -36,8 +40,9 @@ public class EditDiscussionHandler extends AbstractHandler {
 			IEvaluationContext context = (IEvaluationContext) evaluationContext;
 			String contextId = (String) context.getVariable("debugString");
 			isEditorClicked = contextId != null && contextId.endsWith("EditorContext");
+			isRulerClicked = contextId != null && contextId.endsWith("RulerContext");
 
-			if (!isEditorClicked) {
+			if (!isEditorClicked && !isRulerClicked) {
 				Object selection = context.getVariable(ISources.ACTIVE_CURRENT_SELECTION_NAME);
 				if (selection instanceof TreeSelection) {
 					TreeSelection treeSelection = (TreeSelection) selection;
@@ -49,6 +54,7 @@ public class EditDiscussionHandler extends AbstractHandler {
 					}
 				}
 			}
+
 		}
 
 	}
@@ -57,7 +63,7 @@ public class EditDiscussionHandler extends AbstractHandler {
 		discussionAnnotation = null;
 
 		boolean result = false;
-		if (isEditorClicked) {
+		if (isEditorClicked || isRulerClicked) {
 			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 			IEditorPart editorPart = activeWorkbenchWindow.getActivePage().getActiveEditor();
 			if (editorPart instanceof AbstractTextEditor) {
@@ -68,11 +74,20 @@ public class EditDiscussionHandler extends AbstractHandler {
 						IFileStore fileStore = EFS.getStore(fileStoreEditorInput.getURI());
 						if (fileStore instanceof TFSFileStore) {
 							AbstractTextEditor textEditor = (AbstractTextEditor) editorPart;
-							TextSelection selection = (TextSelection) textEditor.getSelectionProvider().getSelection();
-							if (selection != null) {
-								discussionAnnotation = EditorUtil.getDiscussionAnnotationAtOffset(editorPart, selection.getOffset(),
-										selection.getLength(), false);
-								result = discussionAnnotation != null;
+							if (isEditorClicked) {
+								TextSelection selection = (TextSelection) textEditor.getSelectionProvider().getSelection();
+								if (selection != null) {
+									discussionAnnotation = EditorUtil.getDiscussionAnnotationAtOffset(editorPart, selection.getOffset(),
+											selection.getLength(), false);
+									result = discussionAnnotation != null;
+								}
+							} else {
+								IVerticalRulerInfo rulerInfo = (IVerticalRulerInfo) textEditor.getAdapter(IVerticalRulerInfo.class);
+								if (rulerInfo != null) {
+									int rulerLineNumber = rulerInfo.getLineOfLastMouseButtonActivity();
+									discussionAnnotation = EditorUtil.getDiscussionAnnotationAtLine(textEditor, rulerLineNumber);
+									result = discussionAnnotation != null;
+								}
 							}
 						}
 
