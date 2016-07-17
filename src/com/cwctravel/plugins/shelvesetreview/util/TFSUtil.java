@@ -13,6 +13,7 @@ import org.eclipse.core.runtime.IStatus;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.microsoft.tfs.client.common.repository.TFSRepository;
+import com.microsoft.tfs.client.common.server.TFSServer;
 import com.microsoft.tfs.client.eclipse.TFSEclipseClientPlugin;
 import com.microsoft.tfs.core.TFSConnection;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
@@ -22,6 +23,7 @@ import com.microsoft.tfs.core.clients.webservices.IdentitySearchFactor;
 import com.microsoft.tfs.core.clients.webservices.MembershipQuery;
 import com.microsoft.tfs.core.clients.webservices.ReadIdentityOptions;
 import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
+import com.microsoft.tfs.core.clients.workitem.WorkItemClient;
 
 public class TFSUtil {
 	public static VersionControlClient getVersionControlClient() {
@@ -33,12 +35,30 @@ public class TFSUtil {
 		return vC;
 	}
 
+	public static WorkItemClient getWorkItemClient() {
+		WorkItemClient wIC = null;
+		TFSRepository tfsRepository = TFSEclipseClientPlugin.getDefault().getRepositoryManager().getDefaultRepository();
+		if (tfsRepository != null) {
+			wIC = (WorkItemClient) tfsRepository.getConnection().getClient(WorkItemClient.class);
+		}
+		return wIC;
+	}
+
 	public static TFSConnection getTFSConnection() {
 		TFSConnection result = null;
 
 		TFSRepository tfsRepository = TFSEclipseClientPlugin.getDefault().getRepositoryManager().getDefaultRepository();
 		if (tfsRepository != null) {
 			result = tfsRepository.getConnection();
+		}
+		return result;
+	}
+
+	public static TFSServer getTFSServer() {
+		TFSServer result = null;
+		TFSConnection tfsConnection = getTFSConnection();
+		if (tfsConnection != null) {
+			result = TFSEclipseClientPlugin.getDefault().getServerManager().getServer(tfsConnection.getBaseURI());
 		}
 		return result;
 	}
@@ -62,9 +82,8 @@ public class TFSUtil {
 		URI result = null;
 		try {
 			String hash = computeMD5Hash(downloadURL);
-			result = new URI("tfs://"
-					+ Base64.getUrlEncoder().encodeToString(
-							(path + ";" + downloadURL + ";" + hash + ";" + shelvesetName + ";" + shelvesetOwnerName).getBytes("UTF-8")));
+			result = new URI("tfs://" + Base64.getUrlEncoder()
+					.encodeToString((path + ";" + downloadURL + ";" + hash + ";" + shelvesetName + ";" + shelvesetOwnerName).getBytes("UTF-8")));
 		} catch (UnsupportedEncodingException | URISyntaxException | NoSuchAlgorithmException uEE) {
 			ShelvesetReviewPlugin.log(IStatus.WARNING, uEE.getMessage(), uEE);
 		}

@@ -50,6 +50,8 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 	public static final String DISCUSSION_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.discussion";
 	public static final String DISCUSSION_OVR_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.ovr.discussion";
 	public static final String APPROVED_OVR_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.ovr.approved";
+	public static final String WORKITEMS_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.workitems";
+	public static final String WORKITEM_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.workitem";
 
 	private static ShelvesetReviewPlugin plugin;
 
@@ -113,6 +115,12 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 		ImageDescriptor approvedOverlayIconImage = ImageDescriptor
 				.createFromURL(FileLocator.find(bundle, new Path("icons/approved-ovr-icon.png"), null));
 		registry.put(APPROVED_OVR_ICON_ID, approvedOverlayIconImage);
+
+		ImageDescriptor workitemsIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/workitems.png"), null));
+		registry.put(WORKITEMS_ICON_ID, workitemsIconImage);
+
+		ImageDescriptor workitemIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/workitem.png"), null));
+		registry.put(WORKITEM_ICON_ID, workitemIconImage);
 	}
 
 	public void start(BundleContext context) throws Exception {

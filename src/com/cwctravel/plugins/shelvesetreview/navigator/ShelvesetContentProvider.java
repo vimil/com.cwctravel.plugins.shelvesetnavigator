@@ -19,6 +19,8 @@ import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetUserCategoryItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetUserItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItemContainer;
 
 public class ShelvesetContentProvider implements IPipelinedTreeContentProvider {
 
@@ -81,6 +83,9 @@ public class ShelvesetContentProvider implements IPipelinedTreeContentProvider {
 			ShelvesetDiscussionItem shelvesetDiscussionItem = (ShelvesetDiscussionItem) inputElement;
 			List<ShelvesetResourceItem> shelvesetResourceItems = shelvesetDiscussionItem.getChildDiscussions();
 			result = shelvesetResourceItems.toArray(new ShelvesetResourceItem[0]);
+		} else if (inputElement instanceof ShelvesetWorkItemContainer) {
+			ShelvesetWorkItemContainer shelvesetWorkItemContainer = (ShelvesetWorkItemContainer) inputElement;
+			result = shelvesetWorkItemContainer.getWorkItems().toArray(new ShelvesetResourceItem[0]);
 		}
 		return result;
 	}
@@ -128,6 +133,12 @@ public class ShelvesetContentProvider implements IPipelinedTreeContentProvider {
 					result = shelvesetDiscussionItem.getParent();
 				}
 			}
+		} else if (element instanceof ShelvesetWorkItem) {
+			ShelvesetWorkItem shelvesetWorkItem = (ShelvesetWorkItem) element;
+			result = shelvesetWorkItem.getWorkItemContainer();
+		} else if (element instanceof ShelvesetWorkItemContainer) {
+			ShelvesetWorkItemContainer shelvesetWorkItemContainer = (ShelvesetWorkItemContainer) element;
+			result = shelvesetWorkItemContainer.getParent();
 		} else if (element instanceof ShelvesetResourceItem) {
 			ShelvesetResourceItem shelvesetResourceItem = (ShelvesetResourceItem) element;
 			result = shelvesetResourceItem.getParentFolder();

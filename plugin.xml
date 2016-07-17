@@ -51,10 +51,10 @@
                      value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
                </instanceof>
                <instanceof
-                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem">
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem">
                </instanceof>
                <instanceof
-                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem">
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem">
                </instanceof>
             </or>
          </triggerPoints>
@@ -130,13 +130,23 @@
             class="com.cwctravel.plugins.shelvesetreview.navigator.ShelvesetFileLinkHelper"
             id="com.cwctravel.plugins.shelvesetreview.navigator.ShelvesetFileLinkHelper">
          <editorInputEnablement>
-            <instanceof
-                  value="org.eclipse.ui.IURIEditorInput">
-            </instanceof></editorInputEnablement>
+            <or>
+               <instanceof
+                     value="org.eclipse.ui.IURIEditorInput">
+               </instanceof>
+               <instanceof
+                     value="com.microsoft.tfs.client.common.ui.wit.form.WorkItemEditorInput">
+               </instanceof>
+            </or></editorInputEnablement>
          <selectionEnablement>
-            <instanceof
-                  value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem">
-            </instanceof>
+            <or>
+               <instanceof
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem">
+               </instanceof>
+               <instanceof
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItem">
+               </instanceof>
+            </or>
          </selectionEnablement>
       </linkHelper>
    </extension>
@@ -555,6 +565,9 @@
                </objectClass>
                <objectClass
                      name="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem">
+               </objectClass>
+               <objectClass
+                     name="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItem">
                </objectClass>
             </or>
          </enablement>

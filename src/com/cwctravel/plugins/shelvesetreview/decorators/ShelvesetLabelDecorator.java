@@ -10,6 +10,7 @@ import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussion
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItem;
 import com.cwctravel.plugins.shelvesetreview.util.DateUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.ChangeType;
 
@@ -87,6 +88,9 @@ public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
 			if (authorDisplayName != null) {
 				decoration.addSuffix(" [" + authorDisplayName + "]");
 			}
+		} else if (element instanceof ShelvesetWorkItem) {
+			ShelvesetWorkItem shelvesetWorkItem = (ShelvesetWorkItem) element;
+			decoration.addSuffix(" [" + shelvesetWorkItem.getWorkItemID() + "]");
 		}
 	}
 }

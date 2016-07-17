@@ -284,6 +284,10 @@ public class ShelvesetItem implements IAdaptable {
 		return TFSUtil.userNamesSame(TFSUtil.getCurrentUserName(), shelveset.getOwnerName());
 	}
 
+	public Shelveset getShelveset() {
+		return shelveset;
+	}
+
 	@Override
 	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
 		if (ShelvesetItem.class.equals(adapter)) {

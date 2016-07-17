@@ -20,6 +20,8 @@ import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.comparators.ReviewerComparator;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.DiscussionService;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCommentInfo;
@@ -29,6 +31,7 @@ import com.microsoft.tfs.core.TFSConnection;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PropertyValue;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
+import com.microsoft.tfs.core.clients.versioncontrol.workspacecache.WorkItemCheckedInfo;
 import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
 import ms.tfs.versioncontrol.clientservices._03._PropertyValue;
@@ -55,6 +58,28 @@ public class ShelvesetUtil {
 		ShelvesetDiscussionItem overallShelvesetDiscussionItem = processShelvesetItemDiscussions(shelvesetItem, shelvesetFileItems, discussionInfo);
 		if (overallShelvesetDiscussionItem != null) {
 			result.add(0, overallShelvesetDiscussionItem);
+		}
+
+		ShelvesetWorkItemContainer shelvesetWorkItemContainer = processShelvesetWorkItems(shelvesetItem);
+		if (shelvesetWorkItemContainer != null) {
+			result.add(0, shelvesetWorkItemContainer);
+		}
+
+		return result;
+	}
+
+	private static ShelvesetWorkItemContainer processShelvesetWorkItems(ShelvesetItem shelvesetItem) {
+		ShelvesetWorkItemContainer result = null;
+
+		WorkItemCheckedInfo[] workItemCheckedInfos = shelvesetItem.getShelveset().getBriefWorkItemInfo();
+		if (workItemCheckedInfos != null && workItemCheckedInfos.length > 0) {
+			result = new ShelvesetWorkItemContainer(shelvesetItem);
+			List<ShelvesetWorkItem> shelvesetWorkItems = new ArrayList<ShelvesetWorkItem>();
+			for (WorkItemCheckedInfo workItemCheckedInfo : workItemCheckedInfos) {
+				ShelvesetWorkItem shelvesetWorkItem = new ShelvesetWorkItem(result, workItemCheckedInfo);
+				shelvesetWorkItems.add(shelvesetWorkItem);
+			}
+			result.setWorkItems(shelvesetWorkItems);
 		}
 
 		return result;

@@ -34,12 +34,16 @@ import org.eclipse.ui.texteditor.ITextEditor;
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItem;
+import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
+import com.microsoft.tfs.client.common.ui.helpers.WorkItemEditorHelper;
 
 public class ShelvesetFileOpenAction extends Action implements ISelectionChangedListener {
 	private TreeViewer treeViewer;
 	private ISelectionProvider provider;
 	private ShelvesetFileItem shelvesetFileItem;
 	private ShelvesetDiscussionItem shelvesetDiscussionItem;
+	private ShelvesetWorkItem shelvesetWorkItem;
 
 	public ShelvesetFileOpenAction(IWorkbenchPartSite workbenchPartSite, ISelectionProvider provider, TreeViewer treeViewer) {
 		setText("Open");
@@ -53,6 +57,10 @@ public class ShelvesetFileOpenAction extends Action implements ISelectionChanged
 
 	public boolean isEnabled() {
 		boolean result = false;
+		shelvesetFileItem = null;
+		shelvesetDiscussionItem = null;
+		shelvesetWorkItem = null;
+
 		ISelection selection = provider.getSelection();
 		if (!selection.isEmpty()) {
 			IStructuredSelection structuredSelection = (IStructuredSelection) selection;
@@ -60,10 +68,12 @@ public class ShelvesetFileOpenAction extends Action implements ISelectionChanged
 				Object element = structuredSelection.getFirstElement();
 				if (element instanceof ShelvesetFileItem) {
 					shelvesetFileItem = (ShelvesetFileItem) element;
-					shelvesetDiscussionItem = null;
 					result = true;
 				} else if (element instanceof ShelvesetDiscussionItem) {
 					shelvesetDiscussionItem = (ShelvesetDiscussionItem) element;
+					result = true;
+				} else if (element instanceof ShelvesetWorkItem) {
+					shelvesetWorkItem = (ShelvesetWorkItem) element;
 					result = true;
 				}
 			}
@@ -136,6 +146,8 @@ public class ShelvesetFileOpenAction extends Action implements ISelectionChanged
 						}
 					}
 				}
+			} else if (shelvesetWorkItem != null) {
+				WorkItemEditorHelper.openEditor(TFSUtil.getTFSServer(), shelvesetWorkItem.getWorkItemID());
 			}
 		} catch (CoreException e) {
 			ShelvesetReviewPlugin.log(IStatus.ERROR, e.getMessage(), e);

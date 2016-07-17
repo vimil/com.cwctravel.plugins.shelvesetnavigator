@@ -19,6 +19,8 @@ import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetUserCategoryItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetUserItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItemContainer;
 import com.microsoft.tfs.client.common.ui.framework.image.ImageHelper;
 
 public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvider, IDescriptionProvider {
@@ -74,6 +76,10 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 			image = getImageForFolder();
 		} else if (element instanceof ShelvesetDiscussionItem) {
 			image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.DISCUSSION_ICON_ID);
+		} else if (element instanceof ShelvesetWorkItemContainer) {
+			image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.WORKITEMS_ICON_ID);
+		} else if (element instanceof ShelvesetWorkItem) {
+			image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.WORKITEM_ICON_ID);
 		}
 
 		result = image;
