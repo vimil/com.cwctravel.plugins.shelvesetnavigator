@@ -1,6 +1,8 @@
 package com.cwctravel.plugins.shelvesetreview.util;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,6 +14,7 @@ import java.util.Set;
 import org.eclipse.core.runtime.Status;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
+import com.cwctravel.plugins.shelvesetreview.WorkItemCache;
 import com.cwctravel.plugins.shelvesetreview.constants.ShelvesetPropertyConstants;
 import com.cwctravel.plugins.shelvesetreview.exceptions.ApproveException;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
@@ -33,6 +36,12 @@ import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PropertyValu
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 import com.microsoft.tfs.core.clients.versioncontrol.workspacecache.WorkItemCheckedInfo;
 import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
+import com.microsoft.tfs.core.clients.workitem.WorkItem;
+import com.microsoft.tfs.core.clients.workitem.fields.Field;
+import com.microsoft.tfs.core.clients.workitem.link.Hyperlink;
+import com.microsoft.tfs.core.clients.workitem.link.LinkCollection;
+import com.microsoft.tfs.core.clients.workitem.link.LinkFactory;
+import com.microsoft.tfs.core.util.URIUtils;
 
 import ms.tfs.versioncontrol.clientservices._03._PropertyValue;
 import ms.tfs.versioncontrol.clientservices._03._Shelveset;
@@ -501,12 +510,50 @@ public class ShelvesetUtil {
 				approverIdsSet.add(currentUserId);
 				String newAppoverIdsStr = StringUtil.joinCollection(approverIdsSet, ",");
 				setShelvesetProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS, newAppoverIdsStr);
+
+				addWorkItemApprovalComment(shelveset, true);
+
 			} else {
 				throw new ApproveException("Current User is not a reviewer of the shelveset");
 			}
 		} else {
 			throw new ApproveException("Shelveset is not active");
 		}
+	}
+
+	private static void addWorkItemApprovalComment(Shelveset shelveset, boolean approve) {
+		if (shelveset != null) {
+			String approvalComment = approve ? ("Approved Shelveset " + shelveset.getName() + " for checkin")
+					: ("Approval was revoked for Shelveset " + shelveset.getName());
+			WorkItemCheckedInfo[] workedItemCheckedInfos = shelveset.getBriefWorkItemInfo();
+			if (workedItemCheckedInfos != null) {
+				for (WorkItemCheckedInfo workedItemCheckedInfo : workedItemCheckedInfos) {
+					WorkItem workItem = WorkItemCache.getInstance().getWorkItem(workedItemCheckedInfo.getID());
+					workItem.syncToLatest();
+					Field historyField = workItem.getFields().getField("History");
+					historyField.setValue(approvalComment);
+
+					Hyperlink shelvesetLink = LinkFactory.newHyperlink(getShelvesetUrl(shelveset), shelveset.getName(), true);
+					LinkCollection links = workItem.getLinks();
+					if (!links.contains(shelvesetLink)) {
+						links.add(shelvesetLink);
+					}
+
+					workItem.save();
+				}
+			}
+		}
+	}
+
+	private static String getShelvesetUrl(Shelveset shelveset) {
+		String result = null;
+		try {
+			result = URIUtils.removeTrailingSlash(TFSUtil.getTFSConnection().getBaseURI()).toString() + "_versionControl/shelveset?ss="
+					+ URLEncoder.encode(shelveset.getName() + ";" + shelveset.getOwnerName(), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
+		}
+		return result;
 	}
 
 	private static boolean isUserReviewer(String userId, Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) {
@@ -580,6 +627,8 @@ public class ShelvesetUtil {
 				approverIdsSet.remove(currentUserId);
 				String newAppoverIdsStr = StringUtil.joinCollection(approverIdsSet, ",");
 				setShelvesetProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS, newAppoverIdsStr);
+
+				addWorkItemApprovalComment(shelveset, false);
 			} else {
 				throw new ApproveException("Current User is not a reviewer of the shelveset");
 			}
