@@ -28,6 +28,7 @@ import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 public class DiscussionCommentDialog extends Dialog {
 	private static final int CREATE_MODE = 0;
 	private static final int REPLY_MODE = 1;
+	private static final int NOACTION_MODE = 2;
 
 	private final ShelvesetItem shelvesetItem;
 	private final String path;
@@ -40,10 +41,26 @@ public class DiscussionCommentDialog extends Dialog {
 
 	private Text txtComment;
 	private String comment;
+	private String title;
+
+	public DiscussionCommentDialog(String title, String defaultComment, Shell shell) {
+		super(shell);
+		this.mode = NOACTION_MODE;
+		this.title = title;
+		this.comment = defaultComment;
+		shelvesetItem = null;
+		path = null;
+		startLine = -1;
+		startColumn = -1;
+		endLine = -1;
+		endColumn = -1;
+		threadId = -1;
+	}
 
 	public DiscussionCommentDialog(ShelvesetItem shelvesetItem, int threadId, Shell shell) {
 		super(shell);
 		this.mode = REPLY_MODE;
+		this.title = "New Discussion";
 		this.shelvesetItem = shelvesetItem;
 		this.threadId = threadId;
 		this.path = null;
@@ -54,9 +71,11 @@ public class DiscussionCommentDialog extends Dialog {
 
 	}
 
-	public DiscussionCommentDialog(ShelvesetItem shelvesetItem, String path, int startLine, int startColumn, int endLine, int endColumn, Shell shell) {
+	public DiscussionCommentDialog(ShelvesetItem shelvesetItem, String path, int startLine, int startColumn, int endLine, int endColumn,
+			Shell shell) {
 		super(shell);
 		this.mode = CREATE_MODE;
+		this.title = "New Discussion";
 		this.shelvesetItem = shelvesetItem;
 		this.path = path;
 		this.startLine = startLine;
@@ -81,6 +100,10 @@ public class DiscussionCommentDialog extends Dialog {
 		lblComment.setLayoutData(fdLblComment);
 
 		txtComment = new Text(container, SWT.BORDER | SWT.MULTI | SWT.WRAP | SWT.V_SCROLL | SWT.H_SCROLL);
+		if (comment != null) {
+			txtComment.setText(comment);
+		}
+
 		FormData fdTxtComment = new FormData(390, 170);
 		fdTxtComment.top = new FormAttachment(lblComment, 5, SWT.BOTTOM);
 		fdTxtComment.left = new FormAttachment(0, 5);
@@ -101,7 +124,7 @@ public class DiscussionCommentDialog extends Dialog {
 
 	protected void configureShell(Shell shell) {
 		super.configureShell(shell);
-		shell.setText("New Discussion");
+		shell.setText(title);
 	}
 
 	@Override

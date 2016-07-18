@@ -496,7 +496,7 @@ public class ShelvesetUtil {
 		return result;
 	}
 
-	public static void approve(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) throws ApproveException {
+	public static void approve(Shelveset shelveset, String approvalComment, List<TeamFoundationIdentity> reviewGroupMembers) throws ApproveException {
 		if (!isShelvesetInactive(shelveset)) {
 			String currentUserId = TFSUtil.getCurrentUserName();
 			if (isUserReviewer(currentUserId, shelveset, reviewGroupMembers)) {
@@ -511,7 +511,7 @@ public class ShelvesetUtil {
 				String newAppoverIdsStr = StringUtil.joinCollection(approverIdsSet, ",");
 				setShelvesetProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS, newAppoverIdsStr);
 
-				addWorkItemApprovalComment(shelveset, true);
+				addWorkItemApprovalComment(shelveset, approvalComment, true);
 
 			} else {
 				throw new ApproveException("Current User is not a reviewer of the shelveset");
@@ -521,10 +521,8 @@ public class ShelvesetUtil {
 		}
 	}
 
-	private static void addWorkItemApprovalComment(Shelveset shelveset, boolean approve) {
+	private static void addWorkItemApprovalComment(Shelveset shelveset, String approvalComment, boolean approve) {
 		if (shelveset != null) {
-			String approvalComment = approve ? ("Approved Shelveset " + shelveset.getName() + " for checkin")
-					: ("Approval was revoked for Shelveset " + shelveset.getName());
 			WorkItemCheckedInfo[] workedItemCheckedInfos = shelveset.getBriefWorkItemInfo();
 			if (workedItemCheckedInfos != null) {
 				for (WorkItemCheckedInfo workedItemCheckedInfo : workedItemCheckedInfos) {
@@ -613,7 +611,8 @@ public class ShelvesetUtil {
 		return approverIds != null && approverIds.length > 0;
 	}
 
-	public static void unapprove(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) throws ApproveException {
+	public static void unapprove(Shelveset shelveset, String revokeApprovalComment, List<TeamFoundationIdentity> reviewGroupMembers)
+			throws ApproveException {
 		if (!isShelvesetInactive(shelveset)) {
 			String currentUserId = TFSUtil.getCurrentUserName();
 			if (isUserReviewer(currentUserId, shelveset, reviewGroupMembers)) {
@@ -628,7 +627,7 @@ public class ShelvesetUtil {
 				String newAppoverIdsStr = StringUtil.joinCollection(approverIdsSet, ",");
 				setShelvesetProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS, newAppoverIdsStr);
 
-				addWorkItemApprovalComment(shelveset, false);
+				addWorkItemApprovalComment(shelveset, revokeApprovalComment, false);
 			} else {
 				throw new ApproveException("Current User is not a reviewer of the shelveset");
 			}

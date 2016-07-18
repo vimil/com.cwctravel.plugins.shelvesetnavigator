@@ -259,8 +259,8 @@ public class ShelvesetItem implements IAdaptable {
 		return ShelvesetUtil.canApprove(shelveset, parent.getReviewGroupMembers());
 	}
 
-	public void approve() throws ApproveException {
-		ShelvesetUtil.approve(shelveset, parent.getReviewGroupMembers());
+	public void approve(String approvalComment) throws ApproveException {
+		ShelvesetUtil.approve(shelveset, approvalComment, parent.getReviewGroupMembers());
 
 	}
 
@@ -272,8 +272,8 @@ public class ShelvesetItem implements IAdaptable {
 		return ShelvesetUtil.isApproved(shelveset);
 	}
 
-	public void unapprove() throws ApproveException {
-		ShelvesetUtil.unapprove(shelveset, parent.getReviewGroupMembers());
+	public void unapprove(String revokeApprovalComment) throws ApproveException {
+		ShelvesetUtil.unapprove(shelveset, revokeApprovalComment, parent.getReviewGroupMembers());
 	}
 
 	public Boolean canUnapprove() {
@@ -288,6 +288,7 @@ public class ShelvesetItem implements IAdaptable {
 		return shelveset;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
 		if (ShelvesetItem.class.equals(adapter)) {
@@ -303,6 +304,18 @@ public class ShelvesetItem implements IAdaptable {
 			return getParent();
 		}
 		return null;
+	}
+
+	public ShelvesetWorkItemContainer getWorkItemContainer() {
+		ShelvesetWorkItemContainer result = null;
+		List<ShelvesetResourceItem> children = getChildren();
+		if (children != null && children.size() > 0) {
+			ShelvesetResourceItem shelvesetResourceItem = children.get(0);
+			if (shelvesetResourceItem instanceof ShelvesetWorkItemContainer) {
+				result = (ShelvesetWorkItemContainer) shelvesetResourceItem;
+			}
+		}
+		return result;
 	}
 
 }

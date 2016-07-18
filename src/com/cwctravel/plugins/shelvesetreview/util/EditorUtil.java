@@ -181,6 +181,14 @@ public class EditorUtil {
 		}
 	}
 
+	public static DiscussionCommentDialog showDiscussionCommentDialog(String title, String defaultComment) {
+		Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+		DiscussionCommentDialog discussionCommentDialog = new DiscussionCommentDialog(title, defaultComment, shell);
+		discussionCommentDialog.create();
+		discussionCommentDialog.open();
+		return discussionCommentDialog;
+	}
+
 	public static void showDiscussionCommentDialog(ITextEditor editor, int startLine, int startColumn, int endLine, int endColumn) {
 		IEditorInput editorInput = editor.getEditorInput();
 		if (editorInput instanceof FileStoreEditorInput) {
