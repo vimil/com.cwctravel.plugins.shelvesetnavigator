@@ -41,7 +41,6 @@ import com.microsoft.tfs.core.clients.workitem.fields.Field;
 import com.microsoft.tfs.core.clients.workitem.link.Hyperlink;
 import com.microsoft.tfs.core.clients.workitem.link.LinkCollection;
 import com.microsoft.tfs.core.clients.workitem.link.LinkFactory;
-import com.microsoft.tfs.core.util.URIUtils;
 
 import ms.tfs.versioncontrol.clientservices._03._PropertyValue;
 import ms.tfs.versioncontrol.clientservices._03._Shelveset;
@@ -546,8 +545,12 @@ public class ShelvesetUtil {
 	private static String getShelvesetUrl(Shelveset shelveset) {
 		String result = null;
 		try {
-			result = URIUtils.removeTrailingSlash(TFSUtil.getTFSConnection().getBaseURI()).toString() + "_versionControl/shelveset?ss="
-					+ URLEncoder.encode(shelveset.getName() + ";" + shelveset.getOwnerName(), "UTF-8");
+			String baseUri = TFSUtil.getTFSConnection().getBaseURI().toString();
+			if (!baseUri.endsWith("/")) {
+				baseUri += "/";
+			}
+
+			result = baseUri + "_versionControl/shelveset?ss=" + URLEncoder.encode(shelveset.getName() + ";" + shelveset.getOwnerName(), "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
 		}
