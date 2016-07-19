@@ -110,7 +110,7 @@ public class DiscussionUtil {
 			endColumn = startColumn;
 		}
 
-		return getTopLevelDiscussionItemsInternal(inputItem, startLine, startColumn, startLine, startColumn);
+		return getTopLevelDiscussionItemsInternal(inputItem, startLine, startColumn, endLine, endColumn);
 	}
 
 	private static List<ShelvesetDiscussionItem> getTopLevelDiscussionItemsInternal(Object inputItem, int startLine, int startColumn, int endLine,
