@@ -14,9 +14,12 @@ import org.eclipse.core.runtime.IStatus;
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.microsoft.tfs.client.common.repository.TFSRepository;
 import com.microsoft.tfs.client.common.server.TFSServer;
+import com.microsoft.tfs.client.common.ui.controls.vc.changes.ChangeItem;
 import com.microsoft.tfs.client.eclipse.TFSEclipseClientPlugin;
 import com.microsoft.tfs.core.TFSConnection;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
+import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.RecursionType;
+import com.microsoft.tfs.core.clients.versioncontrol.specs.ItemSpec;
 import com.microsoft.tfs.core.clients.webservices.IIdentityManagementService2;
 import com.microsoft.tfs.core.clients.webservices.IdentityDescriptor;
 import com.microsoft.tfs.core.clients.webservices.IdentitySearchFactor;
@@ -26,6 +29,12 @@ import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 import com.microsoft.tfs.core.clients.workitem.WorkItemClient;
 
 public class TFSUtil {
+
+	public static TFSRepository getRepository() {
+		TFSRepository tfsRepository = TFSEclipseClientPlugin.getDefault().getRepositoryManager().getDefaultRepository();
+		return tfsRepository;
+	}
+
 	public static VersionControlClient getVersionControlClient() {
 		VersionControlClient vC = null;
 		TFSRepository tfsRepository = TFSEclipseClientPlugin.getDefault().getRepositoryManager().getDefaultRepository();
@@ -209,5 +218,18 @@ public class TFSUtil {
 			}
 		}
 		return result;
+	}
+
+	public static ItemSpec[] getItemSpecs(ChangeItem[] changeItems) {
+		if (changeItems == null) {
+			return null;
+		}
+
+		final ItemSpec[] specs = new ItemSpec[changeItems.length];
+		for (int i = 0; i < changeItems.length; i++) {
+			specs[i] = new ItemSpec(changeItems[i].getServerItem(), RecursionType.NONE);
+		}
+
+		return specs;
 	}
 }

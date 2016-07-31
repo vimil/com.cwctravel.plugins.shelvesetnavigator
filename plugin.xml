@@ -190,6 +190,10 @@
             id="com.cwctravel.plugins.shelvesetreview.editor.commands.AddCommentCommand"
             name="Add Comment...">
       </command>
+      <command
+            id="com.cwctravel.plugins.shelvesetreview.editor.commands.UnshelveCommand"
+            name="Unshelve...">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -413,6 +417,31 @@
             </with>
          </activeWhen>
       </handler>
+      <handler
+            class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.UnshelveHandler"
+            commandId="com.cwctravel.plugins.shelvesetreview.editor.commands.UnshelveCommand">
+         <enabledWhen>
+            <with
+                  variable="selection">
+               <and>
+                  <count
+                        value="1">
+                  </count>
+                  <iterate>
+                     <and>
+                        <instanceof
+                              value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
+                        </instanceof>
+                        <test
+                              property="com.cwctravel.plugins.shelvesetreview.shelvesetitem.isActive"
+                              value="true">
+                        </test>
+                     </and>
+                  </iterate>
+               </and>
+            </with>
+         </enabledWhen>
+      </handler>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -517,6 +546,14 @@
                      </iterate>
                   </and>
                </with>
+            </visibleWhen>
+         </command>
+         <command
+               commandId="com.cwctravel.plugins.shelvesetreview.editor.commands.UnshelveCommand"
+               label="Unshelve..."
+               style="push">
+            <visibleWhen
+                  checkEnabled="true">
             </visibleWhen>
          </command>
       </menuContribution>
