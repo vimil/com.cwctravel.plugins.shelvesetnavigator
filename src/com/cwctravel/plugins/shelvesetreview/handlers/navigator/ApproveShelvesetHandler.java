@@ -27,6 +27,7 @@ public class ApproveShelvesetHandler extends AbstractHandler {
 			TreeSelection treeSelection = (TreeSelection) selection;
 			if (treeSelection.size() == 1) {
 				ShelvesetItem shelvesetItem = (ShelvesetItem) treeSelection.getFirstElement();
+				shelvesetItem.scheduleRefresh(true);
 				try {
 					String approvalComment = "Approved Shelveset " + shelvesetItem.getName() + " for checkin";
 					if (shelvesetItem.getWorkItemContainer() != null) {

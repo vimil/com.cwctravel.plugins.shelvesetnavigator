@@ -27,6 +27,7 @@ public class UnapproveShelvesetHandler extends AbstractHandler {
 			TreeSelection treeSelection = (TreeSelection) selection;
 			if (treeSelection.size() == 1) {
 				ShelvesetItem shelvesetItem = (ShelvesetItem) treeSelection.getFirstElement();
+				shelvesetItem.scheduleRefresh(true);
 				try {
 					String revokeApprovalComment = "Approval was revoked for Shelveset " + shelvesetItem.getName();
 					if (shelvesetItem.getWorkItemContainer() != null) {
