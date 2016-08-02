@@ -14,8 +14,8 @@ import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
 public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdaptable {
 
-	public static final int GROUP_TYPE_USER_SHELVESETS = 0;
-	public static final int GROUP_TYPE_REVIEWER_SHELVESETS = 1;
+	public static final int GROUP_TYPE_CURRENT_USER_SHELVESETS = 0;
+	public static final int GROUP_TYPE_OTHER_USER_SHELVESETS = 1;
 	public static final int GROUP_TYPE_INACTIVE_SHELVESETS = 2;
 
 	private final ShelvesetGroupItemContainer parent;
@@ -45,10 +45,10 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 
 	public String getName() {
 		switch (groupType) {
-			case GROUP_TYPE_USER_SHELVESETS:
+			case GROUP_TYPE_CURRENT_USER_SHELVESETS:
 				return "My Shelvesets";
-			case GROUP_TYPE_REVIEWER_SHELVESETS:
-				return "Review Shelvesets";
+			case GROUP_TYPE_OTHER_USER_SHELVESETS:
+				return "Other Shelvesets";
 			case GROUP_TYPE_INACTIVE_SHELVESETS:
 				return "Discarded Shelvesets";
 			default:
@@ -57,7 +57,7 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 	}
 
 	public boolean isUserGroup() {
-		return groupType == GROUP_TYPE_REVIEWER_SHELVESETS;
+		return groupType == GROUP_TYPE_OTHER_USER_SHELVESETS;
 	}
 
 	public List<ShelvesetItem> getShelvesetItems() {
@@ -77,7 +77,7 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 		if (userShelvesetItemsMap != null) {
 			String currentUserId = TFSUtil.getCurrentUserName();
 			switch (groupType) {
-				case GROUP_TYPE_USER_SHELVESETS: {
+				case GROUP_TYPE_CURRENT_USER_SHELVESETS: {
 					shelvesetItems = new ArrayList<ShelvesetItem>();
 					List<Shelveset> currentUserShelvesets = userShelvesetItemsMap.get(currentUserId);
 					if (currentUserShelvesets != null) {
@@ -89,7 +89,7 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 					}
 					break;
 				}
-				case GROUP_TYPE_REVIEWER_SHELVESETS: {
+				case GROUP_TYPE_OTHER_USER_SHELVESETS: {
 					shelvesetUserItems = new ArrayList<ShelvesetUserItem>();
 					for (Map.Entry<String, List<Shelveset>> userShelvesetItemsMapEntry : userShelvesetItemsMap.entrySet()) {
 
@@ -104,7 +104,8 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 							List<ShelvesetItem> pendingReviewShelvesetItems = null;
 
 							for (Shelveset shelveset : userShelvesetList) {
-								if (ShelvesetUtil.isCurrentUserReviewer(shelveset, reviewGroupMembers)) {
+								if (!ShelvesetUtil.isShelvesetInactive(shelveset)
+										&& !TFSUtil.userNamesSame(currentUserId, shelveset.getOwnerName())) {
 									if (shelvesetUserItem == null) {
 										shelvesetUserCategoryItems = new ArrayList<ShelvesetUserCategoryItem>();
 										shelvesetUserItem = new ShelvesetUserItem(this, shelvesetOwner, shelvesetUserCategoryItems);
@@ -130,8 +131,8 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 													unassignedShelvesetItems);
 											shelvesetUserCategoryItems.add(unassignedShelvesetUserCategoryItem);
 										}
-										unassignedShelvesetItems.add(new ShelvesetItem(parent, this, shelvesetUserItem,
-												unassignedShelvesetUserCategoryItem, shelveset));
+										unassignedShelvesetItems.add(
+												new ShelvesetItem(parent, this, shelvesetUserItem, unassignedShelvesetUserCategoryItem, shelveset));
 									}
 								}
 							}

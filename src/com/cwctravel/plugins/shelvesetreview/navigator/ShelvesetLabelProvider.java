@@ -36,10 +36,10 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 		if (element instanceof ShelvesetGroupItem) {
 			ShelvesetGroupItem shelvesetGroupItem = (ShelvesetGroupItem) element;
 			switch (shelvesetGroupItem.getGroupType()) {
-				case ShelvesetGroupItem.GROUP_TYPE_USER_SHELVESETS:
+				case ShelvesetGroupItem.GROUP_TYPE_CURRENT_USER_SHELVESETS:
 					image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.USER_GROUP_ICON_ID);
 					break;
-				case ShelvesetGroupItem.GROUP_TYPE_REVIEWER_SHELVESETS:
+				case ShelvesetGroupItem.GROUP_TYPE_OTHER_USER_SHELVESETS:
 					image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.REVIEW_GROUP_ICON_ID);
 					break;
 				case ShelvesetGroupItem.GROUP_TYPE_INACTIVE_SHELVESETS:

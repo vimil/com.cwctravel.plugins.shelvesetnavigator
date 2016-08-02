@@ -28,8 +28,8 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 	public ShelvesetGroupItemContainer() {
 		userShelvesetItemsMap = new HashMap<String, List<Shelveset>>();
 		shelvesetGroupItems = new ArrayList<>();
-		ShelvesetGroupItem userShelvesetGroupItem = new ShelvesetGroupItem(this, ShelvesetGroupItem.GROUP_TYPE_USER_SHELVESETS);
-		ShelvesetGroupItem reviewerShelvesetGroupItem = new ShelvesetGroupItem(this, ShelvesetGroupItem.GROUP_TYPE_REVIEWER_SHELVESETS);
+		ShelvesetGroupItem userShelvesetGroupItem = new ShelvesetGroupItem(this, ShelvesetGroupItem.GROUP_TYPE_CURRENT_USER_SHELVESETS);
+		ShelvesetGroupItem reviewerShelvesetGroupItem = new ShelvesetGroupItem(this, ShelvesetGroupItem.GROUP_TYPE_OTHER_USER_SHELVESETS);
 		ShelvesetGroupItem inactiveShelvesetGroupItem = new ShelvesetGroupItem(this, ShelvesetGroupItem.GROUP_TYPE_INACTIVE_SHELVESETS);
 
 		shelvesetGroupItems.add(userShelvesetGroupItem);

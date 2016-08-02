@@ -21,7 +21,7 @@ public class ShelvesetWorkItem extends ShelvesetResourceItem {
 
 	@Override
 	public String getPath() {
-		return null;
+		return Integer.toString(getWorkItemID());
 	}
 
 	public int getWorkItemID() {
