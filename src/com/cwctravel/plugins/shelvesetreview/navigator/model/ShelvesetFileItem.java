@@ -113,4 +113,8 @@ public class ShelvesetFileItem extends ShelvesetResourceItem {
 		DiscussionService.createDiscussion(TFSUtil.getTFSConnection(), discussionCreateRequestInfo);
 	}
 
+	public int getEncoding() {
+		return pendingChange.getEncoding();
+	}
+
 }

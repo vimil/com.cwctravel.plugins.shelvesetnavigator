@@ -38,6 +38,7 @@ import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItem;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.client.common.ui.helpers.WorkItemEditorHelper;
 
+@SuppressWarnings("restriction")
 public class ShelvesetFileOpenAction extends Action implements ISelectionChangedListener {
 	private TreeViewer treeViewer;
 	private ISelectionProvider provider;

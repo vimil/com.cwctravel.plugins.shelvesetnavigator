@@ -96,7 +96,7 @@ public class EditDiscussionHandler extends AbstractHandler {
 					}
 				}
 			}
-		} else {
+		} else if (shelvesetDiscussionItem != null) {
 			ShelvesetDiscussionItem parentDiscussion = shelvesetDiscussionItem.getParentDiscussion();
 			if (shelvesetDiscussionItem != null && parentDiscussion == null) {
 				result = true;

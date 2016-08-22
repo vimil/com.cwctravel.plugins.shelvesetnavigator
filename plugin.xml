@@ -155,7 +155,12 @@
       <command
             description="Compare shelveset version with base version"
             id="com.cwctravel.plugins.shelvesetreview.navigator.commands.CompareWithBaseCommand"
-            name="Shelveset With Base">
+            name="With Base">
+      </command>
+      <command
+            description="Compare shelvesets with each other"
+            id="com.cwctravel.plugins.shelvesetreview.navigator.commands.CompareShelvesetsCommand"
+            name="With Each Other">
       </command>
       <command
             description="Discard Shelveset"
@@ -217,6 +222,28 @@
                               property="com.cwctravel.plugins.shelvesetreview.shelvesetfileitem.canCompare"
                               value="true">
                         </test>
+                     </and>
+                  </iterate>
+               </and>
+            </with>
+         </enabledWhen>
+      </handler>
+      <handler
+            class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.CompareShelvesetsHandler"
+            commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.CompareShelvesetsCommand">
+         <enabledWhen>
+            <with
+                  variable="selection">
+               <and>
+                  <count
+                        value="2">
+                  </count>
+                  <iterate
+                        ifEmpty="false">
+                     <and>
+                        <instanceof
+                              value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
+                        </instanceof>
                      </and>
                   </iterate>
                </and>
@@ -453,23 +480,17 @@
             <command
                   commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.CompareWithBaseCommand"
                   style="push">
+               <visibleWhen
+                     checkEnabled="true">
+               </visibleWhen>
             </command>
-            <visibleWhen
-                  checkEnabled="false">
-               <with
-                     variable="selection">
-                  <iterate>
-                     <and>
-                        <instanceof
-                              value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem">
-                        </instanceof>
-                     </and>
-                  </iterate>
-                  <count
-                        value="1">
-                  </count>
-               </with>
-            </visibleWhen>
+            <command
+                  commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.CompareShelvesetsCommand"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="true">
+               </visibleWhen>
+            </command>
          </menu>
          <command
                commandId="org.eclipse.ui.file.refresh"
@@ -559,7 +580,7 @@
       </menuContribution>
       <menuContribution
             allPopups="false"
-            locationURI="popup:org.eclipse.ui.popup.any?after=additions?after=additions">
+            locationURI="popup:org.eclipse.ui.popup.any?after=additions">
          <command
                commandId="com.cwctravel.plugins.shelvesetreview.editor.commands.EditDiscussionCommand"
                icon="icons/discussion-icon.png"

@@ -1,5 +1,7 @@
 package com.cwctravel.plugins.shelvesetreview;
 
+import java.util.List;
+
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.ListenerList;
@@ -11,7 +13,10 @@ import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.internal.editors.text.EditorsPlugin;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.ui.texteditor.AnnotationPreference;
+import org.eclipse.ui.texteditor.MarkerAnnotationPreferences;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
@@ -59,6 +64,8 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 	private ListenerList shelvesetItemRefreshListeners;
 
 	private ShelvesetGroupItemContainer shelvesetGroupItemContainer;
+
+	private AnnotationPreference discussionAnnotationPreference;
 
 	public ShelvesetReviewPlugin() {
 		plugin = this;
@@ -143,6 +150,18 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 		workbench.addWindowListener(reviewCommentAnnnotator);
 		repositoryManager.addListener(reviewCommentAnnnotator);
 		addShelvesetItemRefreshListener(reviewCommentAnnnotator);
+
+		MarkerAnnotationPreferences markerAnnotationPreferences = EditorsPlugin.getDefault().getMarkerAnnotationPreferences();
+		List<AnnotationPreference> annotationPreferenceList = markerAnnotationPreferences.getAnnotationPreferences();
+		if (annotationPreferenceList != null) {
+			for (AnnotationPreference annotationPreference : annotationPreferenceList) {
+				if ("com.cwctravel.plugins.shelvesetreview.discussionMarker".equals(annotationPreference.getAnnotationType())) {
+					discussionAnnotationPreference = annotationPreference;
+					break;
+				}
+			}
+		}
+
 	}
 
 	public void stop(BundleContext context) throws Exception {
@@ -213,6 +232,10 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 				listener.onShelvesetItemRefreshed(new ShelvesetItemRefreshEvent(shelvesetItem));
 			}
 		}
+	}
+
+	public AnnotationPreference getDiscussionAnnotationPreference() {
+		return discussionAnnotationPreference;
 	}
 
 }
