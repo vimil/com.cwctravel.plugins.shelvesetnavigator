@@ -7,6 +7,7 @@ import org.eclipse.compare.CompareConfiguration;
 import org.eclipse.compare.CompareEditorInput;
 import org.eclipse.compare.CompareViewerSwitchingPane;
 import org.eclipse.compare.Splitter;
+import org.eclipse.compare.contentmergeviewer.IMergeViewerContentProvider;
 import org.eclipse.compare.contentmergeviewer.TextMergeViewer;
 import org.eclipse.compare.structuremergeviewer.DiffNode;
 import org.eclipse.compare.structuremergeviewer.ICompareInput;
@@ -14,30 +15,47 @@ import org.eclipse.compare.structuremergeviewer.StructureDiffViewer;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextListener;
-import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.TextEvent;
-import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.source.AnnotationModel;
+import org.eclipse.jface.text.source.AnnotationRulerColumn;
 import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.progress.UIJob;
+import org.eclipse.ui.texteditor.DefaultMarkerAnnotationAccess;
 import org.eclipse.ui.texteditor.SourceViewerDecorationSupport;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
+import com.cwctravel.plugins.shelvesetreview.constants.ShelvesetReviewConstants;
+import com.cwctravel.plugins.shelvesetreview.events.ShelvesetItemRefreshEvent;
+import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetItemRefreshListener;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
+import com.cwctravel.plugins.shelvesetreview.util.AnnotationUtil;
 import com.cwctravel.plugins.shelvesetreview.util.CompareUtil;
 import com.cwctravel.plugins.shelvesetreview.util.ReflectionUtil;
+import com.cwctravel.plugins.shelvesetreview.util.TypeUtil;
 import com.microsoft.tfs.client.common.ui.framework.image.ImageHelper;
 
-public class CompareShelvesetItemInput extends CompareEditorInput implements ITextListener {
-	private ShelvesetItem shelvesetItem1;
-	private ShelvesetItem shelvesetItem2;
+public class CompareShelvesetItemInput extends CompareEditorInput implements ITextListener, IShelvesetItemRefreshListener {
+	private static final int VERTICAL_RULER_WIDTH = 12;
+
+	private ShelvesetItem leftShelvesetItem;
+	private ShelvesetItem rightShelvesetItem;
+
+	private ShelvesetFileItem leftShelvesetFileItem;
+	private ShelvesetFileItem rightShelvesetFileItem;
 
 	private TextMergeViewer textMergeViewer;
+	private AnnotationModel leftAnnotationModel;
+	private AnnotationModel rightAnnotationModel;
+	private IDocument leftDocument;
+	private IDocument rightDocument;
 
 	public CompareShelvesetItemInput(ShelvesetItem item1, ShelvesetItem item2) {
 		super(new ShelvesetCompareConfiguration());
@@ -45,14 +63,19 @@ public class CompareShelvesetItemInput extends CompareEditorInput implements ITe
 	}
 
 	private void init(ShelvesetItem item1, ShelvesetItem item2) {
-		this.shelvesetItem1 = item1;
-		this.shelvesetItem2 = item2;
+		this.leftShelvesetItem = item1;
+		this.rightShelvesetItem = item2;
 		setTitle("Compare Shelvesets");
 		CompareConfiguration compareConfiguration = getCompareConfiguration();
 		compareConfiguration.setLeftEditable(false);
 		compareConfiguration.setRightEditable(false);
-		compareConfiguration.setLeftLabel(shelvesetItem1.getName());
-		compareConfiguration.setRightLabel(shelvesetItem2.getName());
+		compareConfiguration.setLeftLabel(leftShelvesetItem.getName());
+		compareConfiguration.setRightLabel(rightShelvesetItem.getName());
+		compareConfiguration.setDefaultLabelProvider(new ShelvesetCompareLabelProvider());
+
+		leftAnnotationModel = new AnnotationModel();
+		rightAnnotationModel = new AnnotationModel();
+		ShelvesetReviewPlugin.getDefault().addShelvesetItemRefreshListener(this);
 	}
 
 	protected ImageHelper getImageHelper() {
@@ -62,28 +85,32 @@ public class CompareShelvesetItemInput extends CompareEditorInput implements ITe
 
 	@Override
 	protected Object prepareInput(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
-		CompareShelvesetItem c1 = new CompareShelvesetItem(shelvesetItem1, getImageHelper());
-		CompareShelvesetItem c2 = new CompareShelvesetItem(shelvesetItem2, getImageHelper());
+		CompareShelvesetItem c1 = new CompareShelvesetItem(leftShelvesetItem, getImageHelper());
+		CompareShelvesetItem c2 = new CompareShelvesetItem(rightShelvesetItem, getImageHelper());
 
 		DiffNode diffNode = new DiffNode(c1, c2);
 		return diffNode;
 	}
 
 	public Viewer findStructureViewer(Viewer oldViewer, ICompareInput input, Composite parent) {
-		StructureDiffViewer sdv = new StructureDiffViewer(parent, getCompareConfiguration());
-		sdv.setStructureCreator(new ShelvesetStructureCreator());
+		CompareConfiguration compareConfiguration = getCompareConfiguration();
+		StructureDiffViewer sdv = new StructureDiffViewer(parent, compareConfiguration);
+		sdv.setStructureCreator(new ShelvesetStructureCreator(getTitle(compareConfiguration, input)));
 		return sdv;
+	}
+
+	private String getTitle(CompareConfiguration compareConfiguration, ICompareInput input) {
+		return compareConfiguration.getLeftLabel(input) + " -> " + compareConfiguration.getRightLabel(input);
 	}
 
 	public Viewer findContentViewer(Viewer oldViewer, ICompareInput input, Composite parent) {
 		Viewer result = super.findContentViewer(oldViewer, input, parent);
 		textMergeViewer = (TextMergeViewer) result;
-
 		return result;
 	}
 
 	protected CompareViewerSwitchingPane createContentViewerSwitchingPane(Splitter parent, int style, CompareEditorInput cei) {
-		return new ShelvesetCompareContentViewerSwitchingPane(parent, style, cei);
+		return new CompareShelvesetItemContentViewerSwitchingPane(parent, style, cei);
 	}
 
 	public Control createContents(Composite parent) {
@@ -100,19 +127,28 @@ public class CompareShelvesetItemInput extends CompareEditorInput implements ITe
 				return Status.OK_STATUS;
 			}
 		}.schedule();
-
 	}
 
+	protected void handleDispose() {
+		super.handleDispose();
+
+		leftShelvesetItem = null;
+		rightShelvesetItem = null;
+
+		leftShelvesetFileItem = null;
+		rightShelvesetFileItem = null;
+
+		textMergeViewer = null;
+		leftAnnotationModel = null;
+		rightAnnotationModel = null;
+		leftDocument = null;
+		rightDocument = null;
+		ShelvesetReviewPlugin.getDefault().removeShelvesetItemRefreshListener(this);
+	}
+
+	@SuppressWarnings("unchecked")
 	public void installListeners() {
 		if (textMergeViewer != null) {
-			SourceViewer leftSourceViewer = (SourceViewer) CompareUtil.getTextViewer(textMergeViewer, CompareUtil.LEFT_LEG);
-			AnnotationModel annotationModel = new AnnotationModel();
-			leftSourceViewer.setDocument(leftSourceViewer.getDocument(), annotationModel);
-			annotationModel.connect(leftSourceViewer.getDocument());
-			Annotation a = new Annotation("com.cwctravel.plugins.shelvesetreview.discussionMarker", false, "hello");
-			Position p = new Position(1, 10);
-			annotationModel.addAnnotation(a, p);
-
 			List<SourceViewerDecorationSupport> sourceViewerDecorationSupportList = (List<SourceViewerDecorationSupport>) ReflectionUtil
 					.getFieldValue(textMergeViewer, "fSourceViewerDecorationSupport", false);
 			for (SourceViewerDecorationSupport sourceViewerDecorationSupport : sourceViewerDecorationSupportList) {
@@ -121,13 +157,86 @@ public class CompareShelvesetItemInput extends CompareEditorInput implements ITe
 						false);
 				sourceViewerDecorationSupport.install(preferenceStore);
 			}
-			System.out.println(sourceViewerDecorationSupportList);
-			textMergeViewer.invalidateTextPresentation();
-			// SourceViewer sourceViewer = (SourceViewer)
-			// CompareUtil.getTextViewer(textMergeViewer, 0);
-			// sourceViewer.getS
-			// textViewer.addTextListener(this);
-			// textMergeViewer.invalidateTextPresentation();
+
+			IMergeViewerContentProvider mergeViewerContentProvider = (IMergeViewerContentProvider) textMergeViewer.getContentProvider();
+			if (mergeViewerContentProvider != null) {
+				SourceViewer leftSourceViewer = (SourceViewer) CompareUtil.getTextViewer(textMergeViewer, CompareUtil.LEFT_LEG);
+				if (leftSourceViewer != null) {
+					CompareShelvesetFileItem leftCompareShelvesetFileItem = (CompareShelvesetFileItem) mergeViewerContentProvider
+							.getLeftContent(textMergeViewer.getInput());
+					leftShelvesetFileItem = (ShelvesetFileItem) leftCompareShelvesetFileItem.getShelvesetResourceItem();
+					leftAnnotationModel.removeAllAnnotations();
+					leftDocument = leftSourceViewer.getDocument();
+					Control leftViewerControl = leftSourceViewer.getControl();
+					Boolean rulerColumnAdded = TypeUtil.optBoolean((Boolean) leftViewerControl.getData("rulerColumnAdded"), false);
+					if (!rulerColumnAdded) {
+						AnnotationRulerColumn leftRulerColumn = new AnnotationRulerColumn(VERTICAL_RULER_WIDTH, new DefaultMarkerAnnotationAccess());
+						leftRulerColumn.addAnnotationType(ShelvesetReviewConstants.ANNOTATION_TYPE_DISCUSSION_MARKER);
+						leftSourceViewer.addVerticalRulerColumn(leftRulerColumn);
+						leftViewerControl.setData("rulerColumnAdded", true);
+					}
+					leftSourceViewer.setDocument(leftDocument, leftAnnotationModel);
+					leftSourceViewer.showAnnotations(true);
+					updateLeftShelvesetFileItemAnnotations();
+				}
+
+				SourceViewer rightSourceViewer = (SourceViewer) CompareUtil.getTextViewer(textMergeViewer, CompareUtil.RIGHT_LEG);
+				if (rightSourceViewer != null) {
+					CompareShelvesetFileItem rightCompareShelvesetFileItem = (CompareShelvesetFileItem) mergeViewerContentProvider
+							.getRightContent(textMergeViewer.getInput());
+					rightShelvesetFileItem = (ShelvesetFileItem) rightCompareShelvesetFileItem.getShelvesetResourceItem();
+					rightAnnotationModel.removeAllAnnotations();
+					rightDocument = rightSourceViewer.getDocument();
+					Control rightViewerControl = rightSourceViewer.getControl();
+					Boolean rulerColumnAdded = TypeUtil.optBoolean((Boolean) rightViewerControl.getData("rulerColumnAdded"), false);
+					if (!rulerColumnAdded) {
+						AnnotationRulerColumn rightRulerColumn = new AnnotationRulerColumn(VERTICAL_RULER_WIDTH, new DefaultMarkerAnnotationAccess());
+						rightRulerColumn.addAnnotationType(ShelvesetReviewConstants.ANNOTATION_TYPE_DISCUSSION_MARKER);
+						rightSourceViewer.addVerticalRulerColumn(rightRulerColumn);
+						rightViewerControl.setData("rulerColumnAdded", true);
+					}
+					rightSourceViewer.setDocument(rightDocument, rightAnnotationModel);
+					rightSourceViewer.showAnnotations(true);
+					updateRightShelvesetFileItemAnnotations();
+				}
+			}
+
+		}
+	}
+
+	private void updateLeftShelvesetFileItemAnnotations() {
+		if (leftShelvesetFileItem != null) {
+			new Job("Updating Review Comments") {
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+					AnnotationUtil.annotateDocument(leftDocument, leftAnnotationModel, leftShelvesetFileItem.getShelvesetName(),
+							leftShelvesetFileItem.getShelvesetOwnerName(), leftShelvesetFileItem.getPath(), monitor);
+					return Status.OK_STATUS;
+				}
+			}.schedule();
+		}
+	}
+
+	private void updateRightShelvesetFileItemAnnotations() {
+		if (rightShelvesetFileItem != null) {
+			new Job("Updating Review Comments") {
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+					AnnotationUtil.annotateDocument(rightDocument, rightAnnotationModel, rightShelvesetFileItem.getShelvesetName(),
+							rightShelvesetFileItem.getShelvesetOwnerName(), rightShelvesetFileItem.getPath(), monitor);
+					return Status.OK_STATUS;
+				}
+			}.schedule();
+		}
+	}
+
+	@Override
+	public void onShelvesetItemRefreshed(ShelvesetItemRefreshEvent event) {
+		ShelvesetItem shelvesetItem = event.getShelvesetItem();
+		if (shelvesetItem.equals(leftShelvesetItem)) {
+			updateLeftShelvesetFileItemAnnotations();
+		} else if (shelvesetItem.equals(rightShelvesetItem)) {
+			updateRightShelvesetFileItemAnnotations();
 		}
 	}
 }

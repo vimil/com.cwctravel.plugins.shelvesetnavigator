@@ -1,9 +1,5 @@
 package com.cwctravel.plugins.shelvesetreview.handlers.editor;
 
-import org.eclipse.compare.CompareEditorInput;
-import org.eclipse.compare.CompareViewerSwitchingPane;
-import org.eclipse.compare.contentmergeviewer.TextMergeViewer;
-import org.eclipse.compare.internal.CompareEditorInputNavigator;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -14,14 +10,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.ITextListener;
-import org.eclipse.jface.text.TextEvent;
 import org.eclipse.jface.text.TextSelection;
-import org.eclipse.jface.text.TextViewer;
 import org.eclipse.jface.text.source.IVerticalRulerInfo;
 import org.eclipse.jface.viewers.TreeSelection;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISources;
@@ -36,7 +27,6 @@ import com.cwctravel.plugins.shelvesetreview.annotator.DiscussionAnnotation;
 import com.cwctravel.plugins.shelvesetreview.compare.CompareShelvesetItemInput;
 import com.cwctravel.plugins.shelvesetreview.filesystem.TFSFileStore;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
-import com.cwctravel.plugins.shelvesetreview.util.CompareUtil;
 import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
 
 public class AddCommentHandler extends AbstractHandler {
@@ -142,7 +132,6 @@ public class AddCommentHandler extends AbstractHandler {
 		return result;
 	}
 
-	@SuppressWarnings("restriction")
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		if (isEditorClicked || isRulerClicked) {
@@ -151,24 +140,7 @@ public class AddCommentHandler extends AbstractHandler {
 			AbstractTextEditor textEditor = (AbstractTextEditor) editorPart;
 			EditorUtil.showDiscussionCommentDialog(textEditor, startLine, startColumn, endLine, endColumn);
 		} else if (isCompareEditorClicked) {
-			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-			IEditorPart editorPart = activeWorkbenchWindow.getActivePage().getActiveEditor();
-			CompareEditorInput editorInput = (CompareEditorInput) editorPart.getEditorInput();
-			CompareEditorInputNavigator navigator = (CompareEditorInputNavigator) editorInput.getNavigator();
-			Object paneObj = navigator.getPanes()[3];
-			if (paneObj instanceof CompareViewerSwitchingPane) {
-				CompareViewerSwitchingPane compareViewerSwitchingPane = (CompareViewerSwitchingPane) paneObj;
-				TextMergeViewer textMergeViewer = (TextMergeViewer) compareViewerSwitchingPane.getViewer();
-				TextViewer textViewer = CompareUtil.getTextViewer(textMergeViewer, 0);
-				CompareUtil.setBackgroundColor(textViewer, Display.getCurrent().getSystemColor(SWT.COLOR_RED), 1, 10, true);
-				textViewer.addTextListener(new ITextListener() {
 
-					@Override
-					public void textChanged(TextEvent event) {
-						CompareUtil.setBackgroundColor(textViewer, Display.getCurrent().getSystemColor(SWT.COLOR_RED), 1, 10, true);
-					}
-				});
-			}
 		} else {
 			EditorUtil.showDiscussionCommentDialog(shelvesetFileItem);
 		}

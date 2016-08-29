@@ -10,13 +10,15 @@ import org.eclipse.core.runtime.Status;
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 
 public class ShelvesetStructureCreator implements IStructureCreator {
+	private String title;
 
-	public ShelvesetStructureCreator() {
+	public ShelvesetStructureCreator(String title) {
+		this.title = title;
 	}
 
 	@Override
 	public String getName() {
-		return "Shelveset Comparator";
+		return title;
 	}
 
 	@Override

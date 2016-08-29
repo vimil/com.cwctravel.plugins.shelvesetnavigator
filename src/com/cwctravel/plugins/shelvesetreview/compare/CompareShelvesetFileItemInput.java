@@ -1,6 +1,8 @@
 package com.cwctravel.plugins.shelvesetreview.compare;
 
 import org.eclipse.compare.CompareEditorInput;
+import org.eclipse.compare.CompareViewerSwitchingPane;
+import org.eclipse.compare.Splitter;
 import org.eclipse.compare.structuremergeviewer.DiffNode;
 import org.eclipse.core.runtime.IProgressMonitor;
 
@@ -27,6 +29,10 @@ public class CompareShelvesetFileItemInput extends CompareEditorInput {
 	protected ImageHelper getImageHelper() {
 		ShelvesetCompareConfiguration compareConfiguration = (ShelvesetCompareConfiguration) getCompareConfiguration();
 		return compareConfiguration.getImageHelper();
+	}
+
+	protected CompareViewerSwitchingPane createContentViewerSwitchingPane(Splitter parent, int style, CompareEditorInput cei) {
+		return new CompareShelvesetFileItemContentViewerSwitchingPane(parent, style, cei);
 	}
 
 	protected Object prepareInput(IProgressMonitor pm) {
