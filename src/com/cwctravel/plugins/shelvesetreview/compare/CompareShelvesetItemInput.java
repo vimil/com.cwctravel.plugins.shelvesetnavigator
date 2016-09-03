@@ -21,14 +21,21 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.TextViewer;
 import org.eclipse.jface.text.source.AnnotationModel;
 import org.eclipse.jface.text.source.AnnotationRulerColumn;
+import org.eclipse.jface.text.source.CompositeRuler;
+import org.eclipse.jface.text.source.IAnnotationModel;
+import org.eclipse.jface.text.source.IVerticalRuler;
 import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.texteditor.DefaultMarkerAnnotationAccess;
 import org.eclipse.ui.texteditor.SourceViewerDecorationSupport;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
+import com.cwctravel.plugins.shelvesetreview.annotator.DiscussionAnnotation;
 import com.cwctravel.plugins.shelvesetreview.constants.ShelvesetReviewConstants;
 import com.cwctravel.plugins.shelvesetreview.events.ShelvesetItemRefreshEvent;
 import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetItemRefreshListener;
@@ -36,11 +43,50 @@ import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.util.AnnotationUtil;
 import com.cwctravel.plugins.shelvesetreview.util.CompareUtil;
+import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
 import com.cwctravel.plugins.shelvesetreview.util.ReflectionUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TypeUtil;
 import com.microsoft.tfs.client.common.ui.framework.image.ImageHelper;
 
 public class CompareShelvesetItemInput extends CompareEditorInput implements IShelvesetItemRefreshListener {
+	private class AnnotationMouseListener implements MouseListener {
+		private int leg;
+
+		private AnnotationMouseListener(int leg) {
+			this.leg = leg;
+		}
+
+		@Override
+		public void mouseDoubleClick(MouseEvent e) {
+			Object source = e.getSource();
+			if (source != null && source.getClass().getSimpleName().startsWith("AnnotationRulerColumn")) {
+				IVerticalRuler verticalRuler = CompareShelvesetItemInput.this.getVerticalRuler(leg);
+				if (verticalRuler instanceof CompositeRuler) {
+					CompositeRuler compositeRuler = (CompositeRuler) verticalRuler;
+					int lineNumber = compositeRuler.toDocumentLineNumber(e.y);
+					IAnnotationModel annotationModel = CompareShelvesetItemInput.this.getAnnotationModel(leg);
+					TextViewer textViewer = CompareShelvesetItemInput.this.getTextViewer(leg);
+					DiscussionAnnotation discussionAnnotation = EditorUtil.getDiscussionAnnotationAtLine(textViewer.getDocument(), annotationModel,
+							lineNumber);
+					if (discussionAnnotation != null) {
+						ShelvesetFileItem shelvesetFileItem = CompareShelvesetItemInput.this.getShelvesetFileItem(leg);
+						EditorUtil.showDiscussionDialog(shelvesetFileItem.getParent(), shelvesetFileItem.getPath(),
+								discussionAnnotation.getStartLine(), discussionAnnotation.getStartColumn(), discussionAnnotation.getEndLine(),
+								discussionAnnotation.getEndColumn());
+					}
+				}
+			}
+		}
+
+		@Override
+		public void mouseDown(MouseEvent e) {
+		}
+
+		@Override
+		public void mouseUp(MouseEvent e) {
+		}
+	}
+
 	private static final int VERTICAL_RULER_WIDTH = 12;
 
 	private ShelvesetItem leftShelvesetItem;
@@ -161,6 +207,8 @@ public class CompareShelvesetItemInput extends CompareEditorInput implements ISh
 						leftRulerColumn.addAnnotationType(ShelvesetReviewConstants.ANNOTATION_TYPE_DISCUSSION_MARKER);
 						leftSourceViewer.addVerticalRulerColumn(leftRulerColumn);
 						leftViewerControl.setData("rulerColumnAdded", true);
+
+						installVerticalRulerListener(CompareUtil.LEFT_LEG);
 					}
 					leftSourceViewer.setDocument(leftDocument, leftAnnotationModel);
 					leftSourceViewer.showAnnotations(true);
@@ -181,6 +229,8 @@ public class CompareShelvesetItemInput extends CompareEditorInput implements ISh
 						rightRulerColumn.addAnnotationType(ShelvesetReviewConstants.ANNOTATION_TYPE_DISCUSSION_MARKER);
 						rightSourceViewer.addVerticalRulerColumn(rightRulerColumn);
 						rightViewerControl.setData("rulerColumnAdded", true);
+
+						installVerticalRulerListener(CompareUtil.RIGHT_LEG);
 					}
 					rightSourceViewer.setDocument(rightDocument, rightAnnotationModel);
 					rightSourceViewer.showAnnotations(true);
@@ -188,6 +238,24 @@ public class CompareShelvesetItemInput extends CompareEditorInput implements ISh
 				}
 			}
 
+		}
+	}
+
+	private void installVerticalRulerListener(int leg) {
+		IVerticalRuler verticalRuler = getVerticalRuler(leg);
+		if (verticalRuler instanceof CompositeRuler) {
+			CompositeRuler compositeRuler = (CompositeRuler) verticalRuler;
+			Control control = compositeRuler.getControl();
+			if (control instanceof Canvas) {
+				Canvas canvas = (Canvas) control;
+				AnnotationMouseListener discussionAnnotationMouseListener = (AnnotationMouseListener) canvas
+						.getData("discussionAnnotationMouseListener");
+				if (discussionAnnotationMouseListener == null) {
+					discussionAnnotationMouseListener = new AnnotationMouseListener(leg);
+					canvas.addMouseListener(discussionAnnotationMouseListener);
+					canvas.setData("discussionAnnotationMouseListener", discussionAnnotationMouseListener);
+				}
+			}
 		}
 	}
 
@@ -231,6 +299,16 @@ public class CompareShelvesetItemInput extends CompareEditorInput implements ISh
 		TextViewer result = null;
 		if (textMergeViewer != null) {
 			result = CompareUtil.getTextViewer(textMergeViewer, leg);
+		}
+		return result;
+	}
+
+	public IVerticalRuler getVerticalRuler(int leg) {
+		IVerticalRuler result = null;
+		TextViewer textViewer = getTextViewer(leg);
+		if (textViewer != null) {
+			SourceViewer sourceViewer = (SourceViewer) textViewer;
+			result = (IVerticalRuler) ReflectionUtil.invokeMethod(sourceViewer, "getVerticalRuler", new Class[0], new Object[0], false);
 		}
 		return result;
 	}

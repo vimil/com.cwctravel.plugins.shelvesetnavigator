@@ -64,6 +64,22 @@ public class EditorUtil {
 		return result;
 	}
 
+	public static DiscussionAnnotation getDiscussionAnnotationAtLine(IDocument document, IAnnotationModel annotationModel, int lineNumber) {
+		DiscussionAnnotation result = null;
+		try {
+			int lineOffset = document.getLineOffset(lineNumber);
+			result = getDiscussionAnnotationClosestToOffset(annotationModel, lineOffset);
+			if (result != null) {
+				if (lineNumber != result.getStartLine() - 1) {
+					result = null;
+				}
+			}
+		} catch (BadLocationException e) {
+			ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
+		}
+		return result;
+	}
+
 	private static IAnnotationModel getDiscussionAnnotationModel(IEditorPart editor) {
 		IAnnotationModel result = null;
 		try {

@@ -66,14 +66,11 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 
 		@Override
 		public void mouseDown(MouseEvent e) {
-
 		}
 
 		@Override
 		public void mouseUp(MouseEvent e) {
-
 		}
-
 	}
 
 	private void annotate(TFSFileStore tfsFileStore, IDocument document, IAnnotationModel annotationModel, IProgressMonitor monitor) {
