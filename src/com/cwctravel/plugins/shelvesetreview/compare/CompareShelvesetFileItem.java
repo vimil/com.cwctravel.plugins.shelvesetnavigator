@@ -16,9 +16,11 @@ import com.microsoft.tfs.core.clients.versioncontrol.specs.DownloadSpec;
 import com.microsoft.tfs.core.util.CodePageMapping;
 
 public class CompareShelvesetFileItem extends CompareShelvesetResourceItem implements IEncodedStreamContentAccessor {
+	private boolean isShelvedItem;
 
-	public CompareShelvesetFileItem(ShelvesetFileItem shelvesetFileItem, ImageHelper imageHelper) {
+	public CompareShelvesetFileItem(ShelvesetFileItem shelvesetFileItem, boolean isShelvedItem, ImageHelper imageHelper) {
 		super(shelvesetFileItem, imageHelper);
+		this.isShelvedItem = isShelvedItem;
 	}
 
 	@Override
@@ -52,7 +54,8 @@ public class CompareShelvesetFileItem extends CompareShelvesetResourceItem imple
 	}
 
 	private byte[] getContentBytes() {
-		String downloadURL = ((ShelvesetFileItem) getShelvesetResourceItem()).getShelvedDownloadURL();
+		ShelvesetFileItem shelvesetFileItem = (ShelvesetFileItem) getShelvesetResourceItem();
+		String downloadURL = isShelvedItem ? shelvesetFileItem.getShelvedDownloadURL() : shelvesetFileItem.getDownloadUrl();
 		DownloadSpec downloadSpec = new DownloadSpec(downloadURL);
 		ByteArrayOutputStream bAOS = new ByteArrayOutputStream();
 		TFSUtil.getVersionControlClient().downloadFileToStream(downloadSpec, bAOS, true);

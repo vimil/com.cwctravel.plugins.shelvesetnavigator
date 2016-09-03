@@ -50,8 +50,12 @@ public class EditorUtil {
 					IDocumentProvider documentProvider = textEditor.getDocumentProvider();
 					IDocument document = documentProvider.getDocument(editorInput);
 					int lineOffset = document.getLineOffset(lineNumber);
-					int lineLength = document.getLineLength(lineNumber);
-					result = getDiscussionAnnotationAtOffset(editor, lineOffset, lineLength, true);
+					result = getDiscussionAnnotationClosestToOffset(editor, lineOffset);
+					if (result != null) {
+						if (lineNumber != result.getStartLine() - 1) {
+							result = null;
+						}
+					}
 				}
 			}
 		} catch (CoreException | BadLocationException e) {
@@ -60,8 +64,8 @@ public class EditorUtil {
 		return result;
 	}
 
-	public static DiscussionAnnotation getDiscussionAnnotationAtOffset(IEditorPart editor, int offset, int length, boolean isContained) {
-		DiscussionAnnotation result = null;
+	private static IAnnotationModel getDiscussionAnnotationModel(IEditorPart editor) {
+		IAnnotationModel result = null;
 		try {
 			IEditorInput editorInput = editor.getEditorInput();
 			if (editorInput instanceof FileStoreEditorInput) {
@@ -70,31 +74,70 @@ public class EditorUtil {
 				if (editor instanceof ITextEditor && fileStore instanceof TFSFileStore) {
 					ITextEditor textEditor = (ITextEditor) editor;
 					IDocumentProvider documentProvider = textEditor.getDocumentProvider();
-					IAnnotationModel annotationModel = documentProvider.getAnnotationModel(editorInput);
-
-					Iterator<?> itr = annotationModel.getAnnotationIterator();
-					while (itr.hasNext()) {
-						Annotation annotation = (Annotation) itr.next();
-						if (annotation instanceof DiscussionAnnotation) {
-							Position position = annotationModel.getPosition(annotation);
-							if (position != null) {
-								int annotationOffset = position.getOffset();
-								int annotationLength = position.getLength();
-
-								if (isContained && annotationOffset >= offset && annotationOffset + annotationLength <= offset + length) {
-									result = (DiscussionAnnotation) annotation;
-									break;
-								} else if (!isContained && annotationOffset <= offset && annotationOffset + annotationLength >= offset + length) {
-									result = (DiscussionAnnotation) annotation;
-									break;
-								}
-							}
-						}
-					}
+					result = documentProvider.getAnnotationModel(editorInput);
 				}
 			}
 		} catch (CoreException e) {
 			ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
+		}
+		return result;
+	}
+
+	public static DiscussionAnnotation getDiscussionAnnotationClosestToOffset(IEditorPart editor, int offset) {
+		DiscussionAnnotation result = getDiscussionAnnotationClosestToOffset(getDiscussionAnnotationModel(editor), offset);
+		return result;
+	}
+
+	public static DiscussionAnnotation getDiscussionAnnotationClosestToOffset(IAnnotationModel annotationModel, int offset) {
+		DiscussionAnnotation result = null;
+		if (annotationModel != null) {
+			Iterator<?> itr = annotationModel.getAnnotationIterator();
+			int distanceFromOffset = -1;
+			while (itr.hasNext()) {
+				Annotation annotation = (Annotation) itr.next();
+				if (annotation instanceof DiscussionAnnotation) {
+					Position position = annotationModel.getPosition(annotation);
+					if (position != null) {
+						int annotationOffset = position.getOffset();
+						if (annotationOffset >= offset && (distanceFromOffset == -1 || distanceFromOffset > (annotationOffset - offset))) {
+							result = (DiscussionAnnotation) annotation;
+							distanceFromOffset = annotationOffset - offset;
+						}
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	public static DiscussionAnnotation getDiscussionAnnotationAtOffset(IEditorPart editor, int offset, int length, boolean isContained) {
+		DiscussionAnnotation result = getDiscussionAnnotationAtOffset(getDiscussionAnnotationModel(editor), offset, length, isContained);
+		return result;
+	}
+
+	public static DiscussionAnnotation getDiscussionAnnotationAtOffset(IAnnotationModel annotationModel, int offset, int length,
+			boolean isContained) {
+		DiscussionAnnotation result = null;
+		if (annotationModel != null) {
+			Iterator<?> itr = annotationModel.getAnnotationIterator();
+			while (itr.hasNext()) {
+				Annotation annotation = (Annotation) itr.next();
+				if (annotation instanceof DiscussionAnnotation) {
+					Position position = annotationModel.getPosition(annotation);
+					if (position != null) {
+						int annotationOffset = position.getOffset();
+						int annotationLength = position.getLength();
+
+						if (isContained && annotationOffset >= offset && annotationOffset + annotationLength <= offset + length) {
+							result = (DiscussionAnnotation) annotation;
+							break;
+						} else if (!isContained && annotationOffset <= offset && annotationOffset + annotationLength >= offset + length) {
+							result = (DiscussionAnnotation) annotation;
+							break;
+						}
+					}
+				}
+			}
 		}
 		return result;
 	}

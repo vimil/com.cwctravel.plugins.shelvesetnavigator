@@ -46,7 +46,7 @@ public class CompareShelvesetItem extends CompareShelvesetResourceItem {
 					resultList.add(new CompareShelvesetFolderItem(childFolderItem, getImageHelper()));
 				} else if (shelvesetResourceItem instanceof ShelvesetFileItem) {
 					ShelvesetFileItem childFileItem = (ShelvesetFileItem) shelvesetResourceItem;
-					resultList.add(new CompareShelvesetFileItem(childFileItem, getImageHelper()));
+					resultList.add(new CompareShelvesetFileItem(childFileItem, true, getImageHelper()));
 				}
 			}
 			result = resultList.toArray(new CompareShelvesetResourceItem[0]);

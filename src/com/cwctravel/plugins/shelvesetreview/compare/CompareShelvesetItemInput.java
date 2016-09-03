@@ -18,15 +18,13 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.ITextListener;
-import org.eclipse.jface.text.TextEvent;
+import org.eclipse.jface.text.TextViewer;
 import org.eclipse.jface.text.source.AnnotationModel;
 import org.eclipse.jface.text.source.AnnotationRulerColumn;
 import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.ui.progress.UIJob;
 import org.eclipse.ui.texteditor.DefaultMarkerAnnotationAccess;
 import org.eclipse.ui.texteditor.SourceViewerDecorationSupport;
 
@@ -42,7 +40,7 @@ import com.cwctravel.plugins.shelvesetreview.util.ReflectionUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TypeUtil;
 import com.microsoft.tfs.client.common.ui.framework.image.ImageHelper;
 
-public class CompareShelvesetItemInput extends CompareEditorInput implements ITextListener, IShelvesetItemRefreshListener {
+public class CompareShelvesetItemInput extends CompareEditorInput implements IShelvesetItemRefreshListener {
 	private static final int VERTICAL_RULER_WIDTH = 12;
 
 	private ShelvesetItem leftShelvesetItem;
@@ -116,17 +114,6 @@ public class CompareShelvesetItemInput extends CompareEditorInput implements ITe
 	public Control createContents(Composite parent) {
 		Control result = super.createContents(parent);
 		return result;
-	}
-
-	@Override
-	public void textChanged(TextEvent event) {
-		new UIJob("Updating Review Comments") {
-			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor) {
-				// CompareUtil.annotate(textMergeViewer, monitor);
-				return Status.OK_STATUS;
-			}
-		}.schedule();
 	}
 
 	protected void handleDispose() {
@@ -238,5 +225,55 @@ public class CompareShelvesetItemInput extends CompareEditorInput implements ITe
 		} else if (shelvesetItem.equals(rightShelvesetItem)) {
 			updateRightShelvesetFileItemAnnotations();
 		}
+	}
+
+	public TextViewer getTextViewer(int leg) {
+		TextViewer result = null;
+		if (textMergeViewer != null) {
+			result = CompareUtil.getTextViewer(textMergeViewer, leg);
+		}
+		return result;
+	}
+
+	public AnnotationModel getAnnotationModel(int leg) {
+		AnnotationModel result = null;
+
+		if (leg == CompareUtil.LEFT_LEG) {
+			result = leftAnnotationModel;
+		} else if (leg == CompareUtil.RIGHT_LEG) {
+			result = rightAnnotationModel;
+		} else {
+			TextViewer focusedTextViewer = getTextViewer(CompareUtil.FOCUSED_LEG);
+			TextViewer leftTextViewer = getTextViewer(CompareUtil.LEFT_LEG);
+			TextViewer rightTextViewer = getTextViewer(CompareUtil.RIGHT_LEG);
+			if (focusedTextViewer == leftTextViewer) {
+				result = leftAnnotationModel;
+			} else if (focusedTextViewer == rightTextViewer) {
+				result = rightAnnotationModel;
+			}
+		}
+
+		return result;
+	}
+
+	public ShelvesetFileItem getShelvesetFileItem(int leg) {
+		ShelvesetFileItem result = null;
+
+		if (leg == CompareUtil.LEFT_LEG) {
+			result = leftShelvesetFileItem;
+		} else if (leg == CompareUtil.RIGHT_LEG) {
+			result = rightShelvesetFileItem;
+		} else {
+			TextViewer focusedTextViewer = getTextViewer(CompareUtil.FOCUSED_LEG);
+			TextViewer leftTextViewer = getTextViewer(CompareUtil.LEFT_LEG);
+			TextViewer rightTextViewer = getTextViewer(CompareUtil.RIGHT_LEG);
+			if (focusedTextViewer == leftTextViewer) {
+				result = leftShelvesetFileItem;
+			} else if (focusedTextViewer == rightTextViewer) {
+				result = rightShelvesetFileItem;
+			}
+		}
+
+		return result;
 	}
 }

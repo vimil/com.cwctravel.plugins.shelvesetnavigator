@@ -9,6 +9,7 @@ import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.text.TextSelection;
+import org.eclipse.jface.text.TextViewer;
 import org.eclipse.jface.text.source.IVerticalRulerInfo;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.ui.IEditorInput;
@@ -21,28 +22,33 @@ import org.eclipse.ui.texteditor.AbstractTextEditor;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.annotator.DiscussionAnnotation;
+import com.cwctravel.plugins.shelvesetreview.compare.CompareShelvesetItemInput;
 import com.cwctravel.plugins.shelvesetreview.filesystem.TFSFileStore;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
+import com.cwctravel.plugins.shelvesetreview.util.CompareUtil;
 import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
 
 public class EditDiscussionHandler extends AbstractHandler {
 	private DiscussionAnnotation discussionAnnotation;
 	private boolean isEditorClicked;
+	private boolean isCompareEditorClicked;
+	private boolean isRulerClicked;
 
 	private ShelvesetDiscussionItem shelvesetDiscussionItem;
-
-	private boolean isRulerClicked;
+	private ShelvesetFileItem shelvesetFileItem;
 
 	public void setEnabled(Object evaluationContext) {
 		shelvesetDiscussionItem = null;
+		shelvesetFileItem = null;
 		if (evaluationContext instanceof IEvaluationContext) {
 			IEvaluationContext context = (IEvaluationContext) evaluationContext;
 			String contextId = (String) context.getVariable("debugString");
 			isEditorClicked = contextId != null && contextId.endsWith("EditorContext");
 			isRulerClicked = contextId != null && contextId.endsWith("RulerContext");
+			isCompareEditorClicked = contextId != null && contextId.equals("popup:org.eclipse.compare.CompareEditor");
 
-			if (!isEditorClicked && !isRulerClicked) {
+			if (!isEditorClicked && !isRulerClicked && !isCompareEditorClicked) {
 				Object selection = context.getVariable(ISources.ACTIVE_CURRENT_SELECTION_NAME);
 				if (selection instanceof TreeSelection) {
 					TreeSelection treeSelection = (TreeSelection) selection;
@@ -61,7 +67,7 @@ public class EditDiscussionHandler extends AbstractHandler {
 
 	public boolean isEnabled() {
 		discussionAnnotation = null;
-
+		shelvesetFileItem = null;
 		boolean result = false;
 		if (isEditorClicked || isRulerClicked) {
 			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
@@ -96,6 +102,28 @@ public class EditDiscussionHandler extends AbstractHandler {
 					}
 				}
 			}
+		} else if (isCompareEditorClicked) {
+			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+			IEditorPart editorPart = activeWorkbenchWindow.getActivePage().getActiveEditor();
+			if (editorPart != null) {
+				IEditorInput editorInput = editorPart.getEditorInput();
+				if (editorInput instanceof CompareShelvesetItemInput) {
+					CompareShelvesetItemInput compareShelvesetItemInput = (CompareShelvesetItemInput) editorInput;
+					TextViewer textViewer = compareShelvesetItemInput.getTextViewer(CompareUtil.FOCUSED_LEG);
+					if (textViewer != null) {
+						TextSelection selection = (TextSelection) textViewer.getSelectionProvider().getSelection();
+						if (selection != null) {
+							discussionAnnotation = EditorUtil.getDiscussionAnnotationAtOffset(
+									compareShelvesetItemInput.getAnnotationModel(CompareUtil.FOCUSED_LEG), selection.getOffset(),
+									selection.getLength(), false);
+							result = discussionAnnotation != null;
+							if (result) {
+								shelvesetFileItem = compareShelvesetItemInput.getShelvesetFileItem(CompareUtil.FOCUSED_LEG);
+							}
+						}
+					}
+				}
+			}
 		} else if (shelvesetDiscussionItem != null) {
 			ShelvesetDiscussionItem parentDiscussion = shelvesetDiscussionItem.getParentDiscussion();
 			if (shelvesetDiscussionItem != null && parentDiscussion == null) {
@@ -108,10 +136,15 @@ public class EditDiscussionHandler extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		if (discussionAnnotation != null) {
-			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-			IEditorPart editorPart = activeWorkbenchWindow.getActivePage().getActiveEditor();
-			EditorUtil.showDiscussionDialog(editorPart, discussionAnnotation.getStartLine(), discussionAnnotation.getStartColumn(),
-					discussionAnnotation.getEndLine(), discussionAnnotation.getEndColumn());
+			if (shelvesetFileItem != null) {
+				EditorUtil.showDiscussionDialog(shelvesetFileItem.getParent(), shelvesetFileItem.getPath(), discussionAnnotation.getStartLine(),
+						discussionAnnotation.getStartColumn(), discussionAnnotation.getEndLine(), discussionAnnotation.getEndColumn());
+			} else {
+				IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+				IEditorPart editorPart = activeWorkbenchWindow.getActivePage().getActiveEditor();
+				EditorUtil.showDiscussionDialog(editorPart, discussionAnnotation.getStartLine(), discussionAnnotation.getStartColumn(),
+						discussionAnnotation.getEndLine(), discussionAnnotation.getEndColumn());
+			}
 		} else {
 			ShelvesetDiscussionItem parentDiscussion = shelvesetDiscussionItem.getParentDiscussion();
 			if (shelvesetDiscussionItem != null && parentDiscussion == null) {

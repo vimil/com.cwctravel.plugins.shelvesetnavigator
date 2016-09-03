@@ -15,6 +15,6 @@ public class CompareShelvesetFileItemContentViewerSwitchingPane extends CompareC
 
 	public void setInput(Object input) {
 		super.setInput(input);
-		compareShelvesetFileItemInput.installListeners();
+		// compareShelvesetFileItemInput.installListeners();
 	}
 }

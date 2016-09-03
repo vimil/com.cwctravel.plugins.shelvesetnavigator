@@ -36,8 +36,8 @@ public class CompareShelvesetFileItemInput extends CompareEditorInput {
 	}
 
 	protected Object prepareInput(IProgressMonitor pm) {
-		CompareShelvesetFileItem shelvedItem = new CompareShelvesetFileItem(shelvesetFileItem, getImageHelper());
-		CompareShelvesetFileItem sourceItem = new CompareShelvesetFileItem(shelvesetFileItem, getImageHelper());
+		CompareShelvesetFileItem shelvedItem = new CompareShelvesetFileItem(shelvesetFileItem, true, getImageHelper());
+		CompareShelvesetFileItem sourceItem = new CompareShelvesetFileItem(shelvesetFileItem, false, getImageHelper());
 
 		return new DiffNode(shelvedItem, sourceItem);
 	}

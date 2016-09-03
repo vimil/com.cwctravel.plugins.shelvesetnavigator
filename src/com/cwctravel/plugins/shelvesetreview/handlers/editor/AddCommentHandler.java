@@ -11,6 +11,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.TextSelection;
+import org.eclipse.jface.text.TextViewer;
 import org.eclipse.jface.text.source.IVerticalRulerInfo;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.ui.IEditorInput;
@@ -27,6 +28,7 @@ import com.cwctravel.plugins.shelvesetreview.annotator.DiscussionAnnotation;
 import com.cwctravel.plugins.shelvesetreview.compare.CompareShelvesetItemInput;
 import com.cwctravel.plugins.shelvesetreview.filesystem.TFSFileStore;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
+import com.cwctravel.plugins.shelvesetreview.util.CompareUtil;
 import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
 
 public class AddCommentHandler extends AbstractHandler {
@@ -123,7 +125,29 @@ public class AddCommentHandler extends AbstractHandler {
 			if (editorPart != null) {
 				IEditorInput editorInput = editorPart.getEditorInput();
 				if (editorInput instanceof CompareShelvesetItemInput) {
-					result = true;
+					try {
+						CompareShelvesetItemInput compareShelvesetItemInput = (CompareShelvesetItemInput) editorInput;
+						TextViewer textViewer = compareShelvesetItemInput.getTextViewer(CompareUtil.FOCUSED_LEG);
+						if (textViewer != null) {
+							TextSelection selection = (TextSelection) textViewer.getSelectionProvider().getSelection();
+							if (selection != null) {
+								DiscussionAnnotation discussionAnnotation = EditorUtil.getDiscussionAnnotationAtOffset(
+										compareShelvesetItemInput.getAnnotationModel(CompareUtil.FOCUSED_LEG), selection.getOffset(),
+										selection.getLength(), false);
+								if (discussionAnnotation == null) {
+									shelvesetFileItem = compareShelvesetItemInput.getShelvesetFileItem(CompareUtil.FOCUSED_LEG);
+									IDocument document = textViewer.getDocument();
+									startLine = selection.getStartLine() + 1;
+									endLine = selection.getEndLine() + 1;
+									startColumn = selection.getOffset() - document.getLineOffset(startLine - 1) + 1;
+									endColumn = selection.getOffset() + selection.getLength() - document.getLineOffset(endLine - 1) + 1;
+									result = true;
+								}
+							}
+						}
+					} catch (BadLocationException e) {
+						ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
+					}
 				}
 			}
 		} else if (shelvesetFileItem != null) {
@@ -140,7 +164,7 @@ public class AddCommentHandler extends AbstractHandler {
 			AbstractTextEditor textEditor = (AbstractTextEditor) editorPart;
 			EditorUtil.showDiscussionCommentDialog(textEditor, startLine, startColumn, endLine, endColumn);
 		} else if (isCompareEditorClicked) {
-
+			EditorUtil.showDiscussionCommentDialog(shelvesetFileItem, startLine, startColumn, endLine, endColumn);
 		} else {
 			EditorUtil.showDiscussionCommentDialog(shelvesetFileItem);
 		}
