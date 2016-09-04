@@ -2,9 +2,6 @@ package com.cwctravel.plugins.shelvesetreview.dialogs;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IMessageProvider;
@@ -36,21 +33,13 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
+import com.cwctravel.plugins.shelvesetreview.asynch.RepeatingJob;
 import com.cwctravel.plugins.shelvesetreview.contentProviders.ReviewerContentProvider;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 
 public class AssignReviewersDialog extends Dialog {
-	private static final ExecutorService SCHEDULER = Executors.newSingleThreadExecutor(new ThreadFactory() {
-
-		@Override
-		public Thread newThread(Runnable r) {
-			Thread t = new Thread(r);
-			t.setDaemon(true);
-			return t;
-		}
-	});
 
 	private final class ErrorMessageClearer implements FocusListener {
 		@Override
@@ -62,8 +51,6 @@ public class AssignReviewersDialog extends Dialog {
 		public void focusGained(FocusEvent e) {
 		}
 	}
-
-	private int userIdValidateCounter;
 
 	private ShelvesetItem shelvesetItem;
 
@@ -148,19 +135,13 @@ public class AssignReviewersDialog extends Dialog {
 		txtReviewerId.setLayoutData(fdReviewerId);
 
 		txtReviewerId.addModifyListener(new ModifyListener() {
+			RepeatingJob userIdValidatingJob = new RepeatingJob();
+
 			@Override
 			public void modifyText(ModifyEvent e) {
-				userIdValidateCounter++;
 				String text = txtReviewerId.getText();
-				SCHEDULER.execute(new Runnable() {
-					int requestId = userIdValidateCounter;
-
-					@Override
-					public void run() {
-						if (requestId == userIdValidateCounter) {
-							validateUserId(text);
-						}
-					}
+				userIdValidatingJob.schedule(() -> {
+					validateUserId(text);
 				});
 			}
 		});
@@ -321,45 +302,40 @@ public class AssignReviewersDialog extends Dialog {
 		return reviewers;
 	}
 
+	private void execInUIThread(Runnable runnable) {
+		if (Display.getCurrent() != null) {
+			runnable.run();
+		} else {
+			Display display = Display.getDefault();
+			if (!display.isDisposed()) {
+				display.asyncExec(runnable);
+			}
+		}
+	}
+
 	private boolean validateUserId(String reviewerId) {
 		boolean result = false;
-		Display display = Display.getDefault();
 		if (reviewerId == null || reviewerId.isEmpty()) {
-			display.asyncExec(() -> {
-				if (!display.isDisposed()) {
-					restoreDefaultMessage();
-				}
-			});
+			execInUIThread(this::restoreDefaultMessage);
 		} else if (TFSUtil.findUserName(reviewerId) != null) {
 			if (!TFSUtil.userNamesSame(reviewerId, TFSUtil.getCurrentUserName())) {
 				ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
 				if (!reviewerContentProvider.reviewerIdExists(reviewerId)) {
 					result = true;
-					display.asyncExec(() -> {
-						if (!display.isDisposed()) {
-							restoreDefaultMessage();
-						}
-					});
-
+					execInUIThread(this::restoreDefaultMessage);
 				} else {
-					display.asyncExec(() -> {
-						if (!display.isDisposed()) {
-							setErrorMessage("Reviewer has already been assigned");
-						}
+					execInUIThread(() -> {
+						setErrorMessage("Reviewer has already been assigned");
 					});
 				}
 			} else {
-				display.asyncExec(() -> {
-					if (!display.isDisposed()) {
-						setErrorMessage("Cannot assign yourself as a reviewer");
-					}
+				execInUIThread(() -> {
+					setErrorMessage("Cannot assign yourself as a reviewer");
 				});
 			}
 		} else {
-			display.asyncExec(() -> {
-				if (!display.isDisposed()) {
-					setErrorMessage("Not a valid TFS user: " + reviewerId);
-				}
+			execInUIThread(() -> {
+				setErrorMessage("Not a valid TFS user: " + reviewerId);
 			});
 		}
 		return result;

@@ -288,6 +288,10 @@ public class ShelvesetItem implements IAdaptable {
 		return shelveset;
 	}
 
+	public String getShelvesetUrl() {
+		return ShelvesetUtil.getShelvesetUrl(shelveset);
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {

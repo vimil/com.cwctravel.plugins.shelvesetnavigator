@@ -553,7 +553,7 @@ public class ShelvesetUtil {
 		}
 	}
 
-	private static String getShelvesetUrl(Shelveset shelveset) {
+	public static String getShelvesetUrl(Shelveset shelveset) {
 		String result = null;
 		try {
 			String baseUri = TFSUtil.getTFSConnection().getBaseURI().toString();

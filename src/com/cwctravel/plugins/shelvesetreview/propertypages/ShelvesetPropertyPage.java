@@ -71,6 +71,22 @@ public class ShelvesetPropertyPage extends PropertyPage {
 		fdShelvesetOwnerNameLabel.left = new FormAttachment(shelvesetOwnerNameTitleLabel, 0, SWT.RIGHT);
 		shelvesetOwnerNameLabel.setLayoutData(fdShelvesetOwnerNameLabel);
 
+		Label shelvesetLinkTitleLabel = new Label(parent, SWT.NONE);
+		shelvesetLinkTitleLabel.setText("Link: ");
+		FormData fdShelvesetLinkTitleLabel = new FormData(convertWidthInCharsToPixels(20), convertHeightInCharsToPixels(1));
+		fdShelvesetLinkTitleLabel.top = new FormAttachment(shelvesetOwnerNameLabel, 3, SWT.BOTTOM);
+		fdShelvesetLinkTitleLabel.left = new FormAttachment(0, 10);
+		shelvesetLinkTitleLabel.setLayoutData(fdShelvesetLinkTitleLabel);
+
+		Text shelvesetLinkLabel = new Text(parent, SWT.READ_ONLY);
+		shelvesetLinkLabel.setText(shelvesetItem.getShelvesetUrl());
+		FormData fdShelvesetLinkLabel = new FormData();
+		fdShelvesetLinkLabel.top = new FormAttachment(shelvesetOwnerNameLabel, 3, SWT.BOTTOM);
+		fdShelvesetLinkLabel.left = new FormAttachment(shelvesetLinkTitleLabel, 0, SWT.RIGHT);
+		fdShelvesetLinkLabel.height = convertHeightInCharsToPixels(1);
+		fdShelvesetLinkLabel.right = new FormAttachment(100, -5);
+		shelvesetLinkLabel.setLayoutData(fdShelvesetLinkLabel);
+
 		String comment = shelvesetItem.getComment();
 		if (comment == null) {
 			comment = "<No Comments>";
@@ -79,15 +95,14 @@ public class ShelvesetPropertyPage extends PropertyPage {
 		Label shelvesetCommentsTitleLabel = new Label(parent, SWT.NONE);
 		shelvesetCommentsTitleLabel.setText("Comments: ");
 		FormData fdShelvesetCommentsTitleLabel = new FormData(convertWidthInCharsToPixels(20), convertHeightInCharsToPixels(1));
-		fdShelvesetCommentsTitleLabel.top = new FormAttachment(shelvesetOwnerNameTitleLabel, 3, SWT.BOTTOM);
+		fdShelvesetCommentsTitleLabel.top = new FormAttachment(shelvesetLinkTitleLabel, 3, SWT.BOTTOM);
 		fdShelvesetCommentsTitleLabel.left = new FormAttachment(0, 10);
 		shelvesetCommentsTitleLabel.setLayoutData(fdShelvesetCommentsTitleLabel);
 
 		Text shelvesetCommentsLabel = new Text(parent, SWT.WRAP | SWT.READ_ONLY);
-
 		shelvesetCommentsLabel.setText(comment);
 		FormData fdShelvesetCommentsLabel = new FormData(convertWidthInCharsToPixels(50), convertHeightInCharsToPixels(1));
-		fdShelvesetCommentsLabel.top = new FormAttachment(shelvesetOwnerNameLabel, 3, SWT.BOTTOM);
+		fdShelvesetCommentsLabel.top = new FormAttachment(shelvesetLinkLabel, 3, SWT.BOTTOM);
 		fdShelvesetCommentsLabel.left = new FormAttachment(shelvesetCommentsTitleLabel, 0, SWT.RIGHT);
 		shelvesetCommentsLabel.setLayoutData(fdShelvesetCommentsLabel);
 
