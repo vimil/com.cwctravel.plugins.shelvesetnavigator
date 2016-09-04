@@ -2,9 +2,13 @@ package com.cwctravel.plugins.shelvesetreview.dialogs;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IMessageProvider;
-import org.eclipse.jface.dialogs.TitleAreaDialog;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
@@ -13,12 +17,16 @@ import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
@@ -33,11 +41,21 @@ import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 
-public class AssignReviewersDialog extends TitleAreaDialog {
+public class AssignReviewersDialog extends Dialog {
+	private static final ExecutorService SCHEDULER = Executors.newSingleThreadExecutor(new ThreadFactory() {
+
+		@Override
+		public Thread newThread(Runnable r) {
+			Thread t = new Thread(r);
+			t.setDaemon(true);
+			return t;
+		}
+	});
+
 	private final class ErrorMessageClearer implements FocusListener {
 		@Override
 		public void focusLost(FocusEvent e) {
-			setErrorMessage(null);
+			restoreDefaultMessage();
 		}
 
 		@Override
@@ -45,7 +63,7 @@ public class AssignReviewersDialog extends TitleAreaDialog {
 		}
 	}
 
-	private long lastUserIdCheckTime;
+	private int userIdValidateCounter;
 
 	private ShelvesetItem shelvesetItem;
 
@@ -55,6 +73,10 @@ public class AssignReviewersDialog extends TitleAreaDialog {
 
 	private TableViewer reviewersViewer;
 
+	private Text messageText;
+
+	private Label messageImageLabel;
+
 	public AssignReviewersDialog(ShelvesetItem shelvesetItem, Shell parentShell) {
 		super(parentShell);
 		this.shelvesetItem = shelvesetItem;
@@ -63,13 +85,40 @@ public class AssignReviewersDialog extends TitleAreaDialog {
 	@Override
 	public void create() {
 		super.create();
-		setTitle("Assign Reviewers");
+		restoreDefaultMessage();
+	}
+
+	private void restoreDefaultMessage() {
 		setMessage("Assign Reviewers for Shelveset " + shelvesetItem.getName(), IMessageProvider.INFORMATION);
+	}
+
+	protected void configureShell(Shell shell) {
+		super.configureShell(shell);
+		shell.setText("Assign Reviewers");
 	}
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
+		Composite messageComposite = new Composite(area, SWT.NONE);
+		messageComposite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+		GridLayout messageLayout = new GridLayout();
+		messageLayout.numColumns = 2;
+		messageLayout.marginWidth = 0;
+		messageLayout.marginHeight = 0;
+		messageLayout.makeColumnsEqualWidth = false;
+		messageComposite.setLayout(messageLayout);
+		messageImageLabel = new Label(messageComposite, SWT.NONE);
+		messageImageLabel.setImage(JFaceResources.getImage(Dialog.DLG_IMG_MESSAGE_INFO));
+		messageImageLabel.setLayoutData(new GridData(GridData.VERTICAL_ALIGN_CENTER));
+
+		messageText = new Text(messageComposite, SWT.NONE);
+		messageText.setEditable(false);
+
+		GridData textData = new GridData(GridData.GRAB_HORIZONTAL | GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
+		messageText.setLayoutData(textData);
+
 		Composite container = new Composite(area, SWT.NONE);
 		FormLayout layout = new FormLayout();
 		container.setLayout(layout);
@@ -101,11 +150,18 @@ public class AssignReviewersDialog extends TitleAreaDialog {
 		txtReviewerId.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
-				long currentTime = System.currentTimeMillis();
-				if (currentTime - lastUserIdCheckTime > 1000) {
-					validateUserId(txtReviewerId.getText());
-					lastUserIdCheckTime = currentTime;
-				}
+				userIdValidateCounter++;
+				String text = txtReviewerId.getText();
+				SCHEDULER.execute(new Runnable() {
+					int requestId = userIdValidateCounter;
+
+					@Override
+					public void run() {
+						if (requestId == userIdValidateCounter) {
+							validateUserId(text);
+						}
+					}
+				});
 			}
 		});
 
@@ -136,8 +192,7 @@ public class AssignReviewersDialog extends TitleAreaDialog {
 			public void handleEvent(Event event) {
 				String reviewerId = txtReviewerId.getText();
 				if (validateUserId(reviewerId)) {
-					ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer
-							.getContentProvider();
+					ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
 					reviewerContentProvider.addReviewer(reviewerId);
 					reviewersViewer.refresh();
 				}
@@ -177,10 +232,8 @@ public class AssignReviewersDialog extends TitleAreaDialog {
 			@Override
 			public void handleEvent(Event event) {
 				List<Integer> checkedRowIndices = getCheckedItemIndices(reviewersTable);
-				if (checkedRowIndices != null && checkedRowIndices.size() > 0
-						&& validateReviewersToRemove(checkedRowIndices)) {
-					ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer
-							.getContentProvider();
+				if (checkedRowIndices != null && checkedRowIndices.size() > 0 && validateReviewersToRemove(checkedRowIndices)) {
+					ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
 					reviewerContentProvider.removeElementsAt(checkedRowIndices);
 					reviewersViewer.refresh();
 				}
@@ -253,8 +306,7 @@ public class AssignReviewersDialog extends TitleAreaDialog {
 	}
 
 	private void saveInput() {
-		ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer
-				.getContentProvider();
+		ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
 		reviewers = reviewerContentProvider.getReviewers();
 
 	}
@@ -271,21 +323,44 @@ public class AssignReviewersDialog extends TitleAreaDialog {
 
 	private boolean validateUserId(String reviewerId) {
 		boolean result = false;
-		if (TFSUtil.findUserName(reviewerId) != null) {
+		Display display = Display.getDefault();
+		if (reviewerId == null || reviewerId.isEmpty()) {
+			display.asyncExec(() -> {
+				if (!display.isDisposed()) {
+					restoreDefaultMessage();
+				}
+			});
+		} else if (TFSUtil.findUserName(reviewerId) != null) {
 			if (!TFSUtil.userNamesSame(reviewerId, TFSUtil.getCurrentUserName())) {
-				ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer
-						.getContentProvider();
+				ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
 				if (!reviewerContentProvider.reviewerIdExists(reviewerId)) {
 					result = true;
-					setErrorMessage(null);
+					display.asyncExec(() -> {
+						if (!display.isDisposed()) {
+							restoreDefaultMessage();
+						}
+					});
+
 				} else {
-					setErrorMessage("Reviewer has already been assigned");
+					display.asyncExec(() -> {
+						if (!display.isDisposed()) {
+							setErrorMessage("Reviewer has already been assigned");
+						}
+					});
 				}
 			} else {
-				setErrorMessage("Cannot assign yourself as a reviewer");
+				display.asyncExec(() -> {
+					if (!display.isDisposed()) {
+						setErrorMessage("Cannot assign yourself as a reviewer");
+					}
+				});
 			}
 		} else {
-			setErrorMessage("Not a valid TFS user: " + reviewerId);
+			display.asyncExec(() -> {
+				if (!display.isDisposed()) {
+					setErrorMessage("Not a valid TFS user: " + reviewerId);
+				}
+			});
 		}
 		return result;
 	}
@@ -332,5 +407,30 @@ public class AssignReviewersDialog extends TitleAreaDialog {
 			}
 		}
 		return result;
+	}
+
+	private void setErrorMessage(String message) {
+		setMessage(message, IMessageProvider.ERROR);
+	}
+
+	private void setMessage(String message, int type) {
+		Image newImage = null;
+		switch (type) {
+			case IMessageProvider.NONE:
+				return;
+			case IMessageProvider.INFORMATION:
+				newImage = JFaceResources.getImage(Dialog.DLG_IMG_MESSAGE_INFO);
+				break;
+			case IMessageProvider.WARNING:
+				newImage = JFaceResources.getImage(Dialog.DLG_IMG_MESSAGE_WARNING);
+				break;
+			case IMessageProvider.ERROR:
+				newImage = JFaceResources.getImage(Dialog.DLG_IMG_MESSAGE_ERROR);
+				break;
+		}
+
+		messageImageLabel.setImage(newImage);
+		messageText.setText(Dialog.shortenText(message, messageText));
+		messageText.setToolTipText(message);
 	}
 }

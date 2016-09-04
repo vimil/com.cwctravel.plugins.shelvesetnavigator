@@ -377,7 +377,11 @@ public class ShelvesetUtil {
 		return result;
 	}
 
-	public static List<ReviewerInfo> getShelvesetReviewers(Shelveset shelveset) {
+	public static List<ReviewerInfo> getReviewers(Shelveset shelveset) {
+		return getReviewers(shelveset, null);
+	}
+
+	public static List<ReviewerInfo> getReviewers(Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) {
 		List<ReviewerInfo> result = new ArrayList<ReviewerInfo>();
 		String[] reviewerIds = ShelvesetUtil.getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_REVIEWER_IDS);
 
@@ -389,9 +393,16 @@ public class ShelvesetUtil {
 			reviewerIdMap.put(reviewerId, false);
 		}
 
+		Set<String> reviewGroupMembersSet = new HashSet<String>();
+		if (reviewGroupMembers != null) {
+			for (TeamFoundationIdentity reviewGroupMember : reviewGroupMembers) {
+				reviewGroupMembersSet.add(TFSUtil.normalizeUserName(reviewGroupMember.getUniqueName()));
+			}
+		}
+
 		for (String approverId : approverIds) {
 			approverId = TFSUtil.normalizeUserName(approverId);
-			if (reviewerIdMap.containsKey(approverId)) {
+			if (reviewerIdMap.containsKey(approverId) || reviewGroupMembersSet.contains(approverId)) {
 				reviewerIdMap.put(approverId, true);
 			}
 		}
@@ -411,7 +422,7 @@ public class ShelvesetUtil {
 	}
 
 	public static void assignReviewers(Shelveset shelveset, List<ReviewerInfo> reviewerInfos) {
-		Map<String, ReviewerInfo> currentReviewersMap = getReviewersMap(getShelvesetReviewers(shelveset));
+		Map<String, ReviewerInfo> currentReviewersMap = getReviewersMap(getReviewers(shelveset));
 		Map<String, ReviewerInfo> newReviewersMap = getReviewersMap(reviewerInfos);
 		Map<String, ReviewerInfo> modifiedReviewersMap = new HashMap<String, ReviewerInfo>();
 
@@ -560,7 +571,7 @@ public class ShelvesetUtil {
 	private static boolean isUserReviewer(String userId, Shelveset shelveset, List<TeamFoundationIdentity> reviewGroupMembers) {
 		boolean result = false;
 
-		List<ReviewerInfo> reviewerInfos = getShelvesetReviewers(shelveset);
+		List<ReviewerInfo> reviewerInfos = getReviewers(shelveset);
 		if (reviewerInfos != null) {
 			for (ReviewerInfo reviewerInfo : reviewerInfos) {
 				if (TFSUtil.userNamesSame(userId, reviewerInfo.getReviewerId())) {

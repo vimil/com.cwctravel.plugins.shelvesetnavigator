@@ -236,7 +236,7 @@ public class ShelvesetItem implements IAdaptable {
 	}
 
 	public List<ReviewerInfo> getReviewers() {
-		return ShelvesetUtil.getShelvesetReviewers(shelveset);
+		return ShelvesetUtil.getReviewers(shelveset, parent.getReviewGroupMembers());
 	}
 
 	public boolean canAssignReviewers() {

@@ -188,17 +188,18 @@ public class TFSUtil {
 			IIdentityManagementService2 identitySvc = (IIdentityManagementService2) tfsConnection.getClient(IIdentityManagementService2.class);
 
 			if (identitySvc != null) {
-				TeamFoundationIdentity reviewerIdentity = identitySvc.readIdentity(IdentitySearchFactor.GENERAL, "Reviewers",
-						MembershipQuery.EXPANDED, ReadIdentityOptions.NONE);
-				if (reviewerIdentity != null) {
-					IdentityDescriptor[] reviewGroupMemberDescriptors = reviewerIdentity.getMembers();
-					if (reviewGroupMemberDescriptors != null) {
-						for (IdentityDescriptor reviewGroupMemberDescriptor : reviewGroupMemberDescriptors) {
-
-							TeamFoundationIdentity reviewGroupMemberIdentity = identitySvc.readIdentity(IdentitySearchFactor.IDENTIFIER,
-									reviewGroupMemberDescriptor.getIdentifier(), MembershipQuery.DIRECT, ReadIdentityOptions.NONE);
-							if (reviewGroupMemberIdentity != null) {
-								result.add(reviewGroupMemberIdentity);
+				TeamFoundationIdentity[] reviewerIdentities = identitySvc.readIdentities(IdentitySearchFactor.GENERAL, new String[] { "Reviewers" },
+						MembershipQuery.EXPANDED, ReadIdentityOptions.NONE)[0];
+				if (reviewerIdentities != null) {
+					for (TeamFoundationIdentity reviewerIdentity : reviewerIdentities) {
+						IdentityDescriptor[] reviewGroupMemberDescriptors = reviewerIdentity.getMembers();
+						if (reviewGroupMemberDescriptors != null) {
+							for (IdentityDescriptor reviewGroupMemberDescriptor : reviewGroupMemberDescriptors) {
+								TeamFoundationIdentity reviewGroupMemberIdentity = identitySvc.readIdentity(IdentitySearchFactor.IDENTIFIER,
+										reviewGroupMemberDescriptor.getIdentifier(), MembershipQuery.DIRECT, ReadIdentityOptions.NONE);
+								if (reviewGroupMemberIdentity != null) {
+									result.add(reviewGroupMemberIdentity);
+								}
 							}
 						}
 					}
