@@ -13,6 +13,7 @@ import org.eclipse.ui.progress.UIJob;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.constants.ShelvesetPropertyConstants;
+import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
@@ -46,7 +47,7 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 		if (!softRefresh) {
 			VersionControlClient vC = TFSUtil.getVersionControlClient();
 			if (vC != null) {
-				defaultReviewersGroup = TFSUtil.getDefaultReviewersGroup();
+				defaultReviewersGroup = IdentityUtil.getDefaultReviewersGroup();
 
 				userShelvesetItemsMap.clear();
 
@@ -111,7 +112,7 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 
 	public boolean removeShelveset(Shelveset shelveset) {
 		boolean result = false;
-		List<Shelveset> shelvesets = userShelvesetItemsMap.get(TFSUtil.getCurrentUserName());
+		List<Shelveset> shelvesets = userShelvesetItemsMap.get(IdentityUtil.getCurrentUserName());
 		if (shelvesets != null) {
 			result = shelvesets.remove(shelveset);
 		}

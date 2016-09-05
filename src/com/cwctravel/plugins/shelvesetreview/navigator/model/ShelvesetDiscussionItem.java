@@ -10,6 +10,7 @@ import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.Discuss
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCommentInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadPropertiesInfo;
+import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 import com.cwctravel.plugins.shelvesetreview.util.StringUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 
@@ -209,7 +210,7 @@ public class ShelvesetDiscussionItem extends ShelvesetResourceItem {
 	}
 
 	public boolean canEdit() {
-		return StringUtil.equals(getAuthorId(), TFSUtil.getCurrentUserId());
+		return StringUtil.equals(getAuthorId(), IdentityUtil.getCurrentUserId());
 	}
 
 	public boolean canReply() {
@@ -228,6 +229,6 @@ public class ShelvesetDiscussionItem extends ShelvesetResourceItem {
 	}
 
 	public boolean canDelete() {
-		return StringUtil.equals(getAuthorId(), TFSUtil.getCurrentUserId());
+		return StringUtil.equals(getAuthorId(), IdentityUtil.getCurrentUserId());
 	}
 }

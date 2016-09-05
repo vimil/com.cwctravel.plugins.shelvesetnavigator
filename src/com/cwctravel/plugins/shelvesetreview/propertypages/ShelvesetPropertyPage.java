@@ -19,7 +19,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import com.cwctravel.plugins.shelvesetreview.contentProviders.ReviewerContentProvider;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
-import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
+import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
 public class ShelvesetPropertyPage extends PropertyPage {
@@ -196,7 +196,7 @@ public class ShelvesetPropertyPage extends PropertyPage {
 			public String getText(Object element) {
 				if (element != null) {
 					ReviewerInfo reviewerInfo = (ReviewerInfo) element;
-					TeamFoundationIdentity identity = TFSUtil.getIdentity(reviewerInfo.getReviewerId());
+					TeamFoundationIdentity identity = IdentityUtil.getIdentity(reviewerInfo.getReviewerId());
 					if (identity != null) {
 						return identity.getDisplayName();
 					}

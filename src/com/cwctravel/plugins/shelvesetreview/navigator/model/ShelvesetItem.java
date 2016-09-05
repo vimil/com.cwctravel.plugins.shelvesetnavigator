@@ -15,6 +15,7 @@ import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetItemsRefreshJob;
 import com.cwctravel.plugins.shelvesetreview.jobs.ui.RefreshShelvesetsJob;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
 import com.cwctravel.plugins.shelvesetreview.util.DiscussionUtil;
+import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 import com.cwctravel.plugins.shelvesetreview.util.ShelvesetUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
@@ -235,8 +236,8 @@ public class ShelvesetItem implements IAdaptable {
 		return ShelvesetUtil.getShelvesetChangesetNumber(shelveset);
 	}
 
-	public List<ReviewerInfo> getReviewers(boolean includeDefualtReviewersGroup) {
-		return ShelvesetUtil.getReviewers(shelveset, includeDefualtReviewersGroup ? parent.getDefaultReviewersGroup() : null);
+	public List<ReviewerInfo> getReviewers(boolean includeDefaultReviewersGroupIfApproved) {
+		return ShelvesetUtil.getReviewers(shelveset, includeDefaultReviewersGroupIfApproved ? parent.getDefaultReviewersGroup() : null, false);
 	}
 
 	public boolean canAssignReviewers() {
@@ -281,7 +282,7 @@ public class ShelvesetItem implements IAdaptable {
 	}
 
 	public boolean isCurrentUserOwner() {
-		return TFSUtil.userNamesSame(TFSUtil.getCurrentUserName(), shelveset.getOwnerName());
+		return IdentityUtil.userNamesSame(IdentityUtil.getCurrentUserName(), shelveset.getOwnerName());
 	}
 
 	public Shelveset getShelveset() {

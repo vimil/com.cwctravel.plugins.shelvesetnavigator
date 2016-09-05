@@ -37,7 +37,7 @@ import com.cwctravel.plugins.shelvesetreview.asynch.RepeatingJob;
 import com.cwctravel.plugins.shelvesetreview.contentProviders.ReviewerContentProvider;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
-import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
+import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
 public class AssignReviewersDialog extends Dialog {
@@ -168,19 +168,6 @@ public class AssignReviewersDialog extends Dialog {
 		btnReviewerIdAdd.setLayoutData(fdReviewerAdd);
 		btnReviewerIdAdd.setEnabled(true);
 
-		btnReviewerIdAdd.addListener(SWT.Selection, new Listener() {
-
-			@Override
-			public void handleEvent(Event event) {
-				String reviewerId = txtReviewerId.getText();
-				if (validateUserId(reviewerId)) {
-					ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
-					reviewerContentProvider.addReviewer(reviewerId);
-					reviewersViewer.refresh();
-				}
-			}
-		});
-
 		ErrorMessageClearer errorMessageClearer = new ErrorMessageClearer();
 		btnReviewerIdAdd.addFocusListener(errorMessageClearer);
 
@@ -209,19 +196,6 @@ public class AssignReviewersDialog extends Dialog {
 		btnReviewerIdRemove.setLayoutData(fdReviewerRemove);
 		btnReviewerIdRemove.setEnabled(false);
 
-		btnReviewerIdRemove.addListener(SWT.Selection, new Listener() {
-
-			@Override
-			public void handleEvent(Event event) {
-				List<Integer> checkedRowIndices = getCheckedItemIndices(reviewersTable);
-				if (checkedRowIndices != null && checkedRowIndices.size() > 0) {
-					ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
-					reviewerContentProvider.removeElementsAt(checkedRowIndices);
-					reviewersViewer.refresh();
-				}
-			}
-		});
-
 		btnReviewerIdRemove.addFocusListener(errorMessageClearer);
 
 		Listener reviewersTableOnSelectEventListener = new Listener() {
@@ -232,12 +206,62 @@ public class AssignReviewersDialog extends Dialog {
 			}
 		};
 
+		Button btnAddDefaultReviewerGroup = new Button(container, SWT.PUSH);
+		btnAddDefaultReviewerGroup.setText("Add Default Reviewer Group");
+		FormData fdAddDefaultReviewerGroup = new FormData(convertWidthInCharsToPixels(30), 25);
+		fdAddDefaultReviewerGroup.right = new FormAttachment(btnReviewerIdRemove, -5);
+		fdAddDefaultReviewerGroup.top = new FormAttachment(reviewersTable, 10, SWT.BOTTOM);
+		btnAddDefaultReviewerGroup.setLayoutData(fdAddDefaultReviewerGroup);
+		btnAddDefaultReviewerGroup.setEnabled(isDefaultReviewerGroupPresent() && !isDefaultReviewerGroupAssigned());
+
+		btnAddDefaultReviewerGroup.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				TeamFoundationIdentity defaultReviewersGroup = IdentityUtil.getDefaultReviewersGroup();
+				if (defaultReviewersGroup != null) {
+					ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
+
+					reviewerContentProvider.addReviewer(defaultReviewersGroup.getUniqueName());
+					reviewersViewer.refresh();
+					btnAddDefaultReviewerGroup.setEnabled(isDefaultReviewerGroupPresent() && !isDefaultReviewerGroupAssigned());
+				}
+			}
+		});
+
+		btnReviewerIdAdd.addListener(SWT.Selection, new Listener() {
+
+			@Override
+			public void handleEvent(Event event) {
+				String reviewerId = txtReviewerId.getText();
+				if (validateUserId(reviewerId)) {
+					ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
+					reviewerContentProvider.addReviewer(reviewerId);
+					reviewersViewer.refresh();
+					btnAddDefaultReviewerGroup.setEnabled(isDefaultReviewerGroupPresent() && !isDefaultReviewerGroupAssigned());
+				}
+			}
+		});
+
+		btnReviewerIdRemove.addListener(SWT.Selection, new Listener() {
+
+			@Override
+			public void handleEvent(Event event) {
+				List<Integer> checkedRowIndices = getCheckedItemIndices(reviewersTable);
+				if (checkedRowIndices != null && checkedRowIndices.size() > 0) {
+					ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
+					reviewerContentProvider.removeElementsAt(checkedRowIndices);
+					reviewersViewer.refresh();
+					btnAddDefaultReviewerGroup.setEnabled(isDefaultReviewerGroupPresent() && !isDefaultReviewerGroupAssigned());
+				}
+			}
+		});
+
 		reviewersTable.addListener(SWT.Selection, reviewersTableOnSelectEventListener);
 	}
 
 	private TableViewer createReviewersViewer(Composite parent) {
 		TableViewer reviewersViewer = new TableViewer(parent, SWT.FULL_SELECTION | SWT.MULTI | SWT.CHECK);
-		ReviewerContentProvider reviewerContentProvider = new ReviewerContentProvider(shelvesetItem.getReviewers(true));
+		ReviewerContentProvider reviewerContentProvider = new ReviewerContentProvider(shelvesetItem.getReviewers(false));
 		reviewersViewer.setContentProvider(reviewerContentProvider);
 
 		final Table reviewersTable = reviewersViewer.getTable();
@@ -250,7 +274,7 @@ public class AssignReviewersDialog extends Dialog {
 			public String getText(Object element) {
 				if (element != null) {
 					ReviewerInfo reviewerInfo = (ReviewerInfo) element;
-					TeamFoundationIdentity identity = TFSUtil.getIdentity(reviewerInfo.getReviewerId());
+					TeamFoundationIdentity identity = IdentityUtil.getIdentity(reviewerInfo.getReviewerId());
 					if (identity != null) {
 						return identity.getDisplayName();
 					}
@@ -298,6 +322,26 @@ public class AssignReviewersDialog extends Dialog {
 
 	}
 
+	private boolean isDefaultReviewerGroupPresent() {
+		return IdentityUtil.getDefaultReviewersGroup() != null;
+	}
+
+	private boolean isDefaultReviewerGroupAssigned() {
+		boolean result = false;
+		ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
+		List<ReviewerInfo> reviewers = reviewerContentProvider.getReviewers();
+		if (reviewers != null) {
+			for (ReviewerInfo reviewerInfo : reviewers) {
+				String reviewerId = reviewerInfo.getReviewerId();
+				if (IdentityUtil.isDefaultReviewerGroupId(reviewerId)) {
+					result = true;
+					break;
+				}
+			}
+		}
+		return result;
+	}
+
 	@Override
 	protected void okPressed() {
 		saveInput();
@@ -323,8 +367,8 @@ public class AssignReviewersDialog extends Dialog {
 		boolean result = false;
 		if (reviewerId == null || reviewerId.isEmpty()) {
 			execInUIThread(this::restoreDefaultMessage);
-		} else if (TFSUtil.getIdentity(reviewerId) != null) {
-			if (!TFSUtil.userNamesSame(reviewerId, TFSUtil.getCurrentUserName())) {
+		} else if (IdentityUtil.getIdentity(reviewerId) != null) {
+			if (!IdentityUtil.userNamesSame(reviewerId, IdentityUtil.getCurrentUserName())) {
 				ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
 				if (!reviewerContentProvider.reviewerIdExists(reviewerId)) {
 					result = true;

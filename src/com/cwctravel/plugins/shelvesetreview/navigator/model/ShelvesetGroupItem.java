@@ -7,8 +7,8 @@ import java.util.Map;
 import org.eclipse.core.runtime.IAdaptable;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
+import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 import com.cwctravel.plugins.shelvesetreview.util.ShelvesetUtil;
-import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 
 public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdaptable {
@@ -74,7 +74,7 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 	public void createShelvesetItems(Map<String, List<Shelveset>> userShelvesetItemsMap) {
 		shelvesetItems.clear();
 		if (userShelvesetItemsMap != null) {
-			String currentUserId = TFSUtil.getCurrentUserName();
+			String currentUserId = IdentityUtil.getCurrentUserName();
 			switch (groupType) {
 				case GROUP_TYPE_CURRENT_USER_SHELVESETS: {
 					shelvesetItems = new ArrayList<ShelvesetItem>();
@@ -104,7 +104,7 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 
 							for (Shelveset shelveset : userShelvesetList) {
 								if (!ShelvesetUtil.isShelvesetInactive(shelveset)
-										&& !TFSUtil.userNamesSame(currentUserId, shelveset.getOwnerName())) {
+										&& !IdentityUtil.userNamesSame(currentUserId, shelveset.getOwnerName())) {
 									if (shelvesetUserItem == null) {
 										shelvesetUserCategoryItems = new ArrayList<ShelvesetUserCategoryItem>();
 										shelvesetUserItem = new ShelvesetUserItem(this, shelvesetOwner, shelvesetUserCategoryItems);

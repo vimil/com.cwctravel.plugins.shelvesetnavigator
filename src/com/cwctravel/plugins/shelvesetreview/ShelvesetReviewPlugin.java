@@ -19,6 +19,7 @@ import org.osgi.framework.BundleContext;
 import com.cwctravel.plugins.shelvesetreview.annotator.DiscussionAnnotator;
 import com.cwctravel.plugins.shelvesetreview.events.ShelvesetContainerRefreshEvent;
 import com.cwctravel.plugins.shelvesetreview.events.ShelvesetItemRefreshEvent;
+import com.cwctravel.plugins.shelvesetreview.identity.IdentityManager;
 import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetGroupItemsRefreshJob;
 import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetContainerRefreshListener;
 import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetItemRefreshListener;
@@ -64,10 +65,13 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 
 	private AnnotationPreference discussionAnnotationPreference;
 
+	private IdentityManager identityManager;
+
 	public ShelvesetReviewPlugin() {
 		plugin = this;
 		shelvesetContainerRefreshListeners = new ListenerList();
 		shelvesetItemRefreshListeners = new ListenerList();
+		identityManager = new IdentityManager();
 	}
 
 	@Override
@@ -224,6 +228,10 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 
 	public AnnotationPreference getDiscussionAnnotationPreference() {
 		return discussionAnnotationPreference;
+	}
+
+	public IdentityManager getIdentityManager() {
+		return identityManager;
 	}
 
 }

@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.DiscussionService;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCreateRequestInfo;
+import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.ChangeType;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingChange;
@@ -103,7 +104,7 @@ public class ShelvesetFileItem extends ShelvesetResourceItem {
 		discussionCreateRequestInfo.setShelvesetName(shelvesetItem.getName());
 		discussionCreateRequestInfo.setShelvesetOwnerName(shelvesetItem.getOwnerName());
 		discussionCreateRequestInfo.setPath(getPath());
-		discussionCreateRequestInfo.setAuthorId(TFSUtil.getCurrentUserId());
+		discussionCreateRequestInfo.setAuthorId(IdentityUtil.getCurrentUserId());
 		discussionCreateRequestInfo.setStartLine(startLine);
 		discussionCreateRequestInfo.setStartColumn(startCol);
 		discussionCreateRequestInfo.setEndLine(endLine);

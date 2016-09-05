@@ -8,7 +8,7 @@ import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
-import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
+import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
 public class ReviewerContentProvider implements IStructuredContentProvider {
@@ -45,7 +45,7 @@ public class ReviewerContentProvider implements IStructuredContentProvider {
 
 	public boolean addReviewer(String reviewerId) {
 		boolean result = false;
-		TeamFoundationIdentity reviewerIdentity = TFSUtil.getIdentity(reviewerId);
+		TeamFoundationIdentity reviewerIdentity = IdentityUtil.getIdentity(reviewerId);
 		if (reviewerIdentity != null) {
 			reviewerId = reviewerIdentity.getUniqueName();
 			if (!reviewerIds.contains(reviewerId)) {
@@ -60,7 +60,7 @@ public class ReviewerContentProvider implements IStructuredContentProvider {
 	}
 
 	public boolean reviewerIdExists(String reviewerId) {
-		TeamFoundationIdentity reviewerIdentity = TFSUtil.getIdentity(reviewerId);
+		TeamFoundationIdentity reviewerIdentity = IdentityUtil.getIdentity(reviewerId);
 		if (reviewerIdentity != null) {
 			reviewerId = reviewerIdentity.getUniqueName();
 			return reviewerIds.contains(reviewerId);
