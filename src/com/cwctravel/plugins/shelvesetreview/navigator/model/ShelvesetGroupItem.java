@@ -10,7 +10,6 @@ import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.util.ShelvesetUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
-import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
 public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdaptable {
 
@@ -72,7 +71,7 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 		return isChildrenRefreshed;
 	}
 
-	public void createShelvesetItems(Map<String, List<Shelveset>> userShelvesetItemsMap, List<TeamFoundationIdentity> reviewGroupMembers) {
+	public void createShelvesetItems(Map<String, List<Shelveset>> userShelvesetItemsMap) {
 		shelvesetItems.clear();
 		if (userShelvesetItemsMap != null) {
 			String currentUserId = TFSUtil.getCurrentUserName();

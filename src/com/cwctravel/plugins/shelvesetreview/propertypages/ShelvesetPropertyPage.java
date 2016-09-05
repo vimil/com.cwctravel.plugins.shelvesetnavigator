@@ -19,6 +19,8 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import com.cwctravel.plugins.shelvesetreview.contentProviders.ReviewerContentProvider;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
+import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
+import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
 public class ShelvesetPropertyPage extends PropertyPage {
 	private ShelvesetItem shelvesetItem;
@@ -181,7 +183,7 @@ public class ShelvesetPropertyPage extends PropertyPage {
 
 	private TableViewer createReviewersViewer(Composite parent) {
 		TableViewer reviewersViewer = new TableViewer(parent, SWT.FULL_SELECTION);
-		ReviewerContentProvider reviewerContentProvider = new ReviewerContentProvider(shelvesetItem.getReviewers());
+		ReviewerContentProvider reviewerContentProvider = new ReviewerContentProvider(shelvesetItem.getReviewers(true));
 		reviewersViewer.setContentProvider(reviewerContentProvider);
 
 		final Table reviewersTable = reviewersViewer.getTable();
@@ -194,6 +196,10 @@ public class ShelvesetPropertyPage extends PropertyPage {
 			public String getText(Object element) {
 				if (element != null) {
 					ReviewerInfo reviewerInfo = (ReviewerInfo) element;
+					TeamFoundationIdentity identity = TFSUtil.getIdentity(reviewerInfo.getReviewerId());
+					if (identity != null) {
+						return identity.getDisplayName();
+					}
 					return reviewerInfo.getReviewerId();
 				}
 				return null;
@@ -201,8 +207,8 @@ public class ShelvesetPropertyPage extends PropertyPage {
 		});
 
 		TableColumn reviewersTableColumn1 = reviewersViewerColumn1.getColumn();
-		reviewersTableColumn1.setText("Reviewer Id");
-		reviewersTableColumn1.setWidth(630);
+		reviewersTableColumn1.setText("Reviewer");
+		reviewersTableColumn1.setWidth(530);
 		reviewersTableColumn1.setResizable(false);
 
 		TableViewerColumn reviewersViewerColumn2 = new TableViewerColumn(reviewersViewer, SWT.NONE);
@@ -211,15 +217,16 @@ public class ShelvesetPropertyPage extends PropertyPage {
 			public String getText(Object element) {
 				if (element != null) {
 					ReviewerInfo reviewerInfo = (ReviewerInfo) element;
-					return reviewerInfo.isApproved() ? "Approved" : "Pending Approval";
+					String approverId = reviewerInfo.getApproverId();
+					return (approverId != null) ? approverId : "<Pending Approval>";
 				}
 				return null;
 			}
 		});
 
 		TableColumn reviewersTableColumn2 = reviewersViewerColumn2.getColumn();
-		reviewersTableColumn2.setText("Approval Status");
-		reviewersTableColumn2.setWidth(120);
+		reviewersTableColumn2.setText("Approver");
+		reviewersTableColumn2.setWidth(220);
 		reviewersTableColumn2.setResizable(false);
 
 		reviewersViewer.setInput(reviewerContentProvider.getReviewers());

@@ -21,7 +21,7 @@ import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 public class ShelvesetGroupItemContainer extends PlatformObject {
 	private Map<String, List<Shelveset>> userShelvesetItemsMap;
 	private final List<ShelvesetGroupItem> shelvesetGroupItems;
-	private final List<TeamFoundationIdentity> reviewGroupMembers;
+	private TeamFoundationIdentity defaultReviewersGroup;;
 
 	private boolean initialRefreshComplete;
 
@@ -36,7 +36,6 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 		shelvesetGroupItems.add(reviewerShelvesetGroupItem);
 		shelvesetGroupItems.add(inactiveShelvesetGroupItem);
 
-		reviewGroupMembers = new ArrayList<TeamFoundationIdentity>();
 	}
 
 	public List<ShelvesetGroupItem> getShelvesetGroupItems() {
@@ -47,8 +46,7 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 		if (!softRefresh) {
 			VersionControlClient vC = TFSUtil.getVersionControlClient();
 			if (vC != null) {
-				reviewGroupMembers.clear();
-				reviewGroupMembers.addAll(TFSUtil.getReviewGroupMembers());
+				defaultReviewersGroup = TFSUtil.getDefaultReviewersGroup();
 
 				userShelvesetItemsMap.clear();
 
@@ -88,7 +86,7 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 		}
 
 		for (ShelvesetGroupItem shelvesetGroupItem : shelvesetGroupItems) {
-			shelvesetGroupItem.createShelvesetItems(userShelvesetItemsMap, reviewGroupMembers);
+			shelvesetGroupItem.createShelvesetItems(userShelvesetItemsMap);
 		}
 
 		new UIJob("Shelveset Container Refresh") {
@@ -126,8 +124,8 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 		return initialRefreshComplete;
 	}
 
-	public List<TeamFoundationIdentity> getReviewGroupMembers() {
-		return reviewGroupMembers;
+	public TeamFoundationIdentity getDefaultReviewersGroup() {
+		return defaultReviewersGroup;
 	}
 
 }

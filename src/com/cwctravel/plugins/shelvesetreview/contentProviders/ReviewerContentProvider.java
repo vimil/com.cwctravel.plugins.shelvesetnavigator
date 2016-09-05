@@ -8,6 +8,8 @@ import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
+import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
+import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
 public class ReviewerContentProvider implements IStructuredContentProvider {
 	private Set<String> reviewerIds;
@@ -43,20 +45,27 @@ public class ReviewerContentProvider implements IStructuredContentProvider {
 
 	public boolean addReviewer(String reviewerId) {
 		boolean result = false;
-		if (!reviewerIds.contains(reviewerId)) {
-			ReviewerInfo reviewerInfo = new ReviewerInfo();
-			reviewerInfo.setReviewerId(reviewerId);
-			reviewerInfo.setModifiable(true);
-			reviewerInfo.setSource(ReviewerInfo.SOURCE_SHELVESET);
-			reviewerIds.add(reviewerId);
-			reviewerInfos.add(reviewerInfo);
-			result = true;
+		TeamFoundationIdentity reviewerIdentity = TFSUtil.getIdentity(reviewerId);
+		if (reviewerIdentity != null) {
+			reviewerId = reviewerIdentity.getUniqueName();
+			if (!reviewerIds.contains(reviewerId)) {
+				ReviewerInfo reviewerInfo = new ReviewerInfo();
+				reviewerInfo.setReviewerId(reviewerId);
+				reviewerIds.add(reviewerId);
+				reviewerInfos.add(reviewerInfo);
+				result = true;
+			}
 		}
 		return result;
 	}
 
 	public boolean reviewerIdExists(String reviewerId) {
-		return reviewerIds.contains(reviewerId);
+		TeamFoundationIdentity reviewerIdentity = TFSUtil.getIdentity(reviewerId);
+		if (reviewerIdentity != null) {
+			reviewerId = reviewerIdentity.getUniqueName();
+			return reviewerIds.contains(reviewerId);
+		}
+		return false;
 	}
 
 	public void removeElementsAt(List<Integer> rowIndices) {

@@ -235,8 +235,8 @@ public class ShelvesetItem implements IAdaptable {
 		return ShelvesetUtil.getShelvesetChangesetNumber(shelveset);
 	}
 
-	public List<ReviewerInfo> getReviewers() {
-		return ShelvesetUtil.getReviewers(shelveset, parent.getReviewGroupMembers());
+	public List<ReviewerInfo> getReviewers(boolean includeDefualtReviewersGroup) {
+		return ShelvesetUtil.getReviewers(shelveset, includeDefualtReviewersGroup ? parent.getDefaultReviewersGroup() : null);
 	}
 
 	public boolean canAssignReviewers() {
@@ -256,11 +256,11 @@ public class ShelvesetItem implements IAdaptable {
 	}
 
 	public boolean canApprove() {
-		return ShelvesetUtil.canApprove(shelveset, parent.getReviewGroupMembers());
+		return ShelvesetUtil.canApprove(shelveset, parent.getDefaultReviewersGroup());
 	}
 
 	public void approve(String approvalComment) throws ApproveException {
-		ShelvesetUtil.approve(shelveset, approvalComment, parent.getReviewGroupMembers());
+		ShelvesetUtil.approve(shelveset, approvalComment, parent.getDefaultReviewersGroup());
 
 	}
 
@@ -273,11 +273,11 @@ public class ShelvesetItem implements IAdaptable {
 	}
 
 	public void unapprove(String revokeApprovalComment) throws ApproveException {
-		ShelvesetUtil.unapprove(shelveset, revokeApprovalComment, parent.getReviewGroupMembers());
+		ShelvesetUtil.unapprove(shelveset, revokeApprovalComment, parent.getDefaultReviewersGroup());
 	}
 
 	public Boolean canUnapprove() {
-		return ShelvesetUtil.canUnapprove(shelveset, parent.getReviewGroupMembers());
+		return ShelvesetUtil.canUnapprove(shelveset, parent.getDefaultReviewersGroup());
 	}
 
 	public boolean isCurrentUserOwner() {

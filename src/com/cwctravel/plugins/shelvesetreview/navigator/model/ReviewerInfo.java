@@ -1,14 +1,8 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
 public class ReviewerInfo {
-	public static final int SOURCE_SHELVESET = 0;
-	public static final int SOURCE_WORKITEM = 1;
-	public static final int SOURCE_CONFIG = 2;
-
 	private String reviewerId;
-	private boolean approved;
-	private boolean modifiable;
-	private int source;
+	private String approverId;
 
 	public String getReviewerId() {
 		return reviewerId;
@@ -18,28 +12,11 @@ public class ReviewerInfo {
 		this.reviewerId = reviewerId;
 	}
 
-	public boolean isApproved() {
-		return approved;
+	public String getApproverId() {
+		return approverId;
 	}
 
-	public void setApproved(boolean approved) {
-		this.approved = approved;
+	public void setApproverId(String approverId) {
+		this.approverId = approverId;
 	}
-
-	public boolean isModifiable() {
-		return modifiable;
-	}
-
-	public void setModifiable(boolean modifiable) {
-		this.modifiable = modifiable;
-	}
-
-	public int getSource() {
-		return source;
-	}
-
-	public void setSource(int source) {
-		this.source = source;
-	}
-
 }

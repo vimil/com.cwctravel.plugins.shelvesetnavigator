@@ -38,6 +38,7 @@ import com.cwctravel.plugins.shelvesetreview.contentProviders.ReviewerContentPro
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
+import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
 public class AssignReviewersDialog extends Dialog {
 
@@ -213,7 +214,7 @@ public class AssignReviewersDialog extends Dialog {
 			@Override
 			public void handleEvent(Event event) {
 				List<Integer> checkedRowIndices = getCheckedItemIndices(reviewersTable);
-				if (checkedRowIndices != null && checkedRowIndices.size() > 0 && validateReviewersToRemove(checkedRowIndices)) {
+				if (checkedRowIndices != null && checkedRowIndices.size() > 0) {
 					ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
 					reviewerContentProvider.removeElementsAt(checkedRowIndices);
 					reviewersViewer.refresh();
@@ -236,7 +237,7 @@ public class AssignReviewersDialog extends Dialog {
 
 	private TableViewer createReviewersViewer(Composite parent) {
 		TableViewer reviewersViewer = new TableViewer(parent, SWT.FULL_SELECTION | SWT.MULTI | SWT.CHECK);
-		ReviewerContentProvider reviewerContentProvider = new ReviewerContentProvider(shelvesetItem.getReviewers());
+		ReviewerContentProvider reviewerContentProvider = new ReviewerContentProvider(shelvesetItem.getReviewers(true));
 		reviewersViewer.setContentProvider(reviewerContentProvider);
 
 		final Table reviewersTable = reviewersViewer.getTable();
@@ -249,6 +250,10 @@ public class AssignReviewersDialog extends Dialog {
 			public String getText(Object element) {
 				if (element != null) {
 					ReviewerInfo reviewerInfo = (ReviewerInfo) element;
+					TeamFoundationIdentity identity = TFSUtil.getIdentity(reviewerInfo.getReviewerId());
+					if (identity != null) {
+						return identity.getDisplayName();
+					}
 					return reviewerInfo.getReviewerId();
 				}
 				return null;
@@ -256,8 +261,8 @@ public class AssignReviewersDialog extends Dialog {
 		});
 
 		TableColumn reviewersTableColumn1 = reviewersViewerColumn1.getColumn();
-		reviewersTableColumn1.setText("Reviewer Id");
-		reviewersTableColumn1.setWidth(630);
+		reviewersTableColumn1.setText("Reviewer");
+		reviewersTableColumn1.setWidth(530);
 		reviewersTableColumn1.setResizable(false);
 
 		TableViewerColumn reviewersViewerColumn2 = new TableViewerColumn(reviewersViewer, SWT.NONE);
@@ -266,15 +271,16 @@ public class AssignReviewersDialog extends Dialog {
 			public String getText(Object element) {
 				if (element != null) {
 					ReviewerInfo reviewerInfo = (ReviewerInfo) element;
-					return reviewerInfo.isApproved() ? "Approved" : "Pending Approval";
+					String approverId = reviewerInfo.getApproverId();
+					return (approverId != null) ? approverId : "<Pending Approval>";
 				}
 				return null;
 			}
 		});
 
 		TableColumn reviewersTableColumn2 = reviewersViewerColumn2.getColumn();
-		reviewersTableColumn2.setText("Approval Status");
-		reviewersTableColumn2.setWidth(120);
+		reviewersTableColumn2.setText("Approver");
+		reviewersTableColumn2.setWidth(220);
 		reviewersTableColumn2.setResizable(false);
 
 		reviewersViewer.setInput(reviewerContentProvider.getReviewers());
@@ -317,7 +323,7 @@ public class AssignReviewersDialog extends Dialog {
 		boolean result = false;
 		if (reviewerId == null || reviewerId.isEmpty()) {
 			execInUIThread(this::restoreDefaultMessage);
-		} else if (TFSUtil.findUserName(reviewerId) != null) {
+		} else if (TFSUtil.getIdentity(reviewerId) != null) {
 			if (!TFSUtil.userNamesSame(reviewerId, TFSUtil.getCurrentUserName())) {
 				ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
 				if (!reviewerContentProvider.reviewerIdExists(reviewerId)) {
@@ -338,23 +344,6 @@ public class AssignReviewersDialog extends Dialog {
 				setErrorMessage("Not a valid TFS user: " + reviewerId);
 			});
 		}
-		return result;
-	}
-
-	private boolean validateReviewersToRemove(List<Integer> selectedRowIndices) {
-		boolean result = false;
-		if (selectedRowIndices != null && selectedRowIndices.size() > 0) {
-			result = true;
-			for (int selectedRowIndex : selectedRowIndices) {
-				ReviewerInfo reviewerInfo = (ReviewerInfo) reviewersViewer.getElementAt(selectedRowIndex);
-				if (reviewerInfo.getSource() != ReviewerInfo.SOURCE_SHELVESET) {
-					setErrorMessage("The reviewer cannot be removed: " + reviewerInfo.getReviewerId());
-					result = false;
-					break;
-				}
-			}
-		}
-
 		return result;
 	}
 
