@@ -50,7 +50,7 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 		@Override
 		public void mouseDoubleClick(MouseEvent e) {
 			Object source = e.getSource();
-			if (source != null && source.getClass().getSimpleName().startsWith("AnnotationRulerColumn")) {
+			if (EditorUtil.isAnnotationRulerColumn(source)) {
 				IVerticalRulerInfo verticalRulerInfo = (IVerticalRulerInfo) editorPart.getAdapter(IVerticalRulerInfo.class);
 				if (verticalRulerInfo instanceof CompositeRuler) {
 					CompositeRuler compositeRuler = (CompositeRuler) verticalRulerInfo;

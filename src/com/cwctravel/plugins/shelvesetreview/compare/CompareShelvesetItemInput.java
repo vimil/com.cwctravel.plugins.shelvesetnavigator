@@ -59,7 +59,7 @@ public class CompareShelvesetItemInput extends CompareEditorInput implements ISh
 		@Override
 		public void mouseDoubleClick(MouseEvent e) {
 			Object source = e.getSource();
-			if (source != null && source.getClass().getSimpleName().startsWith("AnnotationRulerColumn")) {
+			if (EditorUtil.isAnnotationRulerColumn(source)) {
 				IVerticalRuler verticalRuler = CompareShelvesetItemInput.this.getVerticalRuler(leg);
 				if (verticalRuler instanceof CompositeRuler) {
 					CompositeRuler compositeRuler = (CompositeRuler) verticalRuler;

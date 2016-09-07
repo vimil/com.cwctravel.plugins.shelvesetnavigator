@@ -317,4 +317,8 @@ public class EditorUtil {
 		return result;
 	}
 
+	public static boolean isAnnotationRulerColumn(Object source) {
+		return source != null && source.getClass().getName().contains("AnnotationRulerColumn");
+	}
+
 }
