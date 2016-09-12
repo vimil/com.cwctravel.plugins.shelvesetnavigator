@@ -31,12 +31,21 @@
                <instanceof
                      value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem">
                </instanceof>
+               <instanceof
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.CodeReviewItemContainer">
+               </instanceof>
             </or>
          </possibleChildren>
          <triggerPoints>
             <or>
                <instanceof
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.BaseItemContainer">
+               </instanceof>
+               <instanceof
                      value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItemContainer">
+               </instanceof>
+               <instanceof
+                     value="com.cwctravel.plugins.shelvesetreview.navigator.model.CodeReviewItemContainer">
                </instanceof>
                <instanceof
                      value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItem">
@@ -176,8 +185,8 @@
             name="Delete Shelveset">
       </command>
       <command
-            id="com.cwctravel.plugins.shelvesetreview.navigator.commands.AssignReviewersCommand"
-            name="Assign Reviewers">
+            id="com.cwctravel.plugins.shelvesetreview.navigator.commands.RequestCodeReviewCommand"
+            name="Request Code Review">
       </command>
       <command
             id="com.cwctravel.plugins.shelvesetreview.navigator.commands.ApproveShelvesetCommand"
@@ -330,8 +339,8 @@
          </enabledWhen>
       </handler>
       <handler
-            class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.AssignReviewersHandler"
-            commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.AssignReviewersCommand">
+            class="com.cwctravel.plugins.shelvesetreview.handlers.navigator.RequestCodeReviewHandler"
+            commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.RequestCodeReviewCommand">
          <enabledWhen>
             <with
                   variable="selection">
@@ -345,7 +354,7 @@
                               value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
                         </instanceof>
                         <test
-                              property="com.cwctravel.plugins.shelvesetreview.shelvesetitem.canAssignReviewers"
+                              property="com.cwctravel.plugins.shelvesetreview.shelvesetitem.canRequestCodeReview"
                               value="true">
                         </test>
                      </and>
@@ -501,8 +510,8 @@
             </visibleWhen>
          </command>
          <command
-               commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.AssignReviewersCommand"
-               label="Assign Reviewers..."
+               commandId="com.cwctravel.plugins.shelvesetreview.navigator.commands.RequestCodeReviewCommand"
+               label="Request Code Review..."
                style="push">
             <visibleWhen
                   checkEnabled="true">
@@ -644,7 +653,7 @@
             class="com.cwctravel.plugins.shelvesetreview.propertytesters.ShelvesetItemPropertyTester"
             id="com.cwctravel.plugins.shelvesetreview.navigator.propertytesters.ShelvesetItemPropertyTester"
             namespace="com.cwctravel.plugins.shelvesetreview.shelvesetitem"
-            properties="isActive,canActivate,canAssignReviewers,belongsToCurrentUser,canApprove,canUnapprove"
+            properties="isActive,canActivate,canRequestCodeReview,belongsToCurrentUser,canApprove,canUnapprove"
             type="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
       </propertyTester>
    </extension>

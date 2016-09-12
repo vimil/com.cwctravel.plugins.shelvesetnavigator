@@ -1,5 +1,6 @@
 package com.cwctravel.plugins.shelvesetreview.navigator;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -10,6 +11,7 @@ import org.eclipse.ui.navigator.IPipelinedTreeContentProvider;
 import org.eclipse.ui.navigator.PipelinedShapeModification;
 import org.eclipse.ui.navigator.PipelinedViewerUpdate;
 
+import com.cwctravel.plugins.shelvesetreview.navigator.model.BaseItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem;
@@ -37,10 +39,14 @@ public class ShelvesetContentProvider implements IPipelinedTreeContentProvider {
 	@Override
 	public Object[] getElements(Object inputElement) {
 		Object[] result = null;
-		if (inputElement instanceof ShelvesetGroupItemContainer) {
-			ShelvesetGroupItemContainer shelvesetGroupItemContainer = (ShelvesetGroupItemContainer) inputElement;
+		if (inputElement instanceof BaseItemContainer) {
+			BaseItemContainer baseItemContainer = (BaseItemContainer) inputElement;
+			ShelvesetGroupItemContainer shelvesetGroupItemContainer = baseItemContainer.getShelvesetGroupItemContainer();
+			List<Object> resultList = new ArrayList<Object>();
 			List<ShelvesetGroupItem> shelvesetGroupItems = shelvesetGroupItemContainer.getShelvesetGroupItems();
-			result = shelvesetGroupItems.toArray(new ShelvesetGroupItem[0]);
+			resultList.addAll(shelvesetGroupItems);
+			resultList.add(baseItemContainer.getCodeReviewItemContainer());
+			result = resultList.toArray(new Object[0]);
 		} else if (inputElement instanceof ShelvesetGroupItem) {
 			ShelvesetGroupItem shelvesetGroupItem = (ShelvesetGroupItem) inputElement;
 			if (shelvesetGroupItem.isUserGroup()) {

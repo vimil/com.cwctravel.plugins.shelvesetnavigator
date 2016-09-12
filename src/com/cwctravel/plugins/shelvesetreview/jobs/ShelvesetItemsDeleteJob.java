@@ -28,7 +28,7 @@ public class ShelvesetItemsDeleteJob extends Job {
 				monitor.worked(1);
 			}
 			monitor.done();
-			ShelvesetReviewPlugin.getDefault().refreshShelvesetGroupItems(true, monitor);
+			ShelvesetReviewPlugin.getDefault().refresh(true, monitor);
 		}
 		return Status.OK_STATUS;
 	}

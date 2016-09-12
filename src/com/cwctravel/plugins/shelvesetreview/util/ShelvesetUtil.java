@@ -14,7 +14,6 @@ import java.util.Set;
 import org.eclipse.core.runtime.Status;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
-import com.cwctravel.plugins.shelvesetreview.WorkItemCache;
 import com.cwctravel.plugins.shelvesetreview.constants.ShelvesetPropertyConstants;
 import com.cwctravel.plugins.shelvesetreview.exceptions.ApproveException;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
@@ -30,17 +29,13 @@ import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.DiscussionS
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCommentInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadInfo;
+import com.cwctravel.plugins.shelvesetreview.rest.workitems.dto.WorkItemInfo;
 import com.microsoft.tfs.core.TFSConnection;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PropertyValue;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 import com.microsoft.tfs.core.clients.versioncontrol.workspacecache.WorkItemCheckedInfo;
 import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
-import com.microsoft.tfs.core.clients.workitem.WorkItem;
-import com.microsoft.tfs.core.clients.workitem.fields.Field;
-import com.microsoft.tfs.core.clients.workitem.link.Hyperlink;
-import com.microsoft.tfs.core.clients.workitem.link.LinkCollection;
-import com.microsoft.tfs.core.clients.workitem.link.LinkFactory;
 
 import ms.tfs.versioncontrol.clientservices._03._PropertyValue;
 import ms.tfs.versioncontrol.clientservices._03._Shelveset;
@@ -49,7 +44,7 @@ public class ShelvesetUtil {
 	private static final int MAX_ACTIVE_SHELVESET_AGE = 90;
 
 	public static List<ShelvesetResourceItem> groupShelvesetFileItems(ShelvesetItem shelvesetItem, List<ShelvesetFileItem> shelvesetFileItems,
-			DiscussionInfo discussionInfo) {
+			DiscussionInfo discussionInfo, List<WorkItemInfo> workItems) {
 		List<ShelvesetResourceItem> result = new ArrayList<ShelvesetResourceItem>();
 
 		Map<String, Object> root = new HashMap<String, Object>();
@@ -68,7 +63,7 @@ public class ShelvesetUtil {
 			result.add(0, overallShelvesetDiscussionItem);
 		}
 
-		ShelvesetWorkItemContainer shelvesetWorkItemContainer = processShelvesetWorkItems(shelvesetItem);
+		ShelvesetWorkItemContainer shelvesetWorkItemContainer = processShelvesetWorkItems(shelvesetItem, workItems);
 		if (shelvesetWorkItemContainer != null) {
 			result.add(0, shelvesetWorkItemContainer);
 		}
@@ -76,15 +71,15 @@ public class ShelvesetUtil {
 		return result;
 	}
 
-	private static ShelvesetWorkItemContainer processShelvesetWorkItems(ShelvesetItem shelvesetItem) {
+	private static ShelvesetWorkItemContainer processShelvesetWorkItems(ShelvesetItem shelvesetItem, List<WorkItemInfo> workItems) {
 		ShelvesetWorkItemContainer result = null;
 
-		WorkItemCheckedInfo[] workItemCheckedInfos = shelvesetItem.getShelveset().getBriefWorkItemInfo();
-		if (workItemCheckedInfos != null && workItemCheckedInfos.length > 0) {
+		if (workItems != null && !workItems.isEmpty()) {
 			result = new ShelvesetWorkItemContainer(shelvesetItem);
 			List<ShelvesetWorkItem> shelvesetWorkItems = new ArrayList<ShelvesetWorkItem>();
-			for (WorkItemCheckedInfo workItemCheckedInfo : workItemCheckedInfos) {
-				ShelvesetWorkItem shelvesetWorkItem = new ShelvesetWorkItem(result, workItemCheckedInfo);
+
+			for (WorkItemInfo workItemInfo : workItems) {
+				ShelvesetWorkItem shelvesetWorkItem = new ShelvesetWorkItem(result, workItemInfo);
 				shelvesetWorkItems.add(shelvesetWorkItem);
 			}
 			result.setWorkItems(shelvesetWorkItems);
@@ -290,10 +285,10 @@ public class ShelvesetUtil {
 		return isShelvesetInactive && changesetId == null;
 	}
 
-	public static boolean canAssignReviewers(Shelveset shelveset) {
+	public static boolean canRequestCodeReview(Shelveset shelveset) {
 		boolean isShelvesetInactive = isShelvesetInactive(shelveset);
 		boolean shelvesetBelongsToCurrentUser = IdentityUtil.userNamesSame(IdentityUtil.getCurrentUserName(), shelveset.getOwnerName());
-		return !isShelvesetInactive && shelvesetBelongsToCurrentUser;
+		return !isShelvesetInactive && shelvesetBelongsToCurrentUser && shelveset.getBriefWorkItemInfo().length > 0;
 	}
 
 	public static String getShelvesetBuildId(Shelveset shelveset) {
@@ -426,7 +421,7 @@ public class ShelvesetUtil {
 		return result;
 	}
 
-	public static void assignReviewers(Shelveset shelveset, List<ReviewerInfo> reviewerInfos) {
+	public static void createCodeReviewRequest(Shelveset shelveset, int workItemID, List<ReviewerInfo> reviewerInfos) {
 		Map<String, ReviewerInfo> currentReviewersMap = getReviewersMap(getReviewers(shelveset));
 		Map<String, ReviewerInfo> newReviewersMap = getReviewersMap(reviewerInfos);
 		Map<String, ReviewerInfo> modifiedReviewersMap = new HashMap<String, ReviewerInfo>();
@@ -486,6 +481,7 @@ public class ShelvesetUtil {
 		List<String[]> properties = new ArrayList<String[]>();
 		properties.add(new String[] { ShelvesetPropertyConstants.SHELVESET_PROPERTY_REVIEWER_IDS, reviewerIds });
 		properties.add(new String[] { ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS, approverIds });
+		properties.add(new String[] { ShelvesetPropertyConstants.SHELVESET_PROPERTY_WORKITEM_ID, Integer.toString(workItemID) });
 		setShelvesetProperties(shelveset, properties);
 
 	}
@@ -524,7 +520,7 @@ public class ShelvesetUtil {
 				String newAppoverIdsStr = StringUtil.joinCollection(approverIdsSet, ",");
 				setShelvesetProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS, newAppoverIdsStr);
 
-				addWorkItemApprovalComment(shelveset, approvalComment, true);
+				addWorkItemApprovalComment(shelveset, approvalComment);
 
 			} else {
 				throw new ApproveException("Current User is not a reviewer of the shelveset");
@@ -534,23 +530,26 @@ public class ShelvesetUtil {
 		}
 	}
 
-	private static void addWorkItemApprovalComment(Shelveset shelveset, String approvalComment, boolean approve) {
+	private static void addWorkItemApprovalComment(Shelveset shelveset, String approvalComment) {
 		if (shelveset != null) {
 			WorkItemCheckedInfo[] workedItemCheckedInfos = shelveset.getBriefWorkItemInfo();
 			if (workedItemCheckedInfos != null) {
 				for (WorkItemCheckedInfo workedItemCheckedInfo : workedItemCheckedInfos) {
-					WorkItem workItem = WorkItemCache.getInstance().getWorkItem(workedItemCheckedInfo.getID());
-					workItem.syncToLatest();
-					Field historyField = workItem.getFields().getField("History");
-					historyField.setValue(approvalComment);
+					WorkItemUpdateRequestBuilder workItemRequestBuilder = new WorkItemUpdateRequestBuilder();
+					workItemRequestBuilder.addComment(approvalComment);
 
-					Hyperlink shelvesetLink = LinkFactory.newHyperlink(getShelvesetUrl(shelveset), shelveset.getName(), true);
-					LinkCollection links = workItem.getLinks();
-					if (!links.contains(shelvesetLink)) {
-						links.add(shelvesetLink);
+					try {
+						int workItemId = workedItemCheckedInfo.getID();
+						List<String> workItemHyperLinks = WorkItemUtil.getWorkItemHyperLinks(workItemId);
+						String shelvesetUrl = getShelvesetUrl(shelveset);
+						if (!workItemHyperLinks.contains(shelvesetUrl)) {
+							workItemRequestBuilder.addHyperLink(shelvesetUrl);
+						}
+						List<Map<String, Object>> workItemUpdateRequest = workItemRequestBuilder.build();
+						WorkItemUtil.updateWorkItem(workItemId, workItemUpdateRequest);
+					} catch (IOException e) {
+						ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
 					}
-
-					workItem.save();
 				}
 			}
 		}
@@ -635,7 +634,7 @@ public class ShelvesetUtil {
 				String newAppoverIdsStr = StringUtil.joinCollection(approverIdsSet, ",");
 				setShelvesetProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS, newAppoverIdsStr);
 
-				addWorkItemApprovalComment(shelveset, revokeApprovalComment, false);
+				addWorkItemApprovalComment(shelveset, revokeApprovalComment);
 			} else {
 				throw new ApproveException("Current User is not a reviewer of the shelveset");
 			}

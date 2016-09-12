@@ -16,7 +16,7 @@ public class ShelvesetGroupItemsRefreshJob extends Job {
 	@Override
 	protected IStatus run(IProgressMonitor monitor) {
 		ShelvesetReviewPlugin plugin = ShelvesetReviewPlugin.getDefault();
-		plugin.refreshShelvesetGroupItems(false, monitor);
+		plugin.refresh(false, monitor);
 		return Status.OK_STATUS;
 	}
 

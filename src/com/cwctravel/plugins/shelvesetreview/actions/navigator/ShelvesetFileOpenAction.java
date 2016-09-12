@@ -82,7 +82,6 @@ public class ShelvesetFileOpenAction extends Action implements ISelectionChanged
 		return result;
 	}
 
-	@SuppressWarnings("restriction")
 	public void run() {
 		try {
 			if (shelvesetDiscussionItem != null) {

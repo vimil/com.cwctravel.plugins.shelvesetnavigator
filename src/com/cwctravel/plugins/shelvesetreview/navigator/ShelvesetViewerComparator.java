@@ -3,6 +3,7 @@ package com.cwctravel.plugins.shelvesetreview.navigator;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 
+import com.cwctravel.plugins.shelvesetreview.navigator.model.CodeReviewItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItem;
 
@@ -79,6 +80,10 @@ public class ShelvesetViewerComparator extends ViewerComparator {
 				}
 				return result;
 			}
+		} else if (o1 instanceof ShelvesetGroupItem && o2 instanceof CodeReviewItemContainer) {
+			return -1;
+		} else if (o1 instanceof CodeReviewItemContainer && o2 instanceof ShelvesetGroupItem) {
+			return 1;
 		}
 		return super.compare(viewer, o1, o2);
 	}

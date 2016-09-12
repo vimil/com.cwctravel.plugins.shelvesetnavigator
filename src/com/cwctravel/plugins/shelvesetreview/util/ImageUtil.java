@@ -8,6 +8,7 @@ import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.CodeReviewItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem;
@@ -71,8 +72,9 @@ public class ImageUtil {
 			image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.WORKITEMS_ICON_ID);
 		} else if (element instanceof ShelvesetWorkItem) {
 			image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.WORKITEM_ICON_ID);
+		} else if (element instanceof CodeReviewItemContainer) {
+			image = ShelvesetReviewPlugin.getImage(ShelvesetReviewPlugin.CODEREVIEW_ICON_ID);
 		}
-
 		result = image;
 
 		return result;

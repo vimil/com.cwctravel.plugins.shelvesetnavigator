@@ -129,4 +129,8 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 		return defaultReviewersGroup;
 	}
 
+	Map<String, List<Shelveset>> getUserShelvesetItemsMap() {
+		return userShelvesetItemsMap;
+	}
+
 }

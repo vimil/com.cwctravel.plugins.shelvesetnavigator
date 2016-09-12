@@ -6,7 +6,11 @@ import java.util.List;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ComboViewer;
+import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
@@ -21,6 +25,7 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -37,10 +42,11 @@ import com.cwctravel.plugins.shelvesetreview.asynch.RepeatingJob;
 import com.cwctravel.plugins.shelvesetreview.contentProviders.ReviewerContentProvider;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItem;
 import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
-public class AssignReviewersDialog extends Dialog {
+public class RequestCodeReviewDialog extends Dialog {
 
 	private final class ErrorMessageClearer implements FocusListener {
 		@Override
@@ -55,7 +61,11 @@ public class AssignReviewersDialog extends Dialog {
 
 	private ShelvesetItem shelvesetItem;
 
+	private ShelvesetWorkItem selectedWorkItem;
+
 	private Text txtReviewerId;
+
+	private ComboViewer workItemsComboViewer;
 
 	private List<ReviewerInfo> reviewers;
 
@@ -65,7 +75,7 @@ public class AssignReviewersDialog extends Dialog {
 
 	private Label messageImageLabel;
 
-	public AssignReviewersDialog(ShelvesetItem shelvesetItem, Shell parentShell) {
+	public RequestCodeReviewDialog(ShelvesetItem shelvesetItem, Shell parentShell) {
 		super(parentShell);
 		this.shelvesetItem = shelvesetItem;
 	}
@@ -77,12 +87,12 @@ public class AssignReviewersDialog extends Dialog {
 	}
 
 	private void restoreDefaultMessage() {
-		setMessage("Assign Reviewers for Shelveset " + shelvesetItem.getName(), IMessageProvider.INFORMATION);
+		setMessage("Create CodeReview Request for Shelveset " + shelvesetItem.getName(), IMessageProvider.INFORMATION);
 	}
 
 	protected void configureShell(Shell shell) {
 		super.configureShell(shell);
-		shell.setText("Assign Reviewers");
+		shell.setText("Create CodeReview Request");
 	}
 
 	@Override
@@ -121,13 +131,12 @@ public class AssignReviewersDialog extends Dialog {
 		lblReviewerId.setText("Reviewer Id:");
 
 		txtReviewerId = new Text(container, SWT.BORDER);
-		Button btnReviewerIdAdd = new Button(container, SWT.PUSH);
-
 		FormData fdReviewerIdTitle = new FormData(convertWidthInCharsToPixels(15), convertHeightInCharsToPixels(1));
 		fdReviewerIdTitle.top = new FormAttachment(txtReviewerId, 0, SWT.CENTER);
 		fdReviewerIdTitle.left = new FormAttachment(0, 10);
 		lblReviewerId.setLayoutData(fdReviewerIdTitle);
 
+		Button btnReviewerIdAdd = new Button(container, SWT.PUSH);
 		FormData fdReviewerId = new FormData(convertWidthInCharsToPixels(60), convertHeightInCharsToPixels(1));
 		fdReviewerId.top = new FormAttachment(null, 5, SWT.BOTTOM);
 		fdReviewerId.left = new FormAttachment(lblReviewerId, 0, SWT.RIGHT);
@@ -142,7 +151,7 @@ public class AssignReviewersDialog extends Dialog {
 			public void modifyText(ModifyEvent e) {
 				String text = txtReviewerId.getText();
 				userIdValidatingJob.schedule(() -> {
-					validateUserId(text);
+					validateUserId(text, false);
 				});
 			}
 		});
@@ -151,13 +160,13 @@ public class AssignReviewersDialog extends Dialog {
 
 			@Override
 			public void focusLost(FocusEvent e) {
-				validateUserId(txtReviewerId.getText());
+				validateUserId(txtReviewerId.getText(), false);
 
 			}
 
 			@Override
 			public void focusGained(FocusEvent e) {
-				validateUserId(txtReviewerId.getText());
+				validateUserId(txtReviewerId.getText(), false);
 			}
 		});
 
@@ -171,11 +180,30 @@ public class AssignReviewersDialog extends Dialog {
 		ErrorMessageClearer errorMessageClearer = new ErrorMessageClearer();
 		btnReviewerIdAdd.addFocusListener(errorMessageClearer);
 
+		Label lblWorkItemsComboTitle = new Label(container, SWT.NONE);
+		lblWorkItemsComboTitle.setText("Select Work Item:");
+
+		workItemsComboViewer = new ComboViewer(container, SWT.READ_ONLY);
+
+		FormData fdWorkItemsComboTitle = new FormData(convertWidthInCharsToPixels(18), convertHeightInCharsToPixels(1));
+		Combo workItemsCombo = workItemsComboViewer.getCombo();
+		fdWorkItemsComboTitle.top = new FormAttachment(workItemsCombo, 0, SWT.CENTER);
+		fdWorkItemsComboTitle.left = new FormAttachment(0, 10);
+		lblWorkItemsComboTitle.setLayoutData(fdWorkItemsComboTitle);
+
+		FormData fdWorkItemsCombo = new FormData(convertWidthInCharsToPixels(60), convertHeightInCharsToPixels(1));
+		fdWorkItemsCombo.top = new FormAttachment(btnReviewerIdAdd, 10, SWT.BOTTOM);
+		fdWorkItemsCombo.left = new FormAttachment(lblWorkItemsComboTitle, 0, SWT.RIGHT);
+		fdWorkItemsCombo.right = new FormAttachment(100, -5);
+		workItemsCombo.setLayoutData(fdWorkItemsCombo);
+
+		populateWorkItemsCombo();
+
 		Label reviewerInfoSeparator = new Label(container, SWT.SEPARATOR | SWT.HORIZONTAL);
 		FormData fdReviewerInfoSeparator = new FormData(10, 10);
 		fdReviewerInfoSeparator.left = new FormAttachment(0, 5);
 		fdReviewerInfoSeparator.right = new FormAttachment(100, -5);
-		fdReviewerInfoSeparator.top = new FormAttachment(btnReviewerIdAdd, 10, SWT.BOTTOM);
+		fdReviewerInfoSeparator.top = new FormAttachment(workItemsCombo, 10, SWT.BOTTOM);
 		reviewerInfoSeparator.setLayoutData(fdReviewerInfoSeparator);
 
 		reviewersViewer = createReviewersViewer(container);
@@ -233,7 +261,7 @@ public class AssignReviewersDialog extends Dialog {
 			@Override
 			public void handleEvent(Event event) {
 				String reviewerId = txtReviewerId.getText();
-				if (validateUserId(reviewerId)) {
+				if (validateUserId(reviewerId, true)) {
 					ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
 					reviewerContentProvider.addReviewer(reviewerId);
 					reviewersViewer.refresh();
@@ -257,6 +285,26 @@ public class AssignReviewersDialog extends Dialog {
 		});
 
 		reviewersTable.addListener(SWT.Selection, reviewersTableOnSelectEventListener);
+	}
+
+	private void populateWorkItemsCombo() {
+		workItemsComboViewer.setContentProvider(ArrayContentProvider.getInstance());
+		workItemsComboViewer.setLabelProvider(new LabelProvider() {
+			@Override
+			public String getText(Object element) {
+				if (element instanceof ShelvesetWorkItem) {
+					ShelvesetWorkItem current = (ShelvesetWorkItem) element;
+					return current.getName();
+				}
+				return super.getText(element);
+			}
+		});
+
+		List<ShelvesetWorkItem> shelvesetWorkItems = shelvesetItem.getWorkItemContainer().getWorkItems();
+		workItemsComboViewer.setInput(shelvesetWorkItems.toArray(new ShelvesetWorkItem[0]));
+		if (!shelvesetWorkItems.isEmpty()) {
+			workItemsComboViewer.getCombo().select(0);
+		}
 	}
 
 	private TableViewer createReviewersViewer(Composite parent) {
@@ -319,7 +367,8 @@ public class AssignReviewersDialog extends Dialog {
 	private void saveInput() {
 		ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
 		reviewers = reviewerContentProvider.getReviewers();
-
+		StructuredSelection selection = (StructuredSelection) workItemsComboViewer.getSelection();
+		selectedWorkItem = (ShelvesetWorkItem) selection.getFirstElement();
 	}
 
 	private boolean isDefaultReviewerGroupPresent() {
@@ -344,12 +393,21 @@ public class AssignReviewersDialog extends Dialog {
 
 	@Override
 	protected void okPressed() {
-		saveInput();
-		super.okPressed();
+		ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();
+		if (!reviewerContentProvider.getReviewers().isEmpty()) {
+			saveInput();
+			super.okPressed();
+		} else {
+			setErrorMessage("Please assign reviewers before creating a codereview request");
+		}
 	}
 
 	public List<ReviewerInfo> getReviewers() {
 		return reviewers;
+	}
+
+	public ShelvesetWorkItem getSelectedWorkItem() {
+		return selectedWorkItem;
 	}
 
 	private void execInUIThread(Runnable runnable) {
@@ -363,10 +421,14 @@ public class AssignReviewersDialog extends Dialog {
 		}
 	}
 
-	private boolean validateUserId(String reviewerId) {
+	private boolean validateUserId(String reviewerId, boolean checkIfEmpty) {
 		boolean result = false;
 		if (reviewerId == null || reviewerId.isEmpty()) {
-			execInUIThread(this::restoreDefaultMessage);
+			if (checkIfEmpty) {
+				setErrorMessage("Please select a reviewer");
+			} else {
+				execInUIThread(this::restoreDefaultMessage);
+			}
 		} else if (IdentityUtil.getIdentity(reviewerId) != null) {
 			if (!IdentityUtil.userNamesSame(reviewerId, IdentityUtil.getCurrentUserName())) {
 				ReviewerContentProvider reviewerContentProvider = (ReviewerContentProvider) reviewersViewer.getContentProvider();

@@ -1,22 +1,22 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
 import com.cwctravel.plugins.shelvesetreview.WorkItemCache;
-import com.microsoft.tfs.core.clients.versioncontrol.workspacecache.WorkItemCheckedInfo;
+import com.cwctravel.plugins.shelvesetreview.rest.workitems.dto.WorkItemInfo;
 import com.microsoft.tfs.core.clients.workitem.WorkItem;
 
 public class ShelvesetWorkItem extends ShelvesetResourceItem {
 	private final ShelvesetWorkItemContainer workItemContainer;
-	private final WorkItemCheckedInfo workItemCheckedInfo;
+	private final WorkItemInfo workItemInfo;
 
-	public ShelvesetWorkItem(ShelvesetWorkItemContainer workItemContainer, WorkItemCheckedInfo workItemCheckedInfo) {
+	public ShelvesetWorkItem(ShelvesetWorkItemContainer workItemContainer, WorkItemInfo workItemInfo) {
 		super(workItemContainer.getParent());
 		this.workItemContainer = workItemContainer;
-		this.workItemCheckedInfo = workItemCheckedInfo;
+		this.workItemInfo = workItemInfo;
 	}
 
 	@Override
 	public String getName() {
-		return getWorkItem().getTitle();
+		return workItemInfo.getTitle();
 	}
 
 	@Override
@@ -25,7 +25,7 @@ public class ShelvesetWorkItem extends ShelvesetResourceItem {
 	}
 
 	public int getWorkItemID() {
-		return workItemCheckedInfo.getID();
+		return workItemInfo.getId();
 	}
 
 	public ShelvesetWorkItemContainer getWorkItemContainer() {

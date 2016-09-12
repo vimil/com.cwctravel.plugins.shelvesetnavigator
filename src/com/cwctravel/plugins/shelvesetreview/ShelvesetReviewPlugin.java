@@ -23,6 +23,8 @@ import com.cwctravel.plugins.shelvesetreview.identity.IdentityManager;
 import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetGroupItemsRefreshJob;
 import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetContainerRefreshListener;
 import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetItemRefreshListener;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.BaseItemContainer;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.CodeReviewItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.util.CompareUtil;
@@ -55,13 +57,14 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 	public static final String APPROVED_OVR_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.ovr.approved";
 	public static final String WORKITEMS_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.workitems";
 	public static final String WORKITEM_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.workitem";
+	public static final String CODEREVIEW_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.codereview";
 
 	private static ShelvesetReviewPlugin plugin;
 
 	private ListenerList shelvesetContainerRefreshListeners;
 	private ListenerList shelvesetItemRefreshListeners;
 
-	private ShelvesetGroupItemContainer shelvesetGroupItemContainer;
+	private BaseItemContainer baseItemContainer;
 
 	private AnnotationPreference discussionAnnotationPreference;
 
@@ -129,11 +132,15 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 
 		ImageDescriptor workitemIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/workitem.png"), null));
 		registry.put(WORKITEM_ICON_ID, workitemIconImage);
+
+		ImageDescriptor codeReviewIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/codereview-icon.png"), null));
+		registry.put(CODEREVIEW_ICON_ID, codeReviewIconImage);
+
 	}
 
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
-		shelvesetGroupItemContainer = new ShelvesetGroupItemContainer();
+		baseItemContainer = new BaseItemContainer();
 		RepositoryManager repositoryManager = TFSEclipseClientPlugin.getDefault().getRepositoryManager();
 		repositoryManager.addListener(new ShelvesetRepositoryManagerListener());
 
@@ -172,16 +179,24 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 		getDefault().getLog().log(new Status(severity, PLUGIN_ID, message, t));
 	}
 
+	public BaseItemContainer getBaseItemContainer() {
+		return baseItemContainer;
+	}
+
 	public ShelvesetGroupItemContainer getShelvesetGroupItemContainer() {
-		return shelvesetGroupItemContainer;
+		return baseItemContainer.getShelvesetGroupItemContainer();
+	}
+
+	public CodeReviewItemContainer getCodeReviewItemContainer() {
+		return baseItemContainer.getCodeReviewItemContainer();
 	}
 
 	public void scheduleRefreshShelvesetGroupItems() {
 		new ShelvesetGroupItemsRefreshJob().schedule();
 	}
 
-	public void refreshShelvesetGroupItems(boolean softRefresh, IProgressMonitor monitor) {
-		getShelvesetGroupItemContainer().refresh(softRefresh, monitor);
+	public void refresh(boolean softRefresh, IProgressMonitor monitor) {
+		getBaseItemContainer().refresh(softRefresh, monitor);
 	}
 
 	public void addShelvesetItemRefreshListener(IShelvesetItemRefreshListener listener) {

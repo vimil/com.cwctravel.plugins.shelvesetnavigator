@@ -26,6 +26,7 @@ import com.cwctravel.plugins.shelvesetreview.filesystem.TFSFileStore;
 import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetItemsRefreshJob;
 import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetContainerRefreshListener;
 import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetItemRefreshListener;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.CodeReviewItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
@@ -33,12 +34,15 @@ import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
 public class ShelvesetNavigator extends CommonNavigator
 		implements ITreeViewerListener, IOpenListener, IShelvesetItemRefreshListener, IShelvesetContainerRefreshListener {
 	private ShelvesetGroupItemContainer shelvesetGroupItemContainer;
+	private CodeReviewItemContainer codeReviewItemContainer;
 	private ShelvesetItem shelvesetItemToExpand = null;
 
 	private boolean initialRefreshComplete;
 
 	public ShelvesetNavigator() {
 		shelvesetGroupItemContainer = ShelvesetReviewPlugin.getDefault().getShelvesetGroupItemContainer();
+		codeReviewItemContainer = ShelvesetReviewPlugin.getDefault().getCodeReviewItemContainer();
+
 		ShelvesetReviewPlugin.getDefault().addShelvesetItemRefreshListener(this);
 		ShelvesetReviewPlugin.getDefault().addShelvesetContainerRefreshListener(this);
 		if (shelvesetGroupItemContainer.isInitialRefreshComplete()) {
@@ -56,7 +60,7 @@ public class ShelvesetNavigator extends CommonNavigator
 		CommonViewer commonViewer = getCommonViewer();
 		commonViewer.addTreeListener(this);
 		commonViewer.addOpenListener(this);
-		return shelvesetGroupItemContainer;
+		return ShelvesetReviewPlugin.getDefault().getBaseItemContainer();
 	}
 
 	@Override

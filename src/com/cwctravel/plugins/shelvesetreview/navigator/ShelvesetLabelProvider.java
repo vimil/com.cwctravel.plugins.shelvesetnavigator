@@ -5,6 +5,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.navigator.IDescriptionProvider;
 
+import com.cwctravel.plugins.shelvesetreview.navigator.model.CodeReviewItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
@@ -45,7 +46,10 @@ public class ShelvesetLabelProvider extends LabelProvider implements ILabelProvi
 		} else if (element instanceof ShelvesetResourceItem) {
 			ShelvesetResourceItem shelvesetResourceItem = (ShelvesetResourceItem) element;
 			result = shelvesetResourceItem.getName();
+		} else if (element instanceof CodeReviewItemContainer) {
+			result = "Code Reviews";
 		}
+
 		return result;
 	}
 

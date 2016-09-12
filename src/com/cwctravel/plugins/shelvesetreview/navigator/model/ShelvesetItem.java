@@ -14,15 +14,18 @@ import com.cwctravel.plugins.shelvesetreview.exceptions.ApproveException;
 import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetItemsRefreshJob;
 import com.cwctravel.plugins.shelvesetreview.jobs.ui.RefreshShelvesetsJob;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
+import com.cwctravel.plugins.shelvesetreview.rest.workitems.dto.WorkItemInfo;
 import com.cwctravel.plugins.shelvesetreview.util.DiscussionUtil;
 import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 import com.cwctravel.plugins.shelvesetreview.util.ShelvesetUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
+import com.cwctravel.plugins.shelvesetreview.util.WorkItemUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.ItemType;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingChange;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingSet;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
+import com.microsoft.tfs.core.clients.versioncontrol.workspacecache.WorkItemCheckedInfo;
 
 public class ShelvesetItem implements IAdaptable {
 	private final ShelvesetGroupItemContainer parent;
@@ -33,6 +36,8 @@ public class ShelvesetItem implements IAdaptable {
 	private Shelveset shelveset;
 
 	private DiscussionInfo discussionInfo;
+
+	private List<WorkItemInfo> workItems;
 
 	private List<ShelvesetResourceItem> children;
 	private boolean isChildrenRefreshed;
@@ -141,7 +146,20 @@ public class ShelvesetItem implements IAdaptable {
 			ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
 		}
 
-		children = ShelvesetUtil.groupShelvesetFileItems(this, shelvesetFileItems, discussionInfo);
+		try {
+			WorkItemCheckedInfo[] workItemCheckedInfos = shelveset.getBriefWorkItemInfo();
+			if (workItemCheckedInfos != null && workItemCheckedInfos.length > 0) {
+				List<Integer> workItemIds = new ArrayList<Integer>();
+				for (WorkItemCheckedInfo workItemCheckedInfo : workItemCheckedInfos) {
+					workItemIds.add(workItemCheckedInfo.getID());
+				}
+				workItems = WorkItemUtil.retrieveWorkItems(workItemIds);
+			}
+		} catch (IOException e) {
+			ShelvesetReviewPlugin.log(Status.ERROR, e.getMessage(), e);
+		}
+
+		children = ShelvesetUtil.groupShelvesetFileItems(this, shelvesetFileItems, discussionInfo, workItems);
 
 		isChildrenRefreshed = true;
 
@@ -240,12 +258,12 @@ public class ShelvesetItem implements IAdaptable {
 		return ShelvesetUtil.getReviewers(shelveset, includeDefaultReviewersGroupIfApproved ? parent.getDefaultReviewersGroup() : null, false);
 	}
 
-	public boolean canAssignReviewers() {
-		return ShelvesetUtil.canAssignReviewers(shelveset);
+	public boolean canRequestCodeReview() {
+		return ShelvesetUtil.canRequestCodeReview(shelveset);
 	}
 
-	public void assignReviewers(List<ReviewerInfo> reviewerInfos) {
-		ShelvesetUtil.assignReviewers(shelveset, reviewerInfos);
+	public void createCodeReviewRequest(ShelvesetWorkItem shelvesetWorkItem, List<ReviewerInfo> reviewerInfos) {
+		ShelvesetUtil.createCodeReviewRequest(shelveset, shelvesetWorkItem.getWorkItemID(), reviewerInfos);
 	}
 
 	public boolean hasDiscussions() {
