@@ -35,6 +35,7 @@ import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItem;
+import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.client.common.ui.helpers.WorkItemEditorHelper;
 
@@ -124,8 +125,9 @@ public class ShelvesetFileOpenAction extends Action implements ISelectionChanged
 						editorPart = page.openEditor(new FileStoreEditorInput(fileStore), "org.eclipse.ui.DefaultTextEditor");
 					}
 				}
-				if (shelvesetDiscussionItem != null && editorPart instanceof ITextEditor) {
-					ITextEditor textEditor = (ITextEditor) editorPart;
+				ITextEditor textEditor = EditorUtil.getTextEditor(editorPart);
+				if (shelvesetDiscussionItem != null && textEditor != null) {
+
 					IEditorInput editorInput = editorPart.getEditorInput();
 					if (editorInput instanceof FileStoreEditorInput) {
 						IDocumentProvider documentProvider = textEditor.getDocumentProvider();

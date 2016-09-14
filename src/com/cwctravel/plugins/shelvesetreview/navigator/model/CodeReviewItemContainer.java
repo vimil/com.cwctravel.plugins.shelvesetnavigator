@@ -2,8 +2,12 @@ package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.PlatformObject;
+
+import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 
 public class CodeReviewItemContainer extends PlatformObject {
 	private final List<CodeReviewGroupItem> codeReviewGroupItems;
@@ -17,5 +21,9 @@ public class CodeReviewItemContainer extends PlatformObject {
 		codeReviewGroupItems.add(userCodeReviewGroupItem);
 		codeReviewGroupItems.add(openCodeReviewGroupItem);
 		codeReviewGroupItems.add(acceptedCodeReviewGroupItem);
+	}
+
+	public void refresh(Map<String, List<Shelveset>> userShelvesetItemsMap, IProgressMonitor monitor) {
+
 	}
 }

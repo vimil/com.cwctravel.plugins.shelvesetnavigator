@@ -31,6 +31,7 @@ import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItemC
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItem;
+import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.client.common.ui.wit.form.WorkItemEditorInput;
 
@@ -64,8 +65,8 @@ public class ShelvesetFileLinkHelper implements ILinkHelper {
 
 						if (shelvesetFileItem != null) {
 							IEditorPart editorPart = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
-							if (editorPart.getEditorInput() == editorInput && editorPart instanceof ITextEditor) {
-								ITextEditor textEditor = (ITextEditor) editorPart;
+							ITextEditor textEditor = EditorUtil.getTextEditor(editorPart);
+							if (editorPart.getEditorInput() == editorInput && textEditor != null) {
 								IDocument document = textEditor.getDocumentProvider().getDocument(uriEditorInput);
 								if (document != null) {
 									TextSelection selection = (TextSelection) textEditor.getSelectionProvider().getSelection();

@@ -20,8 +20,8 @@ import org.eclipse.ui.ISources;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
-import org.eclipse.ui.texteditor.AbstractTextEditor;
 import org.eclipse.ui.texteditor.IDocumentProvider;
+import org.eclipse.ui.texteditor.ITextEditor;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.annotator.DiscussionAnnotation;
@@ -72,14 +72,14 @@ public class AddCommentHandler extends AbstractHandler {
 		if (isEditorClicked || isRulerClicked) {
 			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 			IEditorPart editorPart = activeWorkbenchWindow.getActivePage().getActiveEditor();
-			if (editorPart instanceof AbstractTextEditor) {
+			ITextEditor textEditor = EditorUtil.getTextEditor(editorPart);
+			if (textEditor != null) {
 				IEditorInput editorInput = editorPart.getEditorInput();
 				if (editorInput instanceof FileStoreEditorInput) {
 					FileStoreEditorInput fileStoreEditorInput = (FileStoreEditorInput) editorInput;
 					try {
 						IFileStore fileStore = EFS.getStore(fileStoreEditorInput.getURI());
 						if (fileStore instanceof TFSFileStore) {
-							AbstractTextEditor textEditor = (AbstractTextEditor) editorPart;
 							if (isEditorClicked) {
 								TextSelection selection = (TextSelection) textEditor.getSelectionProvider().getSelection();
 								if (selection != null) {
@@ -161,7 +161,7 @@ public class AddCommentHandler extends AbstractHandler {
 		if (isEditorClicked || isRulerClicked) {
 			IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 			IEditorPart editorPart = activeWorkbenchWindow.getActivePage().getActiveEditor();
-			AbstractTextEditor textEditor = (AbstractTextEditor) editorPart;
+			ITextEditor textEditor = EditorUtil.getTextEditor(editorPart);
 			EditorUtil.showDiscussionCommentDialog(textEditor, startLine, startColumn, endLine, endColumn);
 		} else if (isCompareEditorClicked) {
 			EditorUtil.showDiscussionCommentDialog(shelvesetFileItem, startLine, startColumn, endLine, endColumn);

@@ -120,8 +120,8 @@ public class DiscussionAnnotator implements RepositoryManagerListener, IWindowLi
 					IFileStore fileStore = EFS.getStore(fileStoreEditorInput.getURI());
 					if (fileStore instanceof TFSFileStore) {
 						TFSFileStore tfsFileStore = (TFSFileStore) fileStore;
-						if (editorPart instanceof ITextEditor) {
-							ITextEditor textEditor = (ITextEditor) editorPart;
+						ITextEditor textEditor = EditorUtil.getTextEditor(editorPart);
+						if (textEditor != null) {
 							IDocumentProvider documentProvider = textEditor.getDocumentProvider();
 							IDocument document = documentProvider.getDocument(editorInput);
 

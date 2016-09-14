@@ -45,8 +45,8 @@ public class EditorUtil {
 			if (editorInput instanceof FileStoreEditorInput) {
 				FileStoreEditorInput fileStoreEditorInput = (FileStoreEditorInput) editorInput;
 				IFileStore fileStore = EFS.getStore(fileStoreEditorInput.getURI());
-				if (editor instanceof ITextEditor && fileStore instanceof TFSFileStore) {
-					ITextEditor textEditor = (ITextEditor) editor;
+				ITextEditor textEditor = EditorUtil.getTextEditor(editor);
+				if (textEditor != null && fileStore instanceof TFSFileStore) {
 					IDocumentProvider documentProvider = textEditor.getDocumentProvider();
 					IDocument document = documentProvider.getDocument(editorInput);
 					int lineOffset = document.getLineOffset(lineNumber);
@@ -87,8 +87,8 @@ public class EditorUtil {
 			if (editorInput instanceof FileStoreEditorInput) {
 				FileStoreEditorInput fileStoreEditorInput = (FileStoreEditorInput) editorInput;
 				IFileStore fileStore = EFS.getStore(fileStoreEditorInput.getURI());
-				if (editor instanceof ITextEditor && fileStore instanceof TFSFileStore) {
-					ITextEditor textEditor = (ITextEditor) editor;
+				ITextEditor textEditor = EditorUtil.getTextEditor(editor);
+				if (textEditor != null && fileStore instanceof TFSFileStore) {
 					IDocumentProvider documentProvider = textEditor.getDocumentProvider();
 					result = documentProvider.getAnnotationModel(editorInput);
 				}
@@ -165,8 +165,8 @@ public class EditorUtil {
 			if (editorInput instanceof FileStoreEditorInput) {
 				FileStoreEditorInput fileStoreEditorInput = (FileStoreEditorInput) editorInput;
 				IFileStore fileStore = EFS.getStore(fileStoreEditorInput.getURI());
-				if (editor instanceof ITextEditor && fileStore instanceof TFSFileStore) {
-					ITextEditor textEditor = (ITextEditor) editor;
+				ITextEditor textEditor = EditorUtil.getTextEditor(editor);
+				if (textEditor != null && fileStore instanceof TFSFileStore) {
 					IDocumentProvider documentProvider = textEditor.getDocumentProvider();
 					IDocument document = documentProvider.getDocument(editorInput);
 					result = document.getLineInformation(lineNumber);
@@ -319,6 +319,10 @@ public class EditorUtil {
 
 	public static boolean isAnnotationRulerColumn(Object source) {
 		return source != null && source.getClass().getName().contains("AnnotationRulerColumn");
+	}
+
+	public static ITextEditor getTextEditor(IEditorPart editorPart) {
+		return editorPart.getAdapter(ITextEditor.class);
 	}
 
 }
