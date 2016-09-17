@@ -26,7 +26,7 @@ import com.cwctravel.plugins.shelvesetreview.filesystem.TFSFileStore;
 import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetItemsRefreshJob;
 import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetContainerRefreshListener;
 import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetItemRefreshListener;
-import com.cwctravel.plugins.shelvesetreview.navigator.model.CodeReviewItemContainer;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.CodeReviewGroupItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
@@ -34,7 +34,7 @@ import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
 public class ShelvesetNavigator extends CommonNavigator
 		implements ITreeViewerListener, IOpenListener, IShelvesetItemRefreshListener, IShelvesetContainerRefreshListener {
 	private ShelvesetGroupItemContainer shelvesetGroupItemContainer;
-	private CodeReviewItemContainer codeReviewItemContainer;
+	private CodeReviewGroupItemContainer codeReviewItemContainer;
 	private ShelvesetItem shelvesetItemToExpand = null;
 
 	private boolean initialRefreshComplete;

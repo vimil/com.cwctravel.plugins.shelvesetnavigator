@@ -5,16 +5,19 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import org.eclipse.swt.graphics.Image;
+
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.DiscussionService;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionAuthorInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCommentInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionThreadPropertiesInfo;
+import com.cwctravel.plugins.shelvesetreview.util.IconManager;
 import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 import com.cwctravel.plugins.shelvesetreview.util.StringUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 
-public class ShelvesetDiscussionItem extends ShelvesetResourceItem {
+public class ShelvesetDiscussionItem extends ShelvesetResourceItem implements IItemContainer<Object, ShelvesetResourceItem> {
 	private final DiscussionThreadInfo discussionThreadInfo;
 	private final DiscussionCommentInfo discussionCommentInfo;
 
@@ -230,5 +233,96 @@ public class ShelvesetDiscussionItem extends ShelvesetResourceItem {
 
 	public boolean canDelete() {
 		return StringUtil.equals(getAuthorId(), IdentityUtil.getCurrentUserId());
+	}
+
+	@Override
+	public List<ShelvesetResourceItem> getChildren() {
+		return getChildDiscussions();
+	}
+
+	public Object getItemParent() {
+		Object result = null;
+		ShelvesetDiscussionItem parentDiscussion = getParentDiscussion();
+		if (parentDiscussion != null) {
+			result = parentDiscussion;
+		} else {
+			ShelvesetFileItem parentFile = getParentFile();
+			if (parentFile != null) {
+				result = parentFile;
+			} else {
+				result = getParent();
+			}
+		}
+		return result;
+	}
+
+	public String getText() {
+		return getName();
+	}
+
+	@Override
+	public Image getImage() {
+		Image image = IconManager.getIcon(IconManager.DISCUSSION_ICON_ID);
+		return image;
+	}
+
+	@Override
+	public int itemCompareTo(IItemContainer<?, ?> itemContainer) {
+		if (itemContainer instanceof ShelvesetDiscussionItem) {
+			ShelvesetDiscussionItem item2 = (ShelvesetDiscussionItem) itemContainer;
+			String path1 = getPath();
+			String path2 = item2.getPath();
+			if (path1 != path2) {
+				if (path1 == null) {
+					return -1;
+				} else if (path2 == null) {
+					return 1;
+				}
+			}
+			int result = path1 == path2 ? 0 : path1.compareTo(path2);
+			if (result == 0) {
+				int startLine1 = getStartLine();
+				int startColumn1 = getStartColumn();
+				int endLine1 = getEndLine();
+				int endColumn1 = getEndColumn();
+
+				int startLine2 = item2.getStartLine();
+				int startColumn2 = item2.getStartColumn();
+				int endLine2 = item2.getEndLine();
+				int endColumn2 = item2.getEndColumn();
+
+				if (startLine1 < startLine2) {
+					return -1;
+				}
+				if (startLine1 > startLine2) {
+					return 1;
+				}
+
+				if (startColumn1 < startColumn2) {
+					return -1;
+				}
+				if (startColumn1 > startColumn2) {
+					return 1;
+				}
+
+				if (endLine1 < endLine2) {
+					return -1;
+				}
+				if (endLine1 > endLine2) {
+					return 1;
+				}
+
+				if (endColumn1 < endColumn2) {
+					return -1;
+				}
+				if (endColumn1 > endColumn2) {
+					return 1;
+				}
+			}
+			return result;
+		} else if (itemContainer instanceof ShelvesetResourceItem) {
+			return -1;
+		}
+		return 0;
 	}
 }

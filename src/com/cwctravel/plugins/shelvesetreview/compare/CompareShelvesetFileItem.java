@@ -11,15 +11,14 @@ import org.eclipse.core.runtime.CoreException;
 
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
-import com.microsoft.tfs.client.common.ui.framework.image.ImageHelper;
 import com.microsoft.tfs.core.clients.versioncontrol.specs.DownloadSpec;
 import com.microsoft.tfs.core.util.CodePageMapping;
 
 public class CompareShelvesetFileItem extends CompareShelvesetResourceItem implements IEncodedStreamContentAccessor {
 	private boolean isShelvedItem;
 
-	public CompareShelvesetFileItem(ShelvesetFileItem shelvesetFileItem, boolean isShelvedItem, ImageHelper imageHelper) {
-		super(shelvesetFileItem, imageHelper);
+	public CompareShelvesetFileItem(ShelvesetFileItem shelvesetFileItem, boolean isShelvedItem) {
+		super(shelvesetFileItem);
 		this.isShelvedItem = isShelvedItem;
 	}
 

@@ -46,7 +46,6 @@ import com.cwctravel.plugins.shelvesetreview.util.CompareUtil;
 import com.cwctravel.plugins.shelvesetreview.util.EditorUtil;
 import com.cwctravel.plugins.shelvesetreview.util.ReflectionUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TypeUtil;
-import com.microsoft.tfs.client.common.ui.framework.image.ImageHelper;
 
 public class CompareShelvesetItemInput extends CompareEditorInput implements IShelvesetItemRefreshListener {
 	private class AnnotationMouseListener implements MouseListener {
@@ -122,15 +121,10 @@ public class CompareShelvesetItemInput extends CompareEditorInput implements ISh
 		ShelvesetReviewPlugin.getDefault().addShelvesetItemRefreshListener(this);
 	}
 
-	protected ImageHelper getImageHelper() {
-		ShelvesetCompareConfiguration compareConfiguration = (ShelvesetCompareConfiguration) getCompareConfiguration();
-		return compareConfiguration.getImageHelper();
-	}
-
 	@Override
 	protected Object prepareInput(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
-		CompareShelvesetItem c1 = new CompareShelvesetItem(leftShelvesetItem, getImageHelper());
-		CompareShelvesetItem c2 = new CompareShelvesetItem(rightShelvesetItem, getImageHelper());
+		CompareShelvesetItem c1 = new CompareShelvesetItem(leftShelvesetItem);
+		CompareShelvesetItem c2 = new CompareShelvesetItem(rightShelvesetItem);
 
 		DiffNode diffNode = new DiffNode(c1, c2);
 		return diffNode;

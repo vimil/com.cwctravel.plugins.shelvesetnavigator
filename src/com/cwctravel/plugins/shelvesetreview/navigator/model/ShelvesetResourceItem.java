@@ -1,6 +1,7 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.swt.graphics.Image;
 
 import com.cwctravel.plugins.shelvesetreview.util.StringUtil;
 
@@ -67,8 +68,18 @@ public abstract class ShelvesetResourceItem implements IAdaptable {
 		return false;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
-		return getParent().getAdapter(adapter);
+	public <T> T getAdapter(Class<T> adapter) {
+		return (T) getParent().getAdapter(adapter);
+	}
+
+	public Image getImage() {
+		Image image = null;
+		if (this instanceof IItemContainer<?, ?>) {
+			IItemContainer<?, ?> itemContainer = (IItemContainer<?, ?>) this;
+			image = itemContainer.getImage();
+		}
+		return image;
 	}
 }

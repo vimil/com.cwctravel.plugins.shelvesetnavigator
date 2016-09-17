@@ -1,14 +1,10 @@
 package com.cwctravel.plugins.shelvesetreview;
 
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.ListenerList;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -24,14 +20,16 @@ import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetGroupItemsRefreshJob;
 import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetContainerRefreshListener;
 import com.cwctravel.plugins.shelvesetreview.listeners.IShelvesetItemRefreshListener;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.BaseItemContainer;
-import com.cwctravel.plugins.shelvesetreview.navigator.model.CodeReviewItemContainer;
+import com.cwctravel.plugins.shelvesetreview.navigator.model.CodeReviewGroupItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetGroupItemContainer;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.util.CompareUtil;
+import com.cwctravel.plugins.shelvesetreview.util.IconManager;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.client.common.autoconnect.AutoConnector;
 import com.microsoft.tfs.client.common.autoconnect.AutoConnectorProvider;
 import com.microsoft.tfs.client.common.repository.RepositoryManager;
+import com.microsoft.tfs.client.common.ui.framework.image.ImageHelper;
 import com.microsoft.tfs.client.eclipse.TFSEclipseClientPlugin;
 
 /**
@@ -40,24 +38,6 @@ import com.microsoft.tfs.client.eclipse.TFSEclipseClientPlugin;
 public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 	// The plug-in ID
 	public static final String PLUGIN_ID = "com.cwctravel.plugins.shelvesetreview";
-
-	public static final String SHELVESET_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.shelveset";
-	public static final String INACTIVE_SHELVESET_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.inactiveshelveset";
-
-	public static final String USER_GROUP_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.usergroup";
-	public static final String REVIEW_GROUP_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.reviewgroup";
-	public static final String INACTIVE_GROUP_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.inactivegroup";
-	public static final String USER_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.user";
-	public static final String MIXED_USER_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.user.mixed";
-	public static final String UNASSIGNED_SHELVESET_USER_CATEGORY_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.usercategory.unassigned";
-	public static final String PENDING_REVIEW_USER_CATEGORY_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.usercategory.pendingReview";
-	public static final String BUILD_SUCCESSFUL_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.buildsuccessful";
-	public static final String DISCUSSION_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.discussion";
-	public static final String DISCUSSION_OVR_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.ovr.discussion";
-	public static final String APPROVED_OVR_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.ovr.approved";
-	public static final String WORKITEMS_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.workitems";
-	public static final String WORKITEM_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.workitem";
-	public static final String CODEREVIEW_ICON_ID = "com.cwctravel.eclipse.plugins.shelvesetreview.navigator.icons.codereview";
 
 	private static ShelvesetReviewPlugin plugin;
 
@@ -70,11 +50,14 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 
 	private IdentityManager identityManager;
 
+	private ImageHelper imageHelper;
+
 	public ShelvesetReviewPlugin() {
 		plugin = this;
 		shelvesetContainerRefreshListeners = new ListenerList();
 		shelvesetItemRefreshListeners = new ListenerList();
 		identityManager = new IdentityManager();
+		imageHelper = new ImageHelper();
 	}
 
 	@Override
@@ -82,59 +65,7 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 		super.initializeImageRegistry(registry);
 		Bundle bundle = Platform.getBundle(PLUGIN_ID);
 
-		ImageDescriptor shelvesetIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/shelveset.png"), null));
-		registry.put(SHELVESET_ICON_ID, shelvesetIconImage);
-
-		ImageDescriptor inactiveShelvesetIconImage = ImageDescriptor
-				.createFromURL(FileLocator.find(bundle, new Path("icons/inactive-shelveset.png"), null));
-		registry.put(INACTIVE_SHELVESET_ICON_ID, inactiveShelvesetIconImage);
-
-		ImageDescriptor userGroupIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/user-group.png"), null));
-		registry.put(USER_GROUP_ICON_ID, userGroupIconImage);
-
-		ImageDescriptor reviewGroupIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/review-group.png"), null));
-		registry.put(REVIEW_GROUP_ICON_ID, reviewGroupIconImage);
-
-		ImageDescriptor inactiveGroupIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/inactive-group.png"), null));
-		registry.put(INACTIVE_GROUP_ICON_ID, inactiveGroupIconImage);
-
-		ImageDescriptor userIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/user.png"), null));
-		registry.put(USER_ICON_ID, userIconImage);
-
-		ImageDescriptor mixedUserIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/mixed-user.png"), null));
-		registry.put(MIXED_USER_ICON_ID, mixedUserIconImage);
-
-		ImageDescriptor unassignedUserCategoryImage = ImageDescriptor
-				.createFromURL(FileLocator.find(bundle, new Path("icons/unassigned-user-category.png"), null));
-		registry.put(UNASSIGNED_SHELVESET_USER_CATEGORY_ICON_ID, unassignedUserCategoryImage);
-
-		ImageDescriptor pendingReviewUserCategoryImage = ImageDescriptor
-				.createFromURL(FileLocator.find(bundle, new Path("icons/pendingreview-user-category.png"), null));
-		registry.put(PENDING_REVIEW_USER_CATEGORY_ICON_ID, pendingReviewUserCategoryImage);
-
-		ImageDescriptor buildSuccessfulIconImage = ImageDescriptor
-				.createFromURL(FileLocator.find(bundle, new Path("icons/build-successful-icon.png"), null));
-		registry.put(BUILD_SUCCESSFUL_ICON_ID, buildSuccessfulIconImage);
-
-		ImageDescriptor discussionIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/discussion-icon.png"), null));
-		registry.put(DISCUSSION_ICON_ID, discussionIconImage);
-
-		ImageDescriptor discussionOverlayIconImage = ImageDescriptor
-				.createFromURL(FileLocator.find(bundle, new Path("icons/discussion-ovr-icon.png"), null));
-		registry.put(DISCUSSION_OVR_ICON_ID, discussionOverlayIconImage);
-
-		ImageDescriptor approvedOverlayIconImage = ImageDescriptor
-				.createFromURL(FileLocator.find(bundle, new Path("icons/approved-ovr-icon.png"), null));
-		registry.put(APPROVED_OVR_ICON_ID, approvedOverlayIconImage);
-
-		ImageDescriptor workitemsIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/workitems.png"), null));
-		registry.put(WORKITEMS_ICON_ID, workitemsIconImage);
-
-		ImageDescriptor workitemIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/workitem.png"), null));
-		registry.put(WORKITEM_ICON_ID, workitemIconImage);
-
-		ImageDescriptor codeReviewIconImage = ImageDescriptor.createFromURL(FileLocator.find(bundle, new Path("icons/codereview-icon.png"), null));
-		registry.put(CODEREVIEW_ICON_ID, codeReviewIconImage);
+		IconManager.loadIcons(registry, bundle);
 
 	}
 
@@ -165,14 +96,11 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 
 	public void stop(BundleContext context) throws Exception {
 		super.stop(context);
+		imageHelper.dispose();
 	}
 
 	public static ShelvesetReviewPlugin getDefault() {
 		return plugin;
-	}
-
-	public static Image getImage(String key) {
-		return getDefault().getImageRegistry().get(key);
 	}
 
 	public static void log(int severity, String message, Throwable t) {
@@ -187,8 +115,8 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 		return baseItemContainer.getShelvesetGroupItemContainer();
 	}
 
-	public CodeReviewItemContainer getCodeReviewItemContainer() {
-		return baseItemContainer.getCodeReviewItemContainer();
+	public CodeReviewGroupItemContainer getCodeReviewItemContainer() {
+		return baseItemContainer.getCodeReviewGroupItemContainer();
 	}
 
 	public void scheduleRefreshShelvesetGroupItems() {
@@ -247,6 +175,10 @@ public class ShelvesetReviewPlugin extends AbstractUIPlugin {
 
 	public IdentityManager getIdentityManager() {
 		return identityManager;
+	}
+
+	public ImageHelper getImageHelper() {
+		return imageHelper;
 	}
 
 }

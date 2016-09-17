@@ -4,15 +4,18 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
+import org.eclipse.swt.graphics.Image;
+
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.DiscussionService;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCreateRequestInfo;
 import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
+import com.cwctravel.plugins.shelvesetreview.util.ImageUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.ChangeType;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingChange;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingSet;
 
-public class ShelvesetFileItem extends ShelvesetResourceItem {
+public class ShelvesetFileItem extends ShelvesetResourceItem implements IItemContainer<Object, ShelvesetResourceItem> {
 	private String name;
 
 	private PendingSet pendingSet;
@@ -116,6 +119,42 @@ public class ShelvesetFileItem extends ShelvesetResourceItem {
 
 	public int getEncoding() {
 		return pendingChange.getEncoding();
+	}
+
+	@Override
+	public List<ShelvesetResourceItem> getChildren() {
+		return getDiscussions();
+	}
+
+	public Object getItemParent() {
+		Object result = getParentFolder();
+		if (result == null) {
+			result = getParent();
+		}
+
+		return result;
+	}
+
+	public String getText() {
+		return getName();
+	}
+
+	@Override
+	public Image getImage() {
+		Image image = ImageUtil.getImageForFile(getPath(), true);
+		return image;
+	}
+
+	@Override
+	public int itemCompareTo(IItemContainer<?, ?> itemContainer) {
+		if (itemContainer instanceof ShelvesetFileItem) {
+			return getPath().compareTo(((ShelvesetFileItem) itemContainer).getPath());
+		} else if (itemContainer instanceof ShelvesetWorkItemContainer) {
+			return -1;
+		} else if (itemContainer instanceof ShelvesetFolderItem) {
+			return 1;
+		}
+		return 0;
 	}
 
 }

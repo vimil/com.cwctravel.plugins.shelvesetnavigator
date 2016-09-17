@@ -8,18 +8,17 @@ import org.eclipse.compare.ITypedElement;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem;
-import com.microsoft.tfs.client.common.ui.framework.image.ImageHelper;
 
 public class CompareShelvesetFolderItem extends CompareShelvesetResourceItem {
 	private String[] nameFragments;
 	private int fragmentIndex;
 
-	public CompareShelvesetFolderItem(ShelvesetFolderItem shelvesetFolderItem, ImageHelper imageHelper) {
-		this(shelvesetFolderItem, imageHelper, 0);
+	public CompareShelvesetFolderItem(ShelvesetFolderItem shelvesetFolderItem) {
+		this(shelvesetFolderItem, 0);
 	}
 
-	public CompareShelvesetFolderItem(ShelvesetFolderItem shelvesetFolderItem, ImageHelper imageHelper, int fragmentIndex) {
-		super(shelvesetFolderItem, imageHelper);
+	public CompareShelvesetFolderItem(ShelvesetFolderItem shelvesetFolderItem, int fragmentIndex) {
+		super(shelvesetFolderItem);
 		this.fragmentIndex = fragmentIndex;
 		String shelvesetFolderName = shelvesetFolderItem.getName();
 		String[] fragments = shelvesetFolderName.split("/");
@@ -33,9 +32,8 @@ public class CompareShelvesetFolderItem extends CompareShelvesetResourceItem {
 		nameFragments = fragments;
 	}
 
-	protected CompareShelvesetFolderItem(ShelvesetFolderItem shelvesetFolderItem, ImageHelper imageHelper, int fragmentIndex,
-			String[] nameFragments) {
-		super(shelvesetFolderItem, imageHelper);
+	protected CompareShelvesetFolderItem(ShelvesetFolderItem shelvesetFolderItem, int fragmentIndex, String[] nameFragments) {
+		super(shelvesetFolderItem);
 		this.fragmentIndex = fragmentIndex;
 		this.nameFragments = nameFragments;
 	}
@@ -51,7 +49,7 @@ public class CompareShelvesetFolderItem extends CompareShelvesetResourceItem {
 		List<CompareShelvesetResourceItem> resultList = new ArrayList<CompareShelvesetResourceItem>();
 		ShelvesetFolderItem shelvesetFolderItem = (ShelvesetFolderItem) getShelvesetResourceItem();
 		if (fragmentIndex < nameFragments.length - 1) {
-			resultList.add(new CompareShelvesetFolderItem(shelvesetFolderItem, getImageHelper(), fragmentIndex + 1, nameFragments));
+			resultList.add(new CompareShelvesetFolderItem(shelvesetFolderItem, fragmentIndex + 1, nameFragments));
 		} else {
 			List<ShelvesetResourceItem> shelvesetResourceItems = shelvesetFolderItem.getChildren();
 			if (shelvesetResourceItems != null) {
@@ -59,10 +57,10 @@ public class CompareShelvesetFolderItem extends CompareShelvesetResourceItem {
 				for (ShelvesetResourceItem shelvesetResourceItem : shelvesetResourceItems) {
 					if ((shelvesetResourceItem instanceof ShelvesetFolderItem)) {
 						ShelvesetFolderItem childFolderItem = (ShelvesetFolderItem) shelvesetResourceItem;
-						resultList.add(new CompareShelvesetFolderItem(childFolderItem, getImageHelper()));
+						resultList.add(new CompareShelvesetFolderItem(childFolderItem));
 					} else if (shelvesetResourceItem instanceof ShelvesetFileItem) {
 						ShelvesetFileItem childFileItem = (ShelvesetFileItem) shelvesetResourceItem;
-						resultList.add(new CompareShelvesetFileItem(childFileItem, true, getImageHelper()));
+						resultList.add(new CompareShelvesetFileItem(childFileItem, true));
 					}
 				}
 			}

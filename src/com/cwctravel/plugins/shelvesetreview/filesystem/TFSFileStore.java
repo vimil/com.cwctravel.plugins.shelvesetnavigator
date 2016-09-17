@@ -47,7 +47,7 @@ public class TFSFileStore implements IFileStore {
 	}
 
 	@Override
-	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
+	public <T> T getAdapter(Class<T> adapter) {
 		return null;
 	}
 
@@ -139,14 +139,13 @@ public class TFSFileStore implements IFileStore {
 	@Override
 	public InputStream openInputStream(int options, IProgressMonitor monitor) throws CoreException {
 		File downloadedFile = new File(new File(System.getProperty("java.io.tmpdir"), hash), name);
-		if(!downloadedFile.isFile()) {
+		if (!downloadedFile.isFile()) {
 			DownloadSpec downloadSpec = new DownloadSpec(downloadURL);
 			TFSUtil.getVersionControlClient().downloadFile(downloadSpec, downloadedFile, true);
 		}
 		try {
 			return new FileInputStream(downloadedFile);
-		}
-		catch(FileNotFoundException e) {
+		} catch (FileNotFoundException e) {
 			throw new CoreException(new Status(IStatus.ERROR, ShelvesetReviewPlugin.PLUGIN_ID, e.getMessage(), e));
 		}
 	}
@@ -165,7 +164,7 @@ public class TFSFileStore implements IFileStore {
 	@Override
 	public File toLocalFile(int options, IProgressMonitor monitor) throws CoreException {
 		File downloadedFile = new File(new File(System.getProperty("java.io.tmpdir"), hash), name);
-		if(!downloadedFile.isFile()) {
+		if (!downloadedFile.isFile()) {
 			DownloadSpec downloadSpec = new DownloadSpec(downloadURL);
 			TFSUtil.getVersionControlClient().downloadFile(downloadSpec, downloadedFile, true);
 		}
@@ -200,14 +199,15 @@ public class TFSFileStore implements IFileStore {
 	}
 
 	public boolean equals(Object obj) {
-		if(this == obj)
+		if (this == obj)
 			return true;
-		if(obj == null)
+		if (obj == null)
 			return false;
-		if(getClass() != obj.getClass())
+		if (getClass() != obj.getClass())
 			return false;
-		TFSFileStore other = (TFSFileStore)obj;
-		if(other.getPath().equals(getPath()) && other.getShelvesetName().equals(getShelvesetName()) && other.getShelvesetOwnerName().equals(getShelvesetOwnerName())) {
+		TFSFileStore other = (TFSFileStore) obj;
+		if (other.getPath().equals(getPath()) && other.getShelvesetName().equals(getShelvesetName())
+				&& other.getShelvesetOwnerName().equals(getShelvesetOwnerName())) {
 			return true;
 		}
 		return false;

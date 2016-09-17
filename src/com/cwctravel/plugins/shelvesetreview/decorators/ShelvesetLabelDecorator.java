@@ -12,6 +12,7 @@ import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItem;
 import com.cwctravel.plugins.shelvesetreview.util.DateUtil;
+import com.cwctravel.plugins.shelvesetreview.util.IconManager;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.ChangeType;
 
 public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
@@ -48,7 +49,7 @@ public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
 
 			if (shelvesetFileItem.hasDiscussions()) {
 				ImageDescriptor discussionOverlayImageDescriptor = ShelvesetReviewPlugin.getDefault().getImageRegistry()
-						.getDescriptor(ShelvesetReviewPlugin.DISCUSSION_OVR_ICON_ID);
+						.getDescriptor(IconManager.DISCUSSION_OVR_ICON_ID);
 				decoration.addOverlay(discussionOverlayImageDescriptor, IDecoration.TOP_LEFT);
 			}
 
@@ -56,7 +57,7 @@ public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
 			ShelvesetFolderItem shelvesetFolderItem = (ShelvesetFolderItem) element;
 			if (shelvesetFolderItem.hasDiscussions()) {
 				ImageDescriptor discussionOverlayImageDescriptor = ShelvesetReviewPlugin.getDefault().getImageRegistry()
-						.getDescriptor(ShelvesetReviewPlugin.DISCUSSION_OVR_ICON_ID);
+						.getDescriptor(IconManager.DISCUSSION_OVR_ICON_ID);
 				decoration.addOverlay(discussionOverlayImageDescriptor, IDecoration.TOP_LEFT);
 			}
 		} else if (element instanceof ShelvesetItem) {
@@ -68,7 +69,7 @@ public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
 			String buildId = shelvesetItem.getBuildId();
 			if (buildId != null && !buildId.isEmpty()) {
 				ImageDescriptor buildSuccessfulImageDescriptor = ShelvesetReviewPlugin.getDefault().getImageRegistry()
-						.getDescriptor(ShelvesetReviewPlugin.BUILD_SUCCESSFUL_ICON_ID);
+						.getDescriptor(IconManager.BUILD_SUCCESSFUL_ICON_ID);
 				decoration.addOverlay(buildSuccessfulImageDescriptor, IDecoration.BOTTOM_LEFT);
 			}
 
@@ -78,7 +79,7 @@ public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
 
 			if (shelvesetItem.isApproved()) {
 				ImageDescriptor approvedImageDescriptor = ShelvesetReviewPlugin.getDefault().getImageRegistry()
-						.getDescriptor(ShelvesetReviewPlugin.APPROVED_OVR_ICON_ID);
+						.getDescriptor(IconManager.APPROVED_OVR_ICON_ID);
 				decoration.addOverlay(approvedImageDescriptor);
 			}
 
@@ -90,7 +91,7 @@ public class ShelvesetLabelDecorator implements ILightweightLabelDecorator {
 			}
 		} else if (element instanceof ShelvesetWorkItem) {
 			ShelvesetWorkItem shelvesetWorkItem = (ShelvesetWorkItem) element;
-			decoration.addSuffix(" [" + shelvesetWorkItem.getWorkItemID() + "]");
+			decoration.addPrefix("[" + shelvesetWorkItem.getWorkItemID() + "] ");
 		}
 	}
 }

@@ -5,13 +5,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.swt.graphics.Image;
 
-import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
+import com.cwctravel.plugins.shelvesetreview.util.IconManager;
 import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 import com.cwctravel.plugins.shelvesetreview.util.ShelvesetUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 
-public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdaptable {
+public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdaptable, IItemContainer<ShelvesetGroupItemContainer, Object> {
 
 	public static final int GROUP_TYPE_CURRENT_USER_SHELVESETS = 0;
 	public static final int GROUP_TYPE_OTHER_USER_SHELVESETS = 1;
@@ -36,6 +37,10 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 
 	public ShelvesetGroupItemContainer getParent() {
 		return parent;
+	}
+
+	public ShelvesetGroupItemContainer getItemParent() {
+		return getParent();
 	}
 
 	public int getGroupType() {
@@ -116,8 +121,7 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 										if (pendingReviewShelvesetUserCategoryItem == null) {
 											pendingReviewShelvesetItems = new ArrayList<ShelvesetItem>();
 											pendingReviewShelvesetUserCategoryItem = new ShelvesetUserCategoryItem("Pending Review",
-													ShelvesetReviewPlugin.PENDING_REVIEW_USER_CATEGORY_ICON_ID, shelvesetUserItem,
-													pendingReviewShelvesetItems);
+													IconManager.PENDING_REVIEW_USER_CATEGORY_ICON_ID, shelvesetUserItem, pendingReviewShelvesetItems);
 											shelvesetUserCategoryItems.add(pendingReviewShelvesetUserCategoryItem);
 										}
 										pendingReviewShelvesetItems.add(new ShelvesetItem(parent, this, shelvesetUserItem,
@@ -126,7 +130,7 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 										if (unassignedShelvesetUserCategoryItem == null) {
 											unassignedShelvesetItems = new ArrayList<ShelvesetItem>();
 											unassignedShelvesetUserCategoryItem = new ShelvesetUserCategoryItem("Unassigned",
-													ShelvesetReviewPlugin.UNASSIGNED_SHELVESET_USER_CATEGORY_ICON_ID, shelvesetUserItem,
+													IconManager.UNASSIGNED_SHELVESET_USER_CATEGORY_ICON_ID, shelvesetUserItem,
 													unassignedShelvesetItems);
 											shelvesetUserCategoryItems.add(unassignedShelvesetUserCategoryItem);
 										}
@@ -207,14 +211,63 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 		return groupType - o.groupType;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
+	public <T> T getAdapter(Class<T> adapter) {
 		if (ShelvesetGroupItem.class.equals(adapter)) {
-			return this;
+			return (T) this;
 		} else if (ShelvesetGroupItemContainer.class.equals(adapter)) {
-			return getParent();
+			return (T) getParent();
 		}
 		return null;
 	}
 
+	@Override
+	public List<Object> getChildren() {
+		List<Object> result = new ArrayList<Object>();
+		if (isUserGroup()) {
+			result.addAll(getShelvesetUserItems());
+		} else {
+			result.addAll(getShelvesetItems());
+		}
+
+		return result;
+	}
+
+	public boolean hasChildren() {
+		return true;
+	}
+
+	public String getText() {
+		return getName();
+	}
+
+	@Override
+	public Image getImage() {
+		Image image = null;
+		switch (getGroupType()) {
+			case ShelvesetGroupItem.GROUP_TYPE_CURRENT_USER_SHELVESETS:
+				image = IconManager.getIcon(IconManager.USER_GROUP_ICON_ID);
+				break;
+			case ShelvesetGroupItem.GROUP_TYPE_OTHER_USER_SHELVESETS:
+				image = IconManager.getIcon(IconManager.REVIEW_GROUP_ICON_ID);
+				break;
+			case ShelvesetGroupItem.GROUP_TYPE_INACTIVE_SHELVESETS:
+				image = IconManager.getIcon(IconManager.INACTIVE_GROUP_ICON_ID);
+				break;
+		}
+
+		return image;
+	}
+
+	@Override
+	public int itemCompareTo(IItemContainer<?, ?> itemContainer) {
+		if (itemContainer instanceof ShelvesetGroupItem) {
+			return compareTo((ShelvesetGroupItem) itemContainer);
+		} else if (itemContainer instanceof CodeReviewGroupItemContainer) {
+			return -1;
+		}
+
+		return 0;
+	}
 }

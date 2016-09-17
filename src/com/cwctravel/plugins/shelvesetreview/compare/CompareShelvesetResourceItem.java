@@ -4,17 +4,15 @@ import org.eclipse.compare.ITypedElement;
 import org.eclipse.compare.structuremergeviewer.IStructureComparator;
 import org.eclipse.swt.graphics.Image;
 
+import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem;
-import com.cwctravel.plugins.shelvesetreview.util.ImageUtil;
 import com.microsoft.tfs.client.common.ui.framework.image.ImageHelper;
 
 public abstract class CompareShelvesetResourceItem implements IStructureComparator, ITypedElement {
 	private ShelvesetResourceItem shelvesetResourceItem;
-	private final ImageHelper imageHelper;
 
-	public CompareShelvesetResourceItem(ShelvesetResourceItem shelvesetResourceItem, ImageHelper imageHelper) {
+	public CompareShelvesetResourceItem(ShelvesetResourceItem shelvesetResourceItem) {
 		this.shelvesetResourceItem = shelvesetResourceItem;
-		this.imageHelper = imageHelper;
 	}
 
 	@Override
@@ -24,7 +22,7 @@ public abstract class CompareShelvesetResourceItem implements IStructureComparat
 
 	@Override
 	public Image getImage() {
-		return ImageUtil.getItemImage(imageHelper, shelvesetResourceItem);
+		return shelvesetResourceItem.getImage();
 	}
 
 	@Override
@@ -42,7 +40,7 @@ public abstract class CompareShelvesetResourceItem implements IStructureComparat
 	}
 
 	public ImageHelper getImageHelper() {
-		return imageHelper;
+		return ShelvesetReviewPlugin.getDefault().getImageHelper();
 	}
 
 }

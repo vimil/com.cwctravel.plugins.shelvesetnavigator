@@ -3,8 +3,11 @@ package com.cwctravel.plugins.shelvesetreview.navigator.model;
 import java.util.List;
 
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.swt.graphics.Image;
 
-public class ShelvesetUserCategoryItem implements IAdaptable {
+import com.cwctravel.plugins.shelvesetreview.util.IconManager;
+
+public class ShelvesetUserCategoryItem implements IAdaptable, IItemContainer<ShelvesetUserItem, ShelvesetItem> {
 	private final String categoryName;
 	private final String iconId;
 
@@ -31,6 +34,10 @@ public class ShelvesetUserCategoryItem implements IAdaptable {
 		return parentUser;
 	}
 
+	public ShelvesetUserItem getItemParent() {
+		return getParentUser();
+	}
+
 	public List<ShelvesetItem> getShelvesetItems() {
 		return shelvesetItems;
 	}
@@ -47,19 +54,47 @@ public class ShelvesetUserCategoryItem implements IAdaptable {
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
+	public <T> T getAdapter(Class<T> adapter) {
 		if (ShelvesetUserCategoryItem.class.equals(adapter)) {
-			return this;
+			return (T) this;
 		} else if (ShelvesetUserItem.class.equals(adapter)) {
-			return getParentUser();
+			return (T) getParentUser();
 		}
 		if (ShelvesetGroupItem.class.equals(adapter)) {
-			return getParentUser().getParentGroup();
+			return (T) getParentUser().getParentGroup();
 		} else if (ShelvesetGroupItemContainer.class.equals(adapter)) {
-			return getParentUser().getParentGroup().getParent();
+			return (T) getParentUser().getParentGroup().getParent();
 		}
 		return null;
+	}
+
+	@Override
+	public List<ShelvesetItem> getChildren() {
+		return getShelvesetItems();
+	}
+
+	public boolean hasChildren() {
+		return true;
+	}
+
+	public String getText() {
+		return getCategoryName();
+	}
+
+	@Override
+	public Image getImage() {
+		Image image = IconManager.getIcon(getIconId());
+		return image;
+	}
+
+	@Override
+	public int itemCompareTo(IItemContainer<?, ?> itemContainer) {
+		if (itemContainer instanceof ShelvesetUserCategoryItem) {
+			return getCategoryName().compareTo(((ShelvesetUserCategoryItem) itemContainer).getCategoryName());
+		}
+		return 0;
 	}
 
 }

@@ -1,29 +1,58 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.PlatformObject;
+import org.eclipse.swt.graphics.Image;
 
-public class BaseItemContainer extends PlatformObject {
+public class BaseItemContainer extends PlatformObject implements IItemContainer<Object, Object> {
 	private final ShelvesetGroupItemContainer shelvesetGroupItemContainer;
-	private final CodeReviewItemContainer codeReviewItemContainer;
+	private final CodeReviewGroupItemContainer codeReviewGroupItemContainer;
 
 	public BaseItemContainer() {
 		shelvesetGroupItemContainer = new ShelvesetGroupItemContainer();
-		codeReviewItemContainer = new CodeReviewItemContainer();
+		codeReviewGroupItemContainer = new CodeReviewGroupItemContainer();
 	}
 
 	public ShelvesetGroupItemContainer getShelvesetGroupItemContainer() {
 		return shelvesetGroupItemContainer;
 	}
 
-	public CodeReviewItemContainer getCodeReviewItemContainer() {
-		return codeReviewItemContainer;
+	public CodeReviewGroupItemContainer getCodeReviewGroupItemContainer() {
+		return codeReviewGroupItemContainer;
 	}
 
 	public void refresh(boolean softRefresh, IProgressMonitor monitor) {
 		shelvesetGroupItemContainer.refresh(softRefresh, monitor);
-		codeReviewItemContainer.refresh(shelvesetGroupItemContainer.getUserShelvesetItemsMap(), monitor);
+		codeReviewGroupItemContainer.refresh(shelvesetGroupItemContainer.getUserShelvesetItemsMap(), monitor);
 
+	}
+
+	@Override
+	public List<Object> getChildren() {
+		List<Object> result = new ArrayList<Object>();
+		ShelvesetGroupItemContainer shelvesetGroupItemContainer = getShelvesetGroupItemContainer();
+		List<ShelvesetGroupItem> shelvesetGroupItems = shelvesetGroupItemContainer.getShelvesetGroupItems();
+		result.addAll(shelvesetGroupItems);
+		result.add(getCodeReviewGroupItemContainer());
+		return result;
+	}
+
+	@Override
+	public Object getItemParent() {
+		return null;
+	}
+
+	@Override
+	public Image getImage() {
+		return null;
+	}
+
+	@Override
+	public int itemCompareTo(IItemContainer<?, ?> itemContainer) {
+		return 0;
 	}
 
 }

@@ -3,7 +3,11 @@ package com.cwctravel.plugins.shelvesetreview.navigator.model;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ShelvesetFolderItem extends ShelvesetResourceItem {
+import org.eclipse.swt.graphics.Image;
+
+import com.cwctravel.plugins.shelvesetreview.util.ImageUtil;
+
+public class ShelvesetFolderItem extends ShelvesetResourceItem implements IItemContainer<Object, ShelvesetResourceItem> {
 
 	private final String folderName;
 
@@ -29,6 +33,19 @@ public class ShelvesetFolderItem extends ShelvesetResourceItem {
 			children = new ArrayList<ShelvesetResourceItem>();
 		}
 		return children;
+	}
+
+	public Object getItemParent() {
+		Object result = getParentFolder();
+		if (result == null) {
+			result = getParent();
+		}
+
+		return result;
+	}
+
+	public String getText() {
+		return getName();
 	}
 
 	@Override
@@ -59,5 +76,23 @@ public class ShelvesetFolderItem extends ShelvesetResourceItem {
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public Image getImage() {
+		Image image = ImageUtil.getImageForFolder();
+		return image;
+	}
+
+	@Override
+	public int itemCompareTo(IItemContainer<?, ?> itemContainer) {
+		if (itemContainer instanceof ShelvesetFolderItem) {
+			return getPath().compareTo(((ShelvesetFolderItem) itemContainer).getPath());
+		} else if (itemContainer instanceof ShelvesetDiscussionItem) {
+			return 1;
+		} else if (itemContainer instanceof ShelvesetWorkItemContainer) {
+			return -1;
+		}
+		return 0;
 	}
 }

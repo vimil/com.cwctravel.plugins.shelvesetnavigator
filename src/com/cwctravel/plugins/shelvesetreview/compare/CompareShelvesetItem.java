@@ -9,13 +9,12 @@ import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetResourceItem;
-import com.microsoft.tfs.client.common.ui.framework.image.ImageHelper;
 
 public class CompareShelvesetItem extends CompareShelvesetResourceItem {
 	private ShelvesetItem shelvesetItem;
 
-	public CompareShelvesetItem(ShelvesetItem shelvesetItem, ImageHelper imageHelper) {
-		super(null, imageHelper);
+	public CompareShelvesetItem(ShelvesetItem shelvesetItem) {
+		super(null);
 		this.shelvesetItem = shelvesetItem;
 	}
 
@@ -43,10 +42,10 @@ public class CompareShelvesetItem extends CompareShelvesetResourceItem {
 			for (ShelvesetResourceItem shelvesetResourceItem : shelvesetResourceItems) {
 				if ((shelvesetResourceItem instanceof ShelvesetFolderItem)) {
 					ShelvesetFolderItem childFolderItem = (ShelvesetFolderItem) shelvesetResourceItem;
-					resultList.add(new CompareShelvesetFolderItem(childFolderItem, getImageHelper()));
+					resultList.add(new CompareShelvesetFolderItem(childFolderItem));
 				} else if (shelvesetResourceItem instanceof ShelvesetFileItem) {
 					ShelvesetFileItem childFileItem = (ShelvesetFileItem) shelvesetResourceItem;
-					resultList.add(new CompareShelvesetFileItem(childFileItem, true, getImageHelper()));
+					resultList.add(new CompareShelvesetFileItem(childFileItem, true));
 				}
 			}
 			result = resultList.toArray(new CompareShelvesetResourceItem[0]);

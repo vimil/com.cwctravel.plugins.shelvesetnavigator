@@ -1,10 +1,14 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.swt.graphics.Image;
 
-public class ShelvesetUserItem implements IAdaptable {
+import com.cwctravel.plugins.shelvesetreview.util.IconManager;
+
+public class ShelvesetUserItem implements IAdaptable, IItemContainer<ShelvesetGroupItem, Object> {
 	private final String shelvesetOwner;
 
 	private final ShelvesetGroupItem parentGroup;
@@ -25,6 +29,10 @@ public class ShelvesetUserItem implements IAdaptable {
 		return parentGroup;
 	}
 
+	public ShelvesetGroupItem getItemParent() {
+		return getParentGroup();
+	}
+
 	public List<ShelvesetUserCategoryItem> getShelvesetUserCategoryItems() {
 		return shelvesetUserCategoryItems;
 	}
@@ -40,16 +48,59 @@ public class ShelvesetUserItem implements IAdaptable {
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
+	public <T> T getAdapter(Class<T> adapter) {
 		if (ShelvesetUserItem.class.equals(adapter)) {
-			return this;
+			return (T) this;
 		}
 		if (ShelvesetGroupItem.class.equals(adapter)) {
-			return getParentGroup();
+			return (T) getParentGroup();
 		} else if (ShelvesetGroupItemContainer.class.equals(adapter)) {
-			return getParentGroup().getParent();
+			return (T) getParentGroup().getParent();
 		}
 		return null;
+	}
+
+	@Override
+	public List<Object> getChildren() {
+		List<Object> result = new ArrayList<Object>();
+		List<ShelvesetUserCategoryItem> shelvesetUserCategoryItems = getShelvesetUserCategoryItems();
+		if (shelvesetUserCategoryItems.size() == 1) {
+			ShelvesetUserCategoryItem shelvesetUserCategoryItem = shelvesetUserCategoryItems.get(0);
+			result.addAll(shelvesetUserCategoryItem.getShelvesetItems());
+		} else {
+			result.addAll(shelvesetUserCategoryItems);
+		}
+		return result;
+	}
+
+	public String getText() {
+		return getShelvesetOwner();
+	}
+
+	@Override
+	public Image getImage() {
+		Image image = null;
+		List<ShelvesetUserCategoryItem> userCategoryItems = getShelvesetUserCategoryItems();
+		int userCategoryCount = userCategoryItems.size();
+		if (userCategoryCount > 1) {
+			image = IconManager.getIcon(IconManager.MIXED_USER_ICON_ID);
+		} else if (userCategoryCount == 1) {
+			ShelvesetUserCategoryItem shelvesetUserCategoryItem = userCategoryItems.get(0);
+			image = IconManager.getIcon(shelvesetUserCategoryItem.getIconId());
+		} else {
+			image = IconManager.getIcon(IconManager.USER_ICON_ID);
+		}
+
+		return image;
+	}
+
+	@Override
+	public int itemCompareTo(IItemContainer<?, ?> itemContainer) {
+		if (itemContainer instanceof ShelvesetUserItem) {
+			return getShelvesetOwner().compareTo(((ShelvesetUserItem) itemContainer).getShelvesetOwner());
+		}
+		return 0;
 	}
 }

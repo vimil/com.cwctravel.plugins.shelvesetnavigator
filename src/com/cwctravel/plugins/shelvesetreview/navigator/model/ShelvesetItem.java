@@ -8,6 +8,7 @@ import java.util.List;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.swt.graphics.Image;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.exceptions.ApproveException;
@@ -16,6 +17,7 @@ import com.cwctravel.plugins.shelvesetreview.jobs.ui.RefreshShelvesetsJob;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.workitems.dto.WorkItemInfo;
 import com.cwctravel.plugins.shelvesetreview.util.DiscussionUtil;
+import com.cwctravel.plugins.shelvesetreview.util.IconManager;
 import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 import com.cwctravel.plugins.shelvesetreview.util.ShelvesetUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
@@ -27,7 +29,7 @@ import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingSet;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 import com.microsoft.tfs.core.clients.versioncontrol.workspacecache.WorkItemCheckedInfo;
 
-public class ShelvesetItem implements IAdaptable {
+public class ShelvesetItem implements IAdaptable, IItemContainer<Object, ShelvesetResourceItem> {
 	private final ShelvesetGroupItemContainer parent;
 	private final ShelvesetGroupItem parentGroup;
 	private final ShelvesetUserItem parentUser;
@@ -60,6 +62,22 @@ public class ShelvesetItem implements IAdaptable {
 		this.parent = shelvesetItemContainer;
 	}
 
+	public Object getItemParent() {
+		Object result = null;
+		ShelvesetUserCategoryItem shelvesetUserCategory = getParentUserCategory();
+		if (shelvesetUserCategory != null) {
+			result = shelvesetUserCategory;
+		} else {
+			ShelvesetUserItem shelvesetUser = getParentUser();
+			if (shelvesetUser != null) {
+				result = shelvesetUser;
+			} else {
+				result = getParentGroup();
+			}
+		}
+		return result;
+	}
+
 	public ShelvesetGroupItemContainer getParent() {
 		return parent;
 	}
@@ -81,7 +99,14 @@ public class ShelvesetItem implements IAdaptable {
 	}
 
 	public List<ShelvesetResourceItem> getChildren() {
+		if (children == null) {
+			children = new ArrayList<ShelvesetResourceItem>();
+		}
 		return children;
+	}
+
+	public boolean hasChildren() {
+		return true;
 	}
 
 	public ShelvesetGroupItem getParentGroup() {
@@ -341,4 +366,26 @@ public class ShelvesetItem implements IAdaptable {
 		return result;
 	}
 
+	public String getText() {
+		return getName();
+	}
+
+	@Override
+	public Image getImage() {
+		Image image = null;
+		if (isInactive()) {
+			image = IconManager.getIcon(IconManager.INACTIVE_SHELVESET_ICON_ID);
+		} else {
+			image = IconManager.getIcon(IconManager.SHELVESET_ICON_ID);
+		}
+		return image;
+	}
+
+	@Override
+	public int itemCompareTo(IItemContainer<?, ?> itemContainer) {
+		if (itemContainer instanceof ShelvesetItem) {
+			return getName().compareTo(((ShelvesetItem) itemContainer).getName());
+		}
+		return 0;
+	}
 }
