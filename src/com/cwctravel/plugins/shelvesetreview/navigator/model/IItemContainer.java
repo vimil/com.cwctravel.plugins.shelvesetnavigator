@@ -2,6 +2,7 @@ package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
 import java.util.List;
 
+import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.swt.graphics.Image;
 
 public interface IItemContainer<T, U> {
@@ -24,4 +25,8 @@ public interface IItemContainer<T, U> {
 	}
 
 	public int itemCompareTo(IItemContainer<?, ?> itemContainer);
+
+	public default void decorate(IDecoration decoration) {
+
+	}
 }

@@ -6,23 +6,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.PlatformObject;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.ui.progress.UIJob;
 
-import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.constants.ShelvesetPropertyConstants;
 import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
-import com.microsoft.tfs.core.clients.webservices.TeamFoundationIdentity;
 
 public class ShelvesetGroupItemContainer extends PlatformObject {
 	private Map<String, List<Shelveset>> userShelvesetItemsMap;
 	private final List<ShelvesetGroupItem> shelvesetGroupItems;
-	private TeamFoundationIdentity defaultReviewersGroup;;
 
 	private boolean initialRefreshComplete;
 
@@ -47,8 +41,6 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 		if (!softRefresh) {
 			VersionControlClient vC = TFSUtil.getVersionControlClient();
 			if (vC != null) {
-				defaultReviewersGroup = IdentityUtil.getDefaultReviewersGroup();
-
 				userShelvesetItemsMap.clear();
 
 				Shelveset[] shelvesets = vC.queryShelvesets(null, null, null);
@@ -89,14 +81,6 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 		for (ShelvesetGroupItem shelvesetGroupItem : shelvesetGroupItems) {
 			shelvesetGroupItem.createShelvesetItems(userShelvesetItemsMap);
 		}
-
-		new UIJob("Shelveset Container Refresh") {
-			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor) {
-				ShelvesetReviewPlugin.getDefault().fireShelvesetContainerRefreshed();
-				return Status.OK_STATUS;
-			}
-		}.schedule();
 	}
 
 	public ShelvesetItem findShelvesetItem(String shelvesetName, String shelvesetOwnerName) {
@@ -123,10 +107,6 @@ public class ShelvesetGroupItemContainer extends PlatformObject {
 
 	public boolean isInitialRefreshComplete() {
 		return initialRefreshComplete;
-	}
-
-	public TeamFoundationIdentity getDefaultReviewersGroup() {
-		return defaultReviewersGroup;
 	}
 
 	Map<String, List<Shelveset>> getUserShelvesetItemsMap() {

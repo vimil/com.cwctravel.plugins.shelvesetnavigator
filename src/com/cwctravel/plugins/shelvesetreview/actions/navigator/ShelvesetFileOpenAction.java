@@ -149,7 +149,7 @@ public class ShelvesetFileOpenAction extends Action implements ISelectionChanged
 					}
 				}
 			} else if (shelvesetWorkItem != null) {
-				WorkItemEditorHelper.openEditor(TFSUtil.getTFSServer(), shelvesetWorkItem.getWorkItemID());
+				WorkItemEditorHelper.openEditor(TFSUtil.getTFSServer(), shelvesetWorkItem.getWorkItemId());
 			}
 		} catch (CoreException e) {
 			ShelvesetReviewPlugin.log(IStatus.ERROR, e.getMessage(), e);

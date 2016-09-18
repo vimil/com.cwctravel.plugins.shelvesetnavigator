@@ -4,6 +4,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.eclipse.core.runtime.Status;
+
+import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
+
 public class StringUtil {
 	public static String truncateTo(String str, int length) {
 		String result = str;
@@ -69,6 +73,18 @@ public class StringUtil {
 			String tabArrayStr = new String(tabArray);
 			String replaceStr = "\n" + tabArrayStr;
 			result = tabArrayStr + str.replace("\n", replaceStr);
+		}
+		return result;
+	}
+
+	public static int toInt(String str, int defaultValue) {
+		int result = defaultValue;
+		if (str != null && !str.isEmpty()) {
+			try {
+				result = Integer.parseInt(str);
+			} catch (NumberFormatException nFE) {
+				ShelvesetReviewPlugin.log(Status.WARNING, nFE.getMessage(), nFE);
+			}
 		}
 		return result;
 	}

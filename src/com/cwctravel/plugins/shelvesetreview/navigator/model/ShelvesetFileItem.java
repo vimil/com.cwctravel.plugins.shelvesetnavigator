@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.swt.graphics.Image;
 
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.DiscussionService;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionCreateRequestInfo;
+import com.cwctravel.plugins.shelvesetreview.util.IconManager;
 import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 import com.cwctravel.plugins.shelvesetreview.util.ImageUtil;
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
@@ -157,4 +160,19 @@ public class ShelvesetFileItem extends ShelvesetResourceItem implements IItemCon
 		return 0;
 	}
 
+	public void decorate(IDecoration decoration) {
+		ChangeType changeType = getChangeType();
+		if (changeType.contains(ChangeType.ADD)) {
+			decoration.addPrefix("+");
+		} else if (changeType.contains(ChangeType.DELETE)) {
+			decoration.addPrefix("-");
+		} else if (changeType.contains(ChangeType.EDIT)) {
+			decoration.addPrefix(">");
+		}
+
+		if (hasDiscussions()) {
+			ImageDescriptor discussionOverlayImageDescriptor = IconManager.getDescriptor(IconManager.DISCUSSION_OVR_ICON_ID);
+			decoration.addOverlay(discussionOverlayImageDescriptor, IDecoration.TOP_LEFT);
+		}
+	}
 }

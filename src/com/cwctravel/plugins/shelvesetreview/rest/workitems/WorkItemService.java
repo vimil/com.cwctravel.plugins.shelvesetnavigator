@@ -21,31 +21,32 @@ public class WorkItemService {
 
 	public static List<WorkItemInfo> getWorkItems(TFSConnection tfsConnection, List<Integer> workItemIds) throws IOException {
 		List<WorkItemInfo> result = Collections.emptyList();
-		HttpClient httpClient = tfsConnection.getHTTPClient();
-		String baseURI = tfsConnection.getBaseURI().toString();
+		if (workItemIds != null && !workItemIds.isEmpty()) {
+			HttpClient httpClient = tfsConnection.getHTTPClient();
+			String baseURI = tfsConnection.getBaseURI().toString();
 
-		String commaSeparatedIds = StringUtil.joinCollection(workItemIds, ",");
+			String commaSeparatedIds = StringUtil.joinCollection(workItemIds, ",");
 
-		GetMethod getMethod = new GetMethod(baseURI + "/_apis/wit/workitems");
-		NameValuePair idsNameValuePair = new NameValuePair();
-		idsNameValuePair.setName("ids");
-		idsNameValuePair.setValue(commaSeparatedIds);
+			GetMethod getMethod = new GetMethod(baseURI + "/_apis/wit/workitems");
+			NameValuePair idsNameValuePair = new NameValuePair();
+			idsNameValuePair.setName("ids");
+			idsNameValuePair.setValue(commaSeparatedIds);
 
-		NameValuePair fieldsNameValuePair = new NameValuePair();
-		fieldsNameValuePair.setName("fields");
-		fieldsNameValuePair.setValue("System.Id,System.Title");
+			NameValuePair fieldsNameValuePair = new NameValuePair();
+			fieldsNameValuePair.setName("fields");
+			fieldsNameValuePair.setValue("System.Id,System.Title");
 
-		NameValuePair apiVersionNameValuePair = new NameValuePair();
-		apiVersionNameValuePair.setName("api-version");
-		apiVersionNameValuePair.setValue("1.0");
+			NameValuePair apiVersionNameValuePair = new NameValuePair();
+			apiVersionNameValuePair.setName("api-version");
+			apiVersionNameValuePair.setValue("1.0");
 
-		NameValuePair[] nameValuePairs = new NameValuePair[] { idsNameValuePair, fieldsNameValuePair, apiVersionNameValuePair };
-		getMethod.setQueryString(nameValuePairs);
+			NameValuePair[] nameValuePairs = new NameValuePair[] { idsNameValuePair, fieldsNameValuePair, apiVersionNameValuePair };
+			getMethod.setQueryString(nameValuePairs);
 
-		httpClient.executeMethod(getMethod);
-		String response = getMethod.getResponseBodyAsString();
-		result = parseWorkItemsResponse(response);
-
+			httpClient.executeMethod(getMethod);
+			String response = getMethod.getResponseBodyAsString();
+			result = parseWorkItemsResponse(response);
+		}
 		return result;
 	}
 

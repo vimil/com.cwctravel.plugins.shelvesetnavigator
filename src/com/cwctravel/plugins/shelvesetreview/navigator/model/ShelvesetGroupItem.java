@@ -22,8 +22,6 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 
 	private final int groupType;
 
-	private boolean isChildrenRefreshed;
-
 	private List<ShelvesetItem> shelvesetItems;
 
 	private List<ShelvesetUserItem> shelvesetUserItems;
@@ -70,10 +68,6 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 
 	public List<ShelvesetUserItem> getShelvesetUserItems() {
 		return shelvesetUserItems;
-	}
-
-	public boolean isChildrenRefreshed() {
-		return isChildrenRefreshed;
 	}
 
 	public void createShelvesetItems(Map<String, List<Shelveset>> userShelvesetItemsMap) {

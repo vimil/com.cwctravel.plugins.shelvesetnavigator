@@ -3,6 +3,7 @@ package com.cwctravel.plugins.shelvesetreview.navigator.model;
 import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.swt.graphics.Image;
 
 import com.cwctravel.plugins.shelvesetreview.WorkItemCache;
@@ -27,10 +28,10 @@ public class ShelvesetWorkItem extends ShelvesetResourceItem implements IItemCon
 
 	@Override
 	public String getPath() {
-		return Integer.toString(getWorkItemID());
+		return Integer.toString(getWorkItemId());
 	}
 
-	public int getWorkItemID() {
+	public int getWorkItemId() {
 		return workItemInfo.getId();
 	}
 
@@ -39,7 +40,7 @@ public class ShelvesetWorkItem extends ShelvesetResourceItem implements IItemCon
 	}
 
 	public WorkItem getWorkItem() {
-		return WorkItemCache.getInstance().getWorkItem(getWorkItemID());
+		return WorkItemCache.getInstance().getWorkItem(getWorkItemId());
 	}
 
 	@Override
@@ -65,9 +66,12 @@ public class ShelvesetWorkItem extends ShelvesetResourceItem implements IItemCon
 	@Override
 	public int itemCompareTo(IItemContainer<?, ?> itemContainer) {
 		if (itemContainer instanceof ShelvesetWorkItem) {
-			return getWorkItemID() - ((ShelvesetWorkItem) itemContainer).getWorkItemID();
+			return getWorkItemId() - ((ShelvesetWorkItem) itemContainer).getWorkItemId();
 		}
 		return 0;
 	}
 
+	public void decorate(IDecoration decoration) {
+		decoration.addPrefix("[" + getWorkItemId() + "] ");
+	}
 }

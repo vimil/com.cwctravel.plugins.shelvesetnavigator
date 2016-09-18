@@ -102,4 +102,8 @@ public class IconManager {
 	public static Image getIcon(String key) {
 		return ShelvesetReviewPlugin.getDefault().getImageRegistry().get(key);
 	}
+
+	public static ImageDescriptor getDescriptor(String key) {
+		return ShelvesetReviewPlugin.getDefault().getImageRegistry().getDescriptor(key);
+	}
 }

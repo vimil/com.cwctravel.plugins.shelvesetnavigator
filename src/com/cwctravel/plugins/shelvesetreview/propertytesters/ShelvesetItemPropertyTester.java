@@ -14,6 +14,8 @@ public class ShelvesetItemPropertyTester extends PropertyTester {
 				result = shelvesetItem.isInactive() != (Boolean) expectedValue;
 			} else if ("canActivate".equals(property)) {
 				result = shelvesetItem.canActivate() == (Boolean) expectedValue;
+			} else if ("canDiscard".equals(property)) {
+				result = shelvesetItem.canDiscard() == (Boolean) expectedValue;
 			} else if ("canRequestCodeReview".equals(property)) {
 				result = shelvesetItem.canRequestCodeReview() == (Boolean) expectedValue;
 			} else if ("belongsToCurrentUser".equals(property)) {

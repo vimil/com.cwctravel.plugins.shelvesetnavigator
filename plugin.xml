@@ -239,11 +239,7 @@
                               value="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
                         </instanceof>
                         <test
-                              property="com.cwctravel.plugins.shelvesetreview.shelvesetitem.isActive"
-                              value="true">
-                        </test>
-                        <test
-                              property="com.cwctravel.plugins.shelvesetreview.shelvesetitem.belongsToCurrentUser"
+                              property="com.cwctravel.plugins.shelvesetreview.shelvesetitem.canDiscard"
                               value="true">
                         </test>
                      </and>
@@ -586,19 +582,7 @@
          <enablement>
             <or>
                <objectClass
-                     name="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFileItem">
-               </objectClass>
-               <objectClass
-                     name="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
-               </objectClass>
-               <objectClass
-                     name="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetDiscussionItem">
-               </objectClass>
-               <objectClass
-                     name="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetFolderItem">
-               </objectClass>
-               <objectClass
-                     name="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItem">
+                     name="com.cwctravel.plugins.shelvesetreview.navigator.model.IItemContainer">
                </objectClass>
             </or>
          </enablement>
@@ -617,7 +601,7 @@
             class="com.cwctravel.plugins.shelvesetreview.propertytesters.ShelvesetItemPropertyTester"
             id="com.cwctravel.plugins.shelvesetreview.navigator.propertytesters.ShelvesetItemPropertyTester"
             namespace="com.cwctravel.plugins.shelvesetreview.shelvesetitem"
-            properties="isActive,canActivate,canRequestCodeReview,belongsToCurrentUser,canApprove,canUnapprove"
+            properties="isActive,canActivate,canDiscard,canRequestCodeReview,belongsToCurrentUser,canApprove,canUnapprove"
             type="com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem">
       </propertyTester>
    </extension>

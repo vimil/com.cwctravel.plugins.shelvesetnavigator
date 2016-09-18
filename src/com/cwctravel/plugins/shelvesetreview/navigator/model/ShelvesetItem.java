@@ -8,6 +8,8 @@ import java.util.List;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.swt.graphics.Image;
 
 import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
@@ -16,6 +18,7 @@ import com.cwctravel.plugins.shelvesetreview.jobs.ShelvesetItemsRefreshJob;
 import com.cwctravel.plugins.shelvesetreview.jobs.ui.RefreshShelvesetsJob;
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.dto.DiscussionInfo;
 import com.cwctravel.plugins.shelvesetreview.rest.workitems.dto.WorkItemInfo;
+import com.cwctravel.plugins.shelvesetreview.util.DateUtil;
 import com.cwctravel.plugins.shelvesetreview.util.DiscussionUtil;
 import com.cwctravel.plugins.shelvesetreview.util.IconManager;
 import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
@@ -254,6 +257,10 @@ public class ShelvesetItem implements IAdaptable, IItemContainer<Object, Shelves
 		return ShelvesetUtil.canActivateShelveset(shelveset);
 	}
 
+	public boolean canDiscard() {
+		return ShelvesetUtil.canDiscardShelveset(shelveset);
+	}
+
 	public void markShelvesetActive(IProgressMonitor monitor) {
 		ShelvesetUtil.markShelvesetActive(shelveset);
 	}
@@ -280,7 +287,7 @@ public class ShelvesetItem implements IAdaptable, IItemContainer<Object, Shelves
 	}
 
 	public List<ReviewerInfo> getReviewers(boolean includeDefaultReviewersGroupIfApproved) {
-		return ShelvesetUtil.getReviewers(shelveset, includeDefaultReviewersGroupIfApproved ? parent.getDefaultReviewersGroup() : null, false);
+		return ShelvesetUtil.getReviewers(shelveset, includeDefaultReviewersGroupIfApproved ? IdentityUtil.getDefaultReviewersGroup() : null, false);
 	}
 
 	public boolean canRequestCodeReview() {
@@ -288,7 +295,7 @@ public class ShelvesetItem implements IAdaptable, IItemContainer<Object, Shelves
 	}
 
 	public void createCodeReviewRequest(ShelvesetWorkItem shelvesetWorkItem, List<ReviewerInfo> reviewerInfos) {
-		ShelvesetUtil.createCodeReviewRequest(shelveset, shelvesetWorkItem.getWorkItemID(), reviewerInfos);
+		ShelvesetUtil.createCodeReviewRequest(shelveset, shelvesetWorkItem.getWorkItemId(), reviewerInfos);
 	}
 
 	public boolean hasDiscussions() {
@@ -300,11 +307,11 @@ public class ShelvesetItem implements IAdaptable, IItemContainer<Object, Shelves
 	}
 
 	public boolean canApprove() {
-		return ShelvesetUtil.canApprove(shelveset, parent.getDefaultReviewersGroup());
+		return ShelvesetUtil.canApprove(shelveset, IdentityUtil.getDefaultReviewersGroup());
 	}
 
 	public void approve(String approvalComment) throws ApproveException {
-		ShelvesetUtil.approve(shelveset, approvalComment, parent.getDefaultReviewersGroup());
+		ShelvesetUtil.approve(shelveset, approvalComment, IdentityUtil.getDefaultReviewersGroup());
 
 	}
 
@@ -317,11 +324,11 @@ public class ShelvesetItem implements IAdaptable, IItemContainer<Object, Shelves
 	}
 
 	public void unapprove(String revokeApprovalComment) throws ApproveException {
-		ShelvesetUtil.unapprove(shelveset, revokeApprovalComment, parent.getDefaultReviewersGroup());
+		ShelvesetUtil.unapprove(shelveset, revokeApprovalComment, IdentityUtil.getDefaultReviewersGroup());
 	}
 
 	public Boolean canUnapprove() {
-		return ShelvesetUtil.canUnapprove(shelveset, parent.getDefaultReviewersGroup());
+		return ShelvesetUtil.canUnapprove(shelveset, IdentityUtil.getDefaultReviewersGroup());
 	}
 
 	public boolean isCurrentUserOwner() {
@@ -338,18 +345,18 @@ public class ShelvesetItem implements IAdaptable, IItemContainer<Object, Shelves
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
+	public <T> T getAdapter(Class<T> adapter) {
 		if (ShelvesetItem.class.equals(adapter)) {
-			return this;
+			return (T) this;
 		} else if (ShelvesetUserCategoryItem.class.equals(adapter)) {
-			return getParentUserCategory();
+			return (T) getParentUserCategory();
 		} else if (ShelvesetUserItem.class.equals(adapter)) {
-			return getParentUser();
+			return (T) getParentUser();
 		}
 		if (ShelvesetGroupItem.class.equals(adapter)) {
-			return getParentGroup();
+			return (T) getParentGroup();
 		} else if (ShelvesetGroupItemContainer.class.equals(adapter)) {
-			return getParent();
+			return (T) getParent();
 		}
 		return null;
 	}
@@ -387,5 +394,26 @@ public class ShelvesetItem implements IAdaptable, IItemContainer<Object, Shelves
 			return getName().compareTo(((ShelvesetItem) itemContainer).getName());
 		}
 		return 0;
+	}
+
+	public void decorate(IDecoration decoration) {
+		if (!isInactive() && isCurrentUserOwner() && getReviewers(false).isEmpty()) {
+			decoration.addSuffix("[not reviewed]");
+		}
+
+		String buildId = getBuildId();
+		if (buildId != null && !buildId.isEmpty()) {
+			ImageDescriptor buildSuccessfulImageDescriptor = IconManager.getDescriptor(IconManager.BUILD_SUCCESSFUL_ICON_ID);
+			decoration.addOverlay(buildSuccessfulImageDescriptor, IDecoration.BOTTOM_LEFT);
+		}
+
+		if (isInactive()) {
+			decoration.addSuffix(" [" + DateUtil.ageAsPrettyString(getCreationDate()) + "]");
+		}
+
+		if (isApproved()) {
+			ImageDescriptor approvedImageDescriptor = IconManager.getDescriptor(IconManager.APPROVED_OVR_ICON_ID);
+			decoration.addOverlay(approvedImageDescriptor);
+		}
 	}
 }

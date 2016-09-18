@@ -285,10 +285,20 @@ public class ShelvesetUtil {
 		return isShelvesetInactive && changesetId == null;
 	}
 
+	public static boolean canDiscardShelveset(Shelveset shelveset) {
+		boolean isShelvesetInactive = isShelvesetInactive(shelveset);
+		return !isShelvesetInactive && isCurrentUserShelvesetOwner(shelveset) && getCodeReviewWorkItemId(shelveset) == -1;
+	}
+
+	private static boolean isCurrentUserShelvesetOwner(Shelveset shelveset) {
+		return IdentityUtil.userNamesSame(IdentityUtil.getCurrentUserName(), shelveset.getOwnerName());
+	}
+
 	public static boolean canRequestCodeReview(Shelveset shelveset) {
 		boolean isShelvesetInactive = isShelvesetInactive(shelveset);
-		boolean shelvesetBelongsToCurrentUser = IdentityUtil.userNamesSame(IdentityUtil.getCurrentUserName(), shelveset.getOwnerName());
-		return !isShelvesetInactive && shelvesetBelongsToCurrentUser && shelveset.getBriefWorkItemInfo().length > 0;
+		boolean shelvesetBelongsToCurrentUser = isCurrentUserShelvesetOwner(shelveset);
+		int codeReviewWorkItemId = getCodeReviewWorkItemId(shelveset);
+		return !isShelvesetInactive && shelvesetBelongsToCurrentUser && shelveset.getBriefWorkItemInfo().length > 0 && codeReviewWorkItemId == -1;
 	}
 
 	public static String getShelvesetBuildId(Shelveset shelveset) {
@@ -421,7 +431,7 @@ public class ShelvesetUtil {
 		return result;
 	}
 
-	public static void createCodeReviewRequest(Shelveset shelveset, int workItemID, List<ReviewerInfo> reviewerInfos) {
+	public static void createCodeReviewRequest(Shelveset shelveset, int workItemId, List<ReviewerInfo> reviewerInfos) {
 		Map<String, ReviewerInfo> currentReviewersMap = getReviewersMap(getReviewers(shelveset));
 		Map<String, ReviewerInfo> newReviewersMap = getReviewersMap(reviewerInfos);
 		Map<String, ReviewerInfo> modifiedReviewersMap = new HashMap<String, ReviewerInfo>();
@@ -481,7 +491,7 @@ public class ShelvesetUtil {
 		List<String[]> properties = new ArrayList<String[]>();
 		properties.add(new String[] { ShelvesetPropertyConstants.SHELVESET_PROPERTY_REVIEWER_IDS, reviewerIds });
 		properties.add(new String[] { ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_IDS, approverIds });
-		properties.add(new String[] { ShelvesetPropertyConstants.SHELVESET_PROPERTY_WORKITEM_ID, Integer.toString(workItemID) });
+		properties.add(new String[] { ShelvesetPropertyConstants.SHELVESET_PROPERTY_WORKITEM_ID, Integer.toString(workItemId) });
 		setShelvesetProperties(shelveset, properties);
 
 	}
@@ -649,4 +659,12 @@ public class ShelvesetUtil {
 				&& isApprovedByUser(shelveset, currentUserId) && !IdentityUtil.userNamesSame(currentUserId, shelveset.getOwnerName());
 
 	}
+
+	public static int getCodeReviewWorkItemId(Shelveset shelveset) {
+		int result = -1;
+		String workItemIdStr = ShelvesetUtil.getProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_WORKITEM_ID, null);
+		result = StringUtil.toInt(workItemIdStr, -1);
+		return result;
+	}
+
 }

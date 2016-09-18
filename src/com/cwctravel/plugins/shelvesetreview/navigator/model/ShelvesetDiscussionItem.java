@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.swt.graphics.Image;
 
 import com.cwctravel.plugins.shelvesetreview.rest.discussion.threads.DiscussionService;
@@ -324,5 +325,12 @@ public class ShelvesetDiscussionItem extends ShelvesetResourceItem implements II
 			return -1;
 		}
 		return 0;
+	}
+
+	public void decorate(IDecoration decoration) {
+		String authorDisplayName = getAuthorDisplayName();
+		if (authorDisplayName != null) {
+			decoration.addSuffix(" [" + authorDisplayName + "]");
+		}
 	}
 }

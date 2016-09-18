@@ -3,8 +3,11 @@ package com.cwctravel.plugins.shelvesetreview.navigator.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.swt.graphics.Image;
 
+import com.cwctravel.plugins.shelvesetreview.util.IconManager;
 import com.cwctravel.plugins.shelvesetreview.util.ImageUtil;
 
 public class ShelvesetFolderItem extends ShelvesetResourceItem implements IItemContainer<Object, ShelvesetResourceItem> {
@@ -94,5 +97,12 @@ public class ShelvesetFolderItem extends ShelvesetResourceItem implements IItemC
 			return -1;
 		}
 		return 0;
+	}
+
+	public void decorate(IDecoration decoration) {
+		if (hasDiscussions()) {
+			ImageDescriptor discussionOverlayImageDescriptor = IconManager.getDescriptor(IconManager.DISCUSSION_OVR_ICON_ID);
+			decoration.addOverlay(discussionOverlayImageDescriptor, IDecoration.TOP_LEFT);
+		}
 	}
 }

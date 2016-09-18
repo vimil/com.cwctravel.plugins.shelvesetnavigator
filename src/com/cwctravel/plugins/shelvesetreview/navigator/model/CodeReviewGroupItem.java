@@ -1,12 +1,18 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.swt.graphics.Image;
 
+import com.cwctravel.plugins.shelvesetreview.rest.workitems.dto.WorkItemInfo;
 import com.cwctravel.plugins.shelvesetreview.util.IconManager;
+import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
+import com.cwctravel.plugins.shelvesetreview.util.ShelvesetUtil;
+import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 
 public class CodeReviewGroupItem
 		implements Comparable<CodeReviewGroupItem>, IAdaptable, IItemContainer<CodeReviewGroupItemContainer, CodeReviewItem> {
@@ -18,13 +24,53 @@ public class CodeReviewGroupItem
 	private final CodeReviewGroupItemContainer parent;
 	private final int groupType;
 
+	private List<CodeReviewItem> codeReviewItems;
+
 	public CodeReviewGroupItem(CodeReviewGroupItemContainer codeReviewItemContainer, int groupType) {
 		this.parent = codeReviewItemContainer;
 		this.groupType = groupType;
+		this.codeReviewItems = new ArrayList<CodeReviewItem>();
+	}
+
+	public void createCodeReviewItems(Map<String, List<Shelveset>> userShelvesetItemsMap, Map<Integer, WorkItemInfo> workItemInfoMap) {
+		codeReviewItems.clear();
+		if (userShelvesetItemsMap != null) {
+			String currentUserId = IdentityUtil.getCurrentUserName();
+			switch (groupType) {
+				case GROUP_TYPE_CURRENT_USER_CODEREVIEWS: {
+					codeReviewItems = new ArrayList<CodeReviewItem>();
+					List<Shelveset> currentUserShelvesets = userShelvesetItemsMap.get(currentUserId);
+					if (currentUserShelvesets != null) {
+						Map<Integer, CodeReviewItem> codeReviewItemsMap = new HashMap<Integer, CodeReviewItem>();
+						for (Shelveset shelveset : currentUserShelvesets) {
+							if (!ShelvesetUtil.isShelvesetInactive(shelveset)) {
+								int codeReviewWorkItemId = ShelvesetUtil.getCodeReviewWorkItemId(shelveset);
+								WorkItemInfo workItemInfo = workItemInfoMap.get(codeReviewWorkItemId);
+								if (workItemInfo != null) {
+									CodeReviewItem codeReviewItem = codeReviewItemsMap.get(codeReviewWorkItemId);
+									if (codeReviewItem == null) {
+										codeReviewItem = new CodeReviewItem(parent, this, workItemInfo);
+										codeReviewItemsMap.put(codeReviewWorkItemId, codeReviewItem);
+										codeReviewItems.add(codeReviewItem);
+									}
+									CodeReviewShelvesetItem codeReviewShelvesetItem = new CodeReviewShelvesetItem(codeReviewItem, shelveset);
+									codeReviewItem.addShelvesetItem(codeReviewShelvesetItem);
+								}
+							}
+						}
+					}
+					break;
+				}
+			}
+		}
 	}
 
 	public CodeReviewGroupItemContainer getParent() {
 		return parent;
+	}
+
+	public List<CodeReviewItem> getCodeReviewItems() {
+		return codeReviewItems;
 	}
 
 	public int getGroupType() {
@@ -93,7 +139,7 @@ public class CodeReviewGroupItem
 
 	@Override
 	public List<CodeReviewItem> getChildren() {
-		return Collections.emptyList();
+		return getCodeReviewItems();
 	}
 
 	public String getText() {

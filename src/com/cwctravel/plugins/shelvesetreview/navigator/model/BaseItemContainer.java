@@ -4,8 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.PlatformObject;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.progress.UIJob;
+
+import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 
 public class BaseItemContainer extends PlatformObject implements IItemContainer<Object, Object> {
 	private final ShelvesetGroupItemContainer shelvesetGroupItemContainer;
@@ -28,6 +33,13 @@ public class BaseItemContainer extends PlatformObject implements IItemContainer<
 		shelvesetGroupItemContainer.refresh(softRefresh, monitor);
 		codeReviewGroupItemContainer.refresh(shelvesetGroupItemContainer.getUserShelvesetItemsMap(), monitor);
 
+		new UIJob("Shelveset Container Refresh") {
+			@Override
+			public IStatus runInUIThread(IProgressMonitor monitor) {
+				ShelvesetReviewPlugin.getDefault().fireShelvesetContainerRefreshed();
+				return Status.OK_STATUS;
+			}
+		}.schedule();
 	}
 
 	@Override

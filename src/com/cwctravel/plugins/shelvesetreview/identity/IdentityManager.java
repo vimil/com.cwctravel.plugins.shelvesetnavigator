@@ -17,6 +17,7 @@ public class IdentityManager {
 			.synchronizedMap(new HashMap<String, TeamFoundationIdentity>());
 
 	private final Map<String, Map<String, Boolean>> GROUP_MEMBERSHIP_MAP = Collections.synchronizedMap(new HashMap<String, Map<String, Boolean>>());
+	private TeamFoundationIdentity defaultReviewersGroup;
 
 	public TeamFoundationIdentity getIdentity(String memberId) {
 		TeamFoundationIdentity result = MEMBER_IDENTITY_MAP.get(memberId);
@@ -47,8 +48,10 @@ public class IdentityManager {
 	}
 
 	public TeamFoundationIdentity getDefaultReviewersGroup() {
-		TeamFoundationIdentity result = getIdentity("Reviewers");
-		return result;
+		if (defaultReviewersGroup == null) {
+			defaultReviewersGroup = getIdentity("Reviewers");
+		}
+		return defaultReviewersGroup;
 	}
 
 	private boolean isMember(TeamFoundationIdentity groupIdentity, TeamFoundationIdentity memberIdentity) {
