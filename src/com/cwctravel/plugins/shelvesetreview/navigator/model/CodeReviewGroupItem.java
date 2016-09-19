@@ -35,31 +35,68 @@ public class CodeReviewGroupItem
 	public void createCodeReviewItems(Map<String, List<Shelveset>> userShelvesetItemsMap, Map<Integer, WorkItemInfo> workItemInfoMap) {
 		codeReviewItems.clear();
 		if (userShelvesetItemsMap != null) {
-			String currentUserId = IdentityUtil.getCurrentUserName();
+
 			switch (groupType) {
 				case GROUP_TYPE_CURRENT_USER_CODEREVIEWS: {
-					codeReviewItems = new ArrayList<CodeReviewItem>();
-					List<Shelveset> currentUserShelvesets = userShelvesetItemsMap.get(currentUserId);
-					if (currentUserShelvesets != null) {
-						Map<Integer, CodeReviewItem> codeReviewItemsMap = new HashMap<Integer, CodeReviewItem>();
-						for (Shelveset shelveset : currentUserShelvesets) {
-							if (!ShelvesetUtil.isShelvesetInactive(shelveset)) {
-								int codeReviewWorkItemId = ShelvesetUtil.getCodeReviewWorkItemId(shelveset);
-								WorkItemInfo workItemInfo = workItemInfoMap.get(codeReviewWorkItemId);
-								if (workItemInfo != null) {
-									CodeReviewItem codeReviewItem = codeReviewItemsMap.get(codeReviewWorkItemId);
-									if (codeReviewItem == null) {
-										codeReviewItem = new CodeReviewItem(parent, this, workItemInfo);
-										codeReviewItemsMap.put(codeReviewWorkItemId, codeReviewItem);
-										codeReviewItems.add(codeReviewItem);
-									}
-									CodeReviewShelvesetItem codeReviewShelvesetItem = new CodeReviewShelvesetItem(codeReviewItem, shelveset);
-									codeReviewItem.addShelvesetItem(codeReviewShelvesetItem);
-								}
+					populateCurrentUserCodeReviewItems(userShelvesetItemsMap, workItemInfoMap);
+					break;
+				}
+				case GROUP_TYPE_OPEN_CODEREVIEWS: {
+					populateOpenCodeReviewItems(userShelvesetItemsMap, workItemInfoMap);
+					break;
+				}
+			}
+		}
+	}
+
+	private void populateCurrentUserCodeReviewItems(Map<String, List<Shelveset>> userShelvesetItemsMap, Map<Integer, WorkItemInfo> workItemInfoMap) {
+		codeReviewItems = new ArrayList<CodeReviewItem>();
+		String currentUserId = IdentityUtil.getCurrentUserName();
+		List<Shelveset> currentUserShelvesets = userShelvesetItemsMap.get(currentUserId);
+		if (currentUserShelvesets != null) {
+			Map<Integer, CodeReviewItem> codeReviewItemsMap = new HashMap<Integer, CodeReviewItem>();
+			for (Shelveset shelveset : currentUserShelvesets) {
+				if (!ShelvesetUtil.isShelvesetInactive(shelveset)) {
+					int codeReviewWorkItemId = ShelvesetUtil.getCodeReviewWorkItemId(shelveset);
+					WorkItemInfo workItemInfo = workItemInfoMap.get(codeReviewWorkItemId);
+					if (workItemInfo != null) {
+						CodeReviewItem codeReviewItem = codeReviewItemsMap.get(codeReviewWorkItemId);
+						if (codeReviewItem == null) {
+							codeReviewItem = new CodeReviewItem(parent, this, workItemInfo);
+							codeReviewItemsMap.put(codeReviewWorkItemId, codeReviewItem);
+							codeReviewItems.add(codeReviewItem);
+						}
+						CodeReviewShelvesetItem codeReviewShelvesetItem = new CodeReviewShelvesetItem(codeReviewItem, shelveset);
+						codeReviewItem.addShelvesetItem(codeReviewShelvesetItem);
+					}
+				}
+			}
+		}
+	}
+
+	private void populateOpenCodeReviewItems(Map<String, List<Shelveset>> userShelvesetItemsMap, Map<Integer, WorkItemInfo> workItemInfoMap) {
+		codeReviewItems = new ArrayList<CodeReviewItem>();
+		String currentUserId = IdentityUtil.getCurrentUserName();
+		Map<Integer, CodeReviewItem> codeReviewItemsMap = new HashMap<Integer, CodeReviewItem>();
+		for (Map.Entry<String, List<Shelveset>> userShelvesetItemsMapEntry : userShelvesetItemsMap.entrySet()) {
+			String shelvesetOwnerId = userShelvesetItemsMapEntry.getKey();
+			if (!IdentityUtil.userNamesSame(currentUserId, shelvesetOwnerId)) {
+				List<Shelveset> shelvesets = userShelvesetItemsMapEntry.getValue();
+				for (Shelveset shelveset : shelvesets) {
+					if (ShelvesetUtil.isShelvesetOpenForCurrentUser(shelveset)) {
+						int codeReviewWorkItemId = ShelvesetUtil.getCodeReviewWorkItemId(shelveset);
+						WorkItemInfo workItemInfo = workItemInfoMap.get(codeReviewWorkItemId);
+						if (workItemInfo != null) {
+							CodeReviewItem codeReviewItem = codeReviewItemsMap.get(codeReviewWorkItemId);
+							if (codeReviewItem == null) {
+								codeReviewItem = new CodeReviewItem(parent, this, workItemInfo);
+								codeReviewItemsMap.put(codeReviewWorkItemId, codeReviewItem);
+								codeReviewItems.add(codeReviewItem);
 							}
+							CodeReviewShelvesetItem codeReviewShelvesetItem = new CodeReviewShelvesetItem(codeReviewItem, shelveset);
+							codeReviewItem.addShelvesetItem(codeReviewShelvesetItem);
 						}
 					}
-					break;
 				}
 			}
 		}

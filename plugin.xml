@@ -580,11 +580,9 @@
             lightweight="true"
             state="true">
          <enablement>
-            <or>
-               <objectClass
+             <objectClass
                      name="com.cwctravel.plugins.shelvesetreview.navigator.model.IItemContainer">
-               </objectClass>
-            </or>
+              </objectClass>
          </enablement>
       </decorator>
    </extension>

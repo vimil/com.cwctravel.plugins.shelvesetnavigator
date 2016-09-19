@@ -294,6 +294,10 @@ public class ShelvesetItem implements IAdaptable, IItemContainer<Object, Shelves
 		return ShelvesetUtil.canRequestCodeReview(shelveset);
 	}
 
+	public boolean isCurrentUserOwner() {
+		return ShelvesetUtil.isCurrentUserShelvesetOwner(shelveset);
+	}
+
 	public void createCodeReviewRequest(ShelvesetWorkItem shelvesetWorkItem, List<ReviewerInfo> reviewerInfos) {
 		ShelvesetUtil.createCodeReviewRequest(shelveset, shelvesetWorkItem.getWorkItemId(), reviewerInfos);
 	}
@@ -307,7 +311,7 @@ public class ShelvesetItem implements IAdaptable, IItemContainer<Object, Shelves
 	}
 
 	public boolean canApprove() {
-		return ShelvesetUtil.canApprove(shelveset, IdentityUtil.getDefaultReviewersGroup());
+		return ShelvesetUtil.canApprove(shelveset);
 	}
 
 	public void approve(String approvalComment) throws ApproveException {
@@ -328,11 +332,7 @@ public class ShelvesetItem implements IAdaptable, IItemContainer<Object, Shelves
 	}
 
 	public Boolean canUnapprove() {
-		return ShelvesetUtil.canUnapprove(shelveset, IdentityUtil.getDefaultReviewersGroup());
-	}
-
-	public boolean isCurrentUserOwner() {
-		return IdentityUtil.userNamesSame(IdentityUtil.getCurrentUserName(), shelveset.getOwnerName());
+		return ShelvesetUtil.canUnapprove(shelveset);
 	}
 
 	public Shelveset getShelveset() {

@@ -3,7 +3,6 @@ package com.cwctravel.plugins.shelvesetreview.propertytesters;
 import org.eclipse.core.expressions.PropertyTester;
 
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
-import com.cwctravel.plugins.shelvesetreview.util.IdentityUtil;
 
 public class ShelvesetItemPropertyTester extends PropertyTester {
 	public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
@@ -19,7 +18,7 @@ public class ShelvesetItemPropertyTester extends PropertyTester {
 			} else if ("canRequestCodeReview".equals(property)) {
 				result = shelvesetItem.canRequestCodeReview() == (Boolean) expectedValue;
 			} else if ("belongsToCurrentUser".equals(property)) {
-				result = IdentityUtil.userNamesSame(IdentityUtil.getCurrentUserName(), shelvesetItem.getOwnerName()) == (Boolean) expectedValue;
+				result = shelvesetItem.isCurrentUserOwner() == (Boolean) expectedValue;
 			} else if ("canApprove".equals(property)) {
 				result = shelvesetItem.canApprove() == (Boolean) expectedValue;
 			} else if ("canUnapprove".equals(property)) {

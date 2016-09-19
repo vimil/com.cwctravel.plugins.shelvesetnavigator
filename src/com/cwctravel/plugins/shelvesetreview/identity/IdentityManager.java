@@ -71,27 +71,29 @@ public class IdentityManager {
 
 	public boolean isMember(String groupId, String memberId) {
 		boolean result = false;
-		if (userNamesSame(groupId, memberId)) {
-			result = true;
-		} else {
-			TeamFoundationIdentity groupIdentity = getIdentity(groupId);
-			if (groupIdentity != null && groupIdentity.isContainer()) {
-				Map<String, Boolean> members = GROUP_MEMBERSHIP_MAP.get(groupId);
-				if (members != null && members.getOrDefault(memberId, false)) {
-					result = true;
-				} else {
-					TeamFoundationIdentity memberIdentity = getIdentity(memberId);
-					if (memberIdentity != null) {
-						result = isMember(groupIdentity, memberIdentity);
-						if (members == null) {
-							members = new HashMap<String, Boolean>();
-							GROUP_MEMBERSHIP_MAP.put(groupId, members);
+		if (memberId != null) {
+			if (userNamesSame(groupId, memberId)) {
+				result = true;
+			} else {
+				TeamFoundationIdentity groupIdentity = getIdentity(groupId);
+				if (groupIdentity != null && groupIdentity.isContainer()) {
+					Map<String, Boolean> members = GROUP_MEMBERSHIP_MAP.get(groupId);
+					if (members != null && members.getOrDefault(memberId, false)) {
+						result = true;
+					} else {
+						TeamFoundationIdentity memberIdentity = getIdentity(memberId);
+						if (memberIdentity != null) {
+							result = isMember(groupIdentity, memberIdentity);
+							if (members == null) {
+								members = new HashMap<String, Boolean>();
+								GROUP_MEMBERSHIP_MAP.put(groupId, members);
+							}
+							members.put(memberId, result);
 						}
-						members.put(memberId, result);
 					}
 				}
-			}
 
+			}
 		}
 		return result;
 	}
