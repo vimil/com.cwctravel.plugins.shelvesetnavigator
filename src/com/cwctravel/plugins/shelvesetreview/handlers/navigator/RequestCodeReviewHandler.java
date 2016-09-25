@@ -27,6 +27,7 @@ public class RequestCodeReviewHandler extends AbstractHandler {
 			TreeSelection treeSelection = (TreeSelection) selection;
 			if (treeSelection.size() == 1) {
 				ShelvesetItem shelvesetItem = (ShelvesetItem) treeSelection.getFirstElement();
+				shelvesetItem.scheduleRefresh(true);
 				Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 				RequestCodeReviewDialog requestCodeReviewDialog = new RequestCodeReviewDialog(shelvesetItem, shell);
 				requestCodeReviewDialog.create();

@@ -7,7 +7,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
-import com.cwctravel.plugins.shelvesetreview.jobs.ui.RefreshShelvesetsJob;
+import com.cwctravel.plugins.shelvesetreview.ShelvesetReviewPlugin;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ReviewerInfo;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetItem;
 import com.cwctravel.plugins.shelvesetreview.navigator.model.ShelvesetWorkItem;
@@ -30,7 +30,7 @@ public class CreateCodeReviewRequestJob extends Job {
 		shelvesetItem.createCodeReviewRequest(shelvesetWorkItem, reviewerInfos);
 		monitor.done();
 
-		new RefreshShelvesetsJob(shelvesetItem).schedule();
+		ShelvesetReviewPlugin.getDefault().refresh(true, monitor);
 
 		return Status.OK_STATUS;
 	}

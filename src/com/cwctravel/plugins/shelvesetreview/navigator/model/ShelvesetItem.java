@@ -35,8 +35,8 @@ import com.microsoft.tfs.core.clients.versioncontrol.workspacecache.WorkItemChec
 public class ShelvesetItem implements IAdaptable, IItemContainer<Object, ShelvesetResourceItem> {
 	private final ShelvesetGroupItemContainer parent;
 	private final ShelvesetGroupItem parentGroup;
-	private final ShelvesetUserItem parentUser;
-	private final ShelvesetUserCategoryItem parentUserCategory;
+	private ShelvesetUserItem parentUser;
+	private ShelvesetUserCategoryItem parentUserCategory;
 
 	private Shelveset shelveset;
 
@@ -415,5 +415,15 @@ public class ShelvesetItem implements IAdaptable, IItemContainer<Object, Shelves
 			ImageDescriptor approvedImageDescriptor = IconManager.getDescriptor(IconManager.APPROVED_OVR_ICON_ID);
 			decoration.addOverlay(approvedImageDescriptor);
 		}
+	}
+
+	void reparent(Shelveset shelveset) {
+		this.shelveset = shelveset;
+	}
+
+	void reparent(ShelvesetUserItem shelvesetUser, ShelvesetUserCategoryItem shelvesetUserCategory, Shelveset shelveset) {
+		this.parentUser = shelvesetUser;
+		this.parentUserCategory = shelvesetUserCategory;
+		this.shelveset = shelveset;
 	}
 }

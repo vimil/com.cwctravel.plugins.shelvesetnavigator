@@ -1,6 +1,7 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,7 @@ import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
 public class CodeReviewGroupItem
 		implements Comparable<CodeReviewGroupItem>, IAdaptable, IItemContainer<CodeReviewGroupItemContainer, CodeReviewItem> {
 
-	public static final int GROUP_TYPE_CURRENT_USER_CODEREVIEWS = 0;
+	public static final int GROUP_TYPE_CURRENT_USER_CODEREVIEW_REQUESTS = 0;
 	public static final int GROUP_TYPE_OPEN_CODEREVIEWS = 1;
 	public static final int GROUP_TYPE_ACCEPTED_CODEREVIEWS = 2;
 
@@ -33,11 +34,10 @@ public class CodeReviewGroupItem
 	}
 
 	public void createCodeReviewItems(Map<String, List<Shelveset>> userShelvesetItemsMap, Map<Integer, WorkItemInfo> workItemInfoMap) {
-		codeReviewItems.clear();
 		if (userShelvesetItemsMap != null) {
 
 			switch (groupType) {
-				case GROUP_TYPE_CURRENT_USER_CODEREVIEWS: {
+				case GROUP_TYPE_CURRENT_USER_CODEREVIEW_REQUESTS: {
 					populateCurrentUserCodeReviewItems(userShelvesetItemsMap, workItemInfoMap);
 					break;
 				}
@@ -50,7 +50,7 @@ public class CodeReviewGroupItem
 	}
 
 	private void populateCurrentUserCodeReviewItems(Map<String, List<Shelveset>> userShelvesetItemsMap, Map<Integer, WorkItemInfo> workItemInfoMap) {
-		codeReviewItems = new ArrayList<CodeReviewItem>();
+		List<CodeReviewItem> newCodeReviewItems = new ArrayList<CodeReviewItem>();
 		String currentUserId = IdentityUtil.getCurrentUserName();
 		List<Shelveset> currentUserShelvesets = userShelvesetItemsMap.get(currentUserId);
 		if (currentUserShelvesets != null) {
@@ -64,18 +64,26 @@ public class CodeReviewGroupItem
 						if (codeReviewItem == null) {
 							codeReviewItem = new CodeReviewItem(parent, this, workItemInfo);
 							codeReviewItemsMap.put(codeReviewWorkItemId, codeReviewItem);
-							codeReviewItems.add(codeReviewItem);
+							newCodeReviewItems.add(codeReviewItem);
 						}
-						CodeReviewShelvesetItem codeReviewShelvesetItem = new CodeReviewShelvesetItem(codeReviewItem, shelveset);
-						codeReviewItem.addShelvesetItem(codeReviewShelvesetItem);
+						CodeReviewShelvesetItem currentCodeReviewShelvesetItem = (CodeReviewShelvesetItem) findShelvesetItem(shelveset.getName(),
+								shelveset.getOwnerName(), shelveset.getCreationDate());
+						if (currentCodeReviewShelvesetItem != null) {
+							currentCodeReviewShelvesetItem.reparent(shelveset);
+							codeReviewItem.addShelvesetItem(currentCodeReviewShelvesetItem);
+						} else {
+							CodeReviewShelvesetItem codeReviewShelvesetItem = new CodeReviewShelvesetItem(codeReviewItem, shelveset);
+							codeReviewItem.addShelvesetItem(codeReviewShelvesetItem);
+						}
 					}
 				}
 			}
 		}
+		codeReviewItems = newCodeReviewItems;
 	}
 
 	private void populateOpenCodeReviewItems(Map<String, List<Shelveset>> userShelvesetItemsMap, Map<Integer, WorkItemInfo> workItemInfoMap) {
-		codeReviewItems = new ArrayList<CodeReviewItem>();
+		List<CodeReviewItem> newCodeReviewItems = new ArrayList<CodeReviewItem>();
 		String currentUserId = IdentityUtil.getCurrentUserName();
 		Map<Integer, CodeReviewItem> codeReviewItemsMap = new HashMap<Integer, CodeReviewItem>();
 		for (Map.Entry<String, List<Shelveset>> userShelvesetItemsMapEntry : userShelvesetItemsMap.entrySet()) {
@@ -91,15 +99,24 @@ public class CodeReviewGroupItem
 							if (codeReviewItem == null) {
 								codeReviewItem = new CodeReviewItem(parent, this, workItemInfo);
 								codeReviewItemsMap.put(codeReviewWorkItemId, codeReviewItem);
-								codeReviewItems.add(codeReviewItem);
+								newCodeReviewItems.add(codeReviewItem);
 							}
-							CodeReviewShelvesetItem codeReviewShelvesetItem = new CodeReviewShelvesetItem(codeReviewItem, shelveset);
-							codeReviewItem.addShelvesetItem(codeReviewShelvesetItem);
+
+							CodeReviewShelvesetItem currentCodeReviewShelvesetItem = (CodeReviewShelvesetItem) findShelvesetItem(shelveset.getName(),
+									shelveset.getOwnerName(), shelveset.getCreationDate());
+							if (currentCodeReviewShelvesetItem != null) {
+								currentCodeReviewShelvesetItem.reparent(shelveset);
+								codeReviewItem.addShelvesetItem(currentCodeReviewShelvesetItem);
+							} else {
+								CodeReviewShelvesetItem codeReviewShelvesetItem = new CodeReviewShelvesetItem(codeReviewItem, shelveset);
+								codeReviewItem.addShelvesetItem(codeReviewShelvesetItem);
+							}
 						}
 					}
 				}
 			}
 		}
+		codeReviewItems = newCodeReviewItems;
 	}
 
 	public CodeReviewGroupItemContainer getParent() {
@@ -116,8 +133,8 @@ public class CodeReviewGroupItem
 
 	public String getName() {
 		switch (groupType) {
-			case GROUP_TYPE_CURRENT_USER_CODEREVIEWS:
-				return "My Code Reviews";
+			case GROUP_TYPE_CURRENT_USER_CODEREVIEW_REQUESTS:
+				return "My Code Review Requests";
 			case GROUP_TYPE_OPEN_CODEREVIEWS:
 				return "Open Code Reviews";
 			case GROUP_TYPE_ACCEPTED_CODEREVIEWS:
@@ -187,7 +204,7 @@ public class CodeReviewGroupItem
 	public Image getImage() {
 		Image image = null;
 		switch (groupType) {
-			case GROUP_TYPE_CURRENT_USER_CODEREVIEWS: {
+			case GROUP_TYPE_CURRENT_USER_CODEREVIEW_REQUESTS: {
 				image = IconManager.getIcon(IconManager.CODEREVIEW_USER_ICON_ID);
 				break;
 			}
@@ -206,5 +223,20 @@ public class CodeReviewGroupItem
 	@Override
 	public int itemCompareTo(IItemContainer<?, ?> itemContainer) {
 		return compareTo((CodeReviewGroupItem) itemContainer);
+	}
+
+	public ShelvesetItem findShelvesetItem(String shelvesetName, String shelvesetOwnerName) {
+		return findShelvesetItem(shelvesetName, shelvesetOwnerName, null);
+	}
+
+	public ShelvesetItem findShelvesetItem(String shelvesetName, String shelvesetOwnerName, Calendar creationDate) {
+		ShelvesetItem result = null;
+		for (CodeReviewItem codeReviewItem : codeReviewItems) {
+			result = codeReviewItem.findShelvesetItem(shelvesetName, shelvesetOwnerName, creationDate);
+			if (result != null) {
+				break;
+			}
+		}
+		return result;
 	}
 }

@@ -31,7 +31,7 @@ public class BaseItemContainer extends PlatformObject implements IItemContainer<
 
 	public void refresh(boolean softRefresh, IProgressMonitor monitor) {
 		shelvesetGroupItemContainer.refresh(softRefresh, monitor);
-		codeReviewGroupItemContainer.refresh(shelvesetGroupItemContainer.getUserShelvesetItemsMap(), monitor);
+		codeReviewGroupItemContainer.refresh(shelvesetGroupItemContainer.getUserShelvesetItemsMap(), softRefresh, monitor);
 
 		new UIJob("Shelveset Container Refresh") {
 			@Override

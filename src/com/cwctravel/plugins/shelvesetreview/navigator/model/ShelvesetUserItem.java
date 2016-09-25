@@ -1,6 +1,7 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import org.eclipse.core.runtime.IAdaptable;
@@ -38,9 +39,13 @@ public class ShelvesetUserItem implements IAdaptable, IItemContainer<ShelvesetGr
 	}
 
 	public ShelvesetItem findShelvesetItem(String shelvesetName, String shelvesetOwnerName) {
+		return findShelvesetItem(shelvesetName, shelvesetOwnerName, null);
+	}
+
+	public ShelvesetItem findShelvesetItem(String shelvesetName, String shelvesetOwnerName, Calendar creationDate) {
 		ShelvesetItem result = null;
 		for (ShelvesetUserCategoryItem shelvesetUserCategoryItem : shelvesetUserCategoryItems) {
-			result = shelvesetUserCategoryItem.findShelvesetItem(shelvesetName, shelvesetOwnerName);
+			result = shelvesetUserCategoryItem.findShelvesetItem(shelvesetName, shelvesetOwnerName, creationDate);
 			if (result != null) {
 				break;
 			}
@@ -102,5 +107,26 @@ public class ShelvesetUserItem implements IAdaptable, IItemContainer<ShelvesetGr
 			return getShelvesetOwner().compareTo(((ShelvesetUserItem) itemContainer).getShelvesetOwner());
 		}
 		return 0;
+	}
+
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + getShelvesetOwner().hashCode();
+		return result;
+	}
+
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ShelvesetUserItem other = (ShelvesetUserItem) obj;
+		if (other.getShelvesetOwner().equals(getShelvesetOwner())) {
+			return true;
+		}
+		return false;
 	}
 }

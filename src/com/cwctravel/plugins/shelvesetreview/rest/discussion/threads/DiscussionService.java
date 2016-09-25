@@ -86,7 +86,7 @@ public class DiscussionService {
 		Object responseObj = Boon.fromJson(response);
 		if (responseObj instanceof Map<?, ?>) {
 			Map<String, Object> root = (Map<String, Object>) responseObj;
-			result = toDiscussionCommentInfo(root);
+			result = toDiscussionCommentInfo(root, true);
 		}
 		return result;
 	}
@@ -118,14 +118,7 @@ public class DiscussionService {
 							for (Map<String, Object> discussionCommentObj : discussionCommentObjs) {
 								boolean isCommentDeleted = (Boolean) discussionCommentObj.getOrDefault("isDeleted", false);
 								if (!isCommentDeleted) {
-									DiscussionCommentInfo discussionCommentInfo = new DiscussionCommentInfo();
-									discussionCommentInfo.setId((int) discussionCommentObj.get("id"));
-									discussionCommentInfo.setParentId((int) discussionCommentObj.getOrDefault("parentId", 0));
-									discussionCommentInfo.setThreadId((int) discussionCommentObj.get("threadId"));
-									discussionCommentInfo.setContent((String) discussionCommentObj.get("content"));
-									discussionCommentInfo.setPublishedDate(toCalendar(discussionCommentObj, "publishedDate"));
-									discussionCommentInfo.setLastUpdatedDate(toCalendar(discussionCommentObj, "lastUpdatedDate"));
-									discussionCommentInfo.setCanDelete((boolean) discussionCommentObj.get("canDelete"));
+									DiscussionCommentInfo discussionCommentInfo = toDiscussionCommentInfo(discussionCommentObj, false);
 
 									Map<String, ?> discussionAuthorObj = (Map<String, ?>) discussionCommentObj.get("author");
 									if (discussionAuthorObj != null) {
@@ -255,7 +248,7 @@ public class DiscussionService {
 		return result;
 	}
 
-	private static DiscussionCommentInfo toDiscussionCommentInfo(Map<String, Object> discussionCommentObj) {
+	private static DiscussionCommentInfo toDiscussionCommentInfo(Map<String, Object> discussionCommentObj, boolean parseAuthors) {
 		DiscussionCommentInfo discussionCommentInfo = new DiscussionCommentInfo();
 		discussionCommentInfo.setId((int) discussionCommentObj.get("id"));
 		discussionCommentInfo.setParentId((int) discussionCommentObj.getOrDefault("parentId", 0));
@@ -263,12 +256,14 @@ public class DiscussionService {
 		discussionCommentInfo.setContent((String) discussionCommentObj.get("content"));
 		discussionCommentInfo.setPublishedDate(toCalendar(discussionCommentObj, "publishedDate"));
 		discussionCommentInfo.setLastUpdatedDate(toCalendar(discussionCommentObj, "lastUpdatedDate"));
-		discussionCommentInfo.setCanDelete((boolean) discussionCommentObj.get("canDelete"));
+		discussionCommentInfo.setCanDelete((boolean) discussionCommentObj.getOrDefault("canDelete", false));
 
-		@SuppressWarnings("unchecked")
-		Map<String, ?> discussionAuthorObj = (Map<String, ?>) discussionCommentObj.get("author");
-		DiscussionAuthorInfo discussionAuthorInfo = toDiscussionAuthorInfo(discussionAuthorObj);
-		discussionCommentInfo.setAuthor(discussionAuthorInfo);
+		if (parseAuthors) {
+			@SuppressWarnings("unchecked")
+			Map<String, ?> discussionAuthorObj = (Map<String, ?>) discussionCommentObj.get("author");
+			DiscussionAuthorInfo discussionAuthorInfo = toDiscussionAuthorInfo(discussionAuthorObj);
+			discussionCommentInfo.setAuthor(discussionAuthorInfo);
+		}
 		return discussionCommentInfo;
 	}
 

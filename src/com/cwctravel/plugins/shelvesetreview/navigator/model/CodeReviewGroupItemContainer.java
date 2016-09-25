@@ -26,7 +26,7 @@ public class CodeReviewGroupItemContainer extends PlatformObject implements IIte
 
 	public CodeReviewGroupItemContainer() {
 		codeReviewGroupItems = new ArrayList<>();
-		CodeReviewGroupItem userCodeReviewGroupItem = new CodeReviewGroupItem(this, CodeReviewGroupItem.GROUP_TYPE_CURRENT_USER_CODEREVIEWS);
+		CodeReviewGroupItem userCodeReviewGroupItem = new CodeReviewGroupItem(this, CodeReviewGroupItem.GROUP_TYPE_CURRENT_USER_CODEREVIEW_REQUESTS);
 		CodeReviewGroupItem openCodeReviewGroupItem = new CodeReviewGroupItem(this, CodeReviewGroupItem.GROUP_TYPE_OPEN_CODEREVIEWS);
 		CodeReviewGroupItem acceptedCodeReviewGroupItem = new CodeReviewGroupItem(this, CodeReviewGroupItem.GROUP_TYPE_ACCEPTED_CODEREVIEWS);
 
@@ -39,7 +39,7 @@ public class CodeReviewGroupItemContainer extends PlatformObject implements IIte
 		return codeReviewGroupItems;
 	}
 
-	public void refresh(Map<String, List<Shelveset>> userShelvesetItemsMap, IProgressMonitor monitor) {
+	public void refresh(Map<String, List<Shelveset>> userShelvesetItemsMap, boolean softRefresh, IProgressMonitor monitor) {
 		String currentUserId = IdentityUtil.getCurrentUserName();
 		Map<Integer, WorkItemInfo> workItemInfoMap = new HashMap<Integer, WorkItemInfo>();
 		Set<Integer> workItemIdsSet = new HashSet<Integer>();

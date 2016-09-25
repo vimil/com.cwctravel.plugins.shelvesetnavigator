@@ -6,6 +6,8 @@ import java.util.Map;
 
 import com.cwctravel.plugins.shelvesetreview.util.TFSUtil;
 import com.microsoft.tfs.core.TFSConnection;
+import com.microsoft.tfs.core.TFSTeamProjectCollection;
+import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.webservices.IIdentityManagementService2;
 import com.microsoft.tfs.core.clients.webservices.IdentitySearchFactor;
 import com.microsoft.tfs.core.clients.webservices.MembershipQuery;
@@ -154,8 +156,17 @@ public class IdentityManager {
 	}
 
 	public String getCurrentUserName() {
-		final TeamFoundationIdentity userIdentity = TFSUtil.getVersionControlClient().getConnection().getAuthorizedIdentity();
-		return userIdentity.getUniqueName();
+		String result = null;
+		VersionControlClient versionControlClient = TFSUtil.getVersionControlClient();
+		if (versionControlClient != null) {
+			TFSTeamProjectCollection connection = versionControlClient.getConnection();
+			if (connection != null) {
+				TeamFoundationIdentity userIdentity = connection.getAuthorizedIdentity();
+				result = userIdentity.getUniqueName();
+			}
+		}
+
+		return result;
 	}
 
 	public String getCurrentUserId() {

@@ -1,6 +1,7 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
@@ -71,24 +72,32 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 	}
 
 	public void createShelvesetItems(Map<String, List<Shelveset>> userShelvesetItemsMap) {
-		shelvesetItems.clear();
+		// shelvesetItems.clear();
 		if (userShelvesetItemsMap != null) {
 			String currentUserId = IdentityUtil.getCurrentUserName();
 			switch (groupType) {
 				case GROUP_TYPE_CURRENT_USER_SHELVESETS: {
-					shelvesetItems = new ArrayList<ShelvesetItem>();
+					List<ShelvesetItem> newShelvesetItems = new ArrayList<ShelvesetItem>();
 					List<Shelveset> currentUserShelvesets = userShelvesetItemsMap.get(currentUserId);
 					if (currentUserShelvesets != null) {
 						for (Shelveset shelveset : currentUserShelvesets) {
 							if (!ShelvesetUtil.isShelvesetInactive(shelveset)) {
-								shelvesetItems.add(new ShelvesetItem(parent, this, shelveset));
+								ShelvesetItem currentShelvesetItem = findShelvesetItem(shelveset.getName(), shelveset.getOwnerName(),
+										shelveset.getCreationDate());
+								if (currentShelvesetItem != null) {
+									currentShelvesetItem.reparent(shelveset);
+									newShelvesetItems.add(currentShelvesetItem);
+								} else {
+									newShelvesetItems.add(new ShelvesetItem(parent, this, shelveset));
+								}
 							}
 						}
 					}
+					shelvesetItems = newShelvesetItems;
 					break;
 				}
 				case GROUP_TYPE_OTHER_USER_SHELVESETS: {
-					shelvesetUserItems = new ArrayList<ShelvesetUserItem>();
+					List<ShelvesetUserItem> newShelvesetUserItems = new ArrayList<ShelvesetUserItem>();
 					for (Map.Entry<String, List<Shelveset>> userShelvesetItemsMapEntry : userShelvesetItemsMap.entrySet()) {
 
 						String shelvesetOwner = userShelvesetItemsMapEntry.getKey();
@@ -108,7 +117,7 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 										shelvesetUserCategoryItems = new ArrayList<ShelvesetUserCategoryItem>();
 										shelvesetUserItem = new ShelvesetUserItem(this, shelvesetOwner, shelvesetUserCategoryItems);
 
-										shelvesetUserItems.add(shelvesetUserItem);
+										newShelvesetUserItems.add(shelvesetUserItem);
 									}
 
 									if (ShelvesetUtil.isCurrentUserReviewer(shelveset, null)) {
@@ -118,8 +127,16 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 													IconManager.PENDING_REVIEW_USER_CATEGORY_ICON_ID, shelvesetUserItem, pendingReviewShelvesetItems);
 											shelvesetUserCategoryItems.add(pendingReviewShelvesetUserCategoryItem);
 										}
-										pendingReviewShelvesetItems.add(new ShelvesetItem(parent, this, shelvesetUserItem,
-												pendingReviewShelvesetUserCategoryItem, shelveset));
+
+										ShelvesetItem currentShelvesetItem = findShelvesetItem(shelveset.getName(), shelveset.getOwnerName(),
+												shelveset.getCreationDate());
+										if (currentShelvesetItem != null) {
+											currentShelvesetItem.reparent(shelvesetUserItem, pendingReviewShelvesetUserCategoryItem, shelveset);
+											pendingReviewShelvesetItems.add(currentShelvesetItem);
+										} else {
+											pendingReviewShelvesetItems.add(new ShelvesetItem(parent, this, shelvesetUserItem,
+													pendingReviewShelvesetUserCategoryItem, shelveset));
+										}
 									} else {
 										if (unassignedShelvesetUserCategoryItem == null) {
 											unassignedShelvesetItems = new ArrayList<ShelvesetItem>();
@@ -128,25 +145,42 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 													unassignedShelvesetItems);
 											shelvesetUserCategoryItems.add(unassignedShelvesetUserCategoryItem);
 										}
-										unassignedShelvesetItems.add(
-												new ShelvesetItem(parent, this, shelvesetUserItem, unassignedShelvesetUserCategoryItem, shelveset));
+
+										ShelvesetItem currentShelvesetItem = findShelvesetItem(shelveset.getName(), shelveset.getOwnerName(),
+												shelveset.getCreationDate());
+										if (currentShelvesetItem != null) {
+											currentShelvesetItem.reparent(shelvesetUserItem, unassignedShelvesetUserCategoryItem, shelveset);
+											unassignedShelvesetItems.add(currentShelvesetItem);
+										} else {
+											unassignedShelvesetItems.add(new ShelvesetItem(parent, this, shelvesetUserItem,
+													unassignedShelvesetUserCategoryItem, shelveset));
+										}
 									}
 								}
 							}
 						}
 					}
+					shelvesetUserItems = newShelvesetUserItems;
 					break;
 				}
 				case GROUP_TYPE_INACTIVE_SHELVESETS: {
-					shelvesetItems = new ArrayList<ShelvesetItem>();
+					List<ShelvesetItem> newShelvesetItems = new ArrayList<ShelvesetItem>();
 					List<Shelveset> currentUserShelvesets = userShelvesetItemsMap.get(currentUserId);
 					if (currentUserShelvesets != null) {
 						for (Shelveset shelveset : currentUserShelvesets) {
 							if (ShelvesetUtil.isShelvesetInactive(shelveset)) {
-								shelvesetItems.add(new ShelvesetItem(parent, this, shelveset));
+								ShelvesetItem currentShelvesetItem = findShelvesetItem(shelveset.getName(), shelveset.getOwnerName(),
+										shelveset.getCreationDate());
+								if (currentShelvesetItem != null) {
+									currentShelvesetItem.reparent(shelveset);
+									newShelvesetItems.add(currentShelvesetItem);
+								} else {
+									newShelvesetItems.add(new ShelvesetItem(parent, this, shelveset));
+								}
 							}
 						}
 					}
+					shelvesetItems = newShelvesetItems;
 					break;
 				}
 			}
@@ -154,10 +188,15 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 	}
 
 	public ShelvesetItem findShelvesetItem(String shelvesetName, String shelvesetOwnerName) {
+		return findShelvesetItem(shelvesetName, shelvesetOwnerName, null);
+	}
+
+	public ShelvesetItem findShelvesetItem(String shelvesetName, String shelvesetOwnerName, Calendar creationDate) {
 		ShelvesetItem result = null;
 
 		for (ShelvesetItem shelvesetItem : shelvesetItems) {
-			if (shelvesetItem.getName().equals(shelvesetName) && shelvesetItem.getOwnerName().equals(shelvesetOwnerName)) {
+			if (shelvesetItem.getName().equals(shelvesetName) && shelvesetItem.getOwnerName().equals(shelvesetOwnerName)
+					&& (creationDate == null || creationDate.equals(shelvesetItem.getCreationDate()))) {
 				result = shelvesetItem;
 				break;
 			}
@@ -165,7 +204,7 @@ public class ShelvesetGroupItem implements Comparable<ShelvesetGroupItem>, IAdap
 
 		if (shelvesetUserItems != null) {
 			for (ShelvesetUserItem shelvesetUserItem : shelvesetUserItems) {
-				result = shelvesetUserItem.findShelvesetItem(shelvesetName, shelvesetOwnerName);
+				result = shelvesetUserItem.findShelvesetItem(shelvesetName, shelvesetOwnerName, creationDate);
 				if (result != null) {
 					break;
 				}

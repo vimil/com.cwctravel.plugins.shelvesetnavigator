@@ -1,6 +1,7 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import org.eclipse.core.runtime.IAdaptable;
@@ -99,5 +100,39 @@ public class CodeReviewItem implements IAdaptable, IItemContainer<CodeReviewGrou
 
 	public void decorate(IDecoration decoration) {
 		decoration.addPrefix("[" + getWorkItemId() + "] ");
+	}
+
+	public ShelvesetItem findShelvesetItem(String shelvesetName, String shelvesetOwnerName) {
+		return findShelvesetItem(shelvesetName, shelvesetOwnerName, null);
+	}
+
+	public ShelvesetItem findShelvesetItem(String shelvesetName, String shelvesetOwnerName, Calendar creationDate) {
+		ShelvesetItem result = null;
+		for (CodeReviewShelvesetItem codeReviewShelvesetItem : codeReviewShelvesetItems) {
+			if (codeReviewShelvesetItem.getName().equals(shelvesetName) && codeReviewShelvesetItem.getOwnerName().equals(shelvesetOwnerName)
+					&& (creationDate == null || creationDate.equals(codeReviewShelvesetItem.getCreationDate()))) {
+				result = codeReviewShelvesetItem;
+				break;
+			}
+		}
+		return result;
+	}
+
+	public int hashCode() {
+		return getWorkItemId();
+	}
+
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		CodeReviewItem other = (CodeReviewItem) obj;
+		if (other.getWorkItemId() == getWorkItemId()) {
+			return true;
+		}
+		return false;
 	}
 }

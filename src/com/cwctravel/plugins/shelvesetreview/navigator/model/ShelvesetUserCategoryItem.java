@@ -1,5 +1,6 @@
 package com.cwctravel.plugins.shelvesetreview.navigator.model;
 
+import java.util.Calendar;
 import java.util.List;
 
 import org.eclipse.core.runtime.IAdaptable;
@@ -43,10 +44,15 @@ public class ShelvesetUserCategoryItem implements IAdaptable, IItemContainer<She
 	}
 
 	public ShelvesetItem findShelvesetItem(String shelvesetName, String shelvesetOwnerName) {
+		return findShelvesetItem(shelvesetName, shelvesetOwnerName, null);
+	}
+
+	public ShelvesetItem findShelvesetItem(String shelvesetName, String shelvesetOwnerName, Calendar creationDate) {
 		ShelvesetItem result = null;
 
 		for (ShelvesetItem shelvesetItem : shelvesetItems) {
-			if (shelvesetItem.getName().equals(shelvesetName) && shelvesetItem.getOwnerName().equals(shelvesetOwnerName)) {
+			if (shelvesetItem.getName().equals(shelvesetName) && shelvesetItem.getOwnerName().equals(shelvesetOwnerName)
+					&& (creationDate == null || creationDate.equals(shelvesetItem.getCreationDate()))) {
 				result = shelvesetItem;
 				break;
 			}
@@ -97,4 +103,24 @@ public class ShelvesetUserCategoryItem implements IAdaptable, IItemContainer<She
 		return 0;
 	}
 
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + getCategoryName().hashCode();
+		return result;
+	}
+
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ShelvesetUserCategoryItem other = (ShelvesetUserCategoryItem) obj;
+		if (other.getCategoryName().equals(getCategoryName())) {
+			return true;
+		}
+		return false;
+	}
 }
