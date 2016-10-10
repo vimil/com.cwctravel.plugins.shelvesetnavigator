@@ -480,16 +480,11 @@ public class ShelvesetUtil {
 		if (!isShelvesetInactive(shelveset)) {
 			String currentUserId = IdentityUtil.getCurrentUserName();
 			if (isUserReviewer(currentUserId, shelveset, defaultReviewersGroup)) {
-				String[] approverIds = getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_ID);
-				Set<String> approverIdsSet = new HashSet<String>();
-				if (approverIds != null) {
-					for (String approverId : approverIds) {
-						approverIdsSet.add(approverId);
-					}
-				}
-				approverIdsSet.add(currentUserId);
-				String newAppoverIdsStr = StringUtil.joinCollection(approverIdsSet, ",");
-				setShelvesetProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_ID, newAppoverIdsStr);
+
+				List<String[]> shelvesetProperties = new ArrayList<String[]>();
+				shelvesetProperties.add(new String[] { ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_ID, currentUserId });
+				shelvesetProperties.add(new String[] { ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVED_FLAG, Boolean.toString(true) });
+				setShelvesetProperties(shelveset, shelvesetProperties);
 
 				addWorkItemApprovalComment(shelveset, approvalComment);
 
@@ -559,8 +554,21 @@ public class ShelvesetUtil {
 
 	public static boolean canApprove(Shelveset shelveset) {
 		String currentUserId = IdentityUtil.getCurrentUserName();
-		return !isShelvesetInactive(shelveset) && isUserReviewer(currentUserId, shelveset, null) && !isApprovedByUser(shelveset, currentUserId)
-				&& !IdentityUtil.userNamesSame(currentUserId, shelveset.getOwnerName());
+		return !isShelvesetInactive(shelveset)
+				&& (isAcceptedByUser(shelveset, currentUserId)
+						|| (!hasReviewers(shelveset) && isUserReviewer(currentUserId, shelveset, IdentityUtil.getDefaultReviewersGroup())))
+				&& !isApprovedByUser(shelveset, currentUserId) && !IdentityUtil.userNamesSame(currentUserId, shelveset.getOwnerName());
+	}
+
+	private static boolean hasReviewers(Shelveset shelveset) {
+		String[] reviewerIds = getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_REVIEWER_IDS);
+		return reviewerIds != null && reviewerIds.length > 0;
+	}
+
+	public static boolean isAcceptedByUser(Shelveset shelveset, String userId) {
+		String approverId = getProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_ID, null);
+		boolean approvedFlag = getPropertyAsBoolean(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVED_FLAG, false);
+		return IdentityUtil.userNamesSame(userId, approverId) && !approvedFlag;
 	}
 
 	public static boolean isCurrentUserReviewer(Shelveset shelveset, TeamFoundationIdentity defaultReviewersGroup) {
@@ -573,14 +581,11 @@ public class ShelvesetUtil {
 		boolean result = false;
 		result = getPropertyAsBoolean(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVED_FLAG, false);
 		if (result) {
-			String[] approverIds = getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_ID);
-			if (approverIds != null) {
+			String approverId = getProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_ID, null);
+			if (approverId != null) {
 				String currentUserId = IdentityUtil.getCurrentUserName();
-				for (String approverId : approverIds) {
-					if (IdentityUtil.userNamesSame(currentUserId, approverId)) {
-						result = true;
-						break;
-					}
+				if (IdentityUtil.userNamesSame(currentUserId, approverId)) {
+					result = true;
 				}
 			}
 		}
@@ -589,26 +594,19 @@ public class ShelvesetUtil {
 
 	public static boolean isApproved(Shelveset shelveset) {
 		boolean approvedFlag = getPropertyAsBoolean(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVED_FLAG, false);
-		String[] approverIds = getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_ID);
-		return approvedFlag && approverIds != null && approverIds.length > 0;
+		String approverId = getProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_ID, null);
+		return approvedFlag && approverId != null;
 	}
 
 	public static void unapprove(Shelveset shelveset, String revokeApprovalComment, TeamFoundationIdentity defaultReviewersGroup)
 			throws ApproveException {
 		if (!isShelvesetInactive(shelveset)) {
 			String currentUserId = IdentityUtil.getCurrentUserName();
-			if (isUserReviewer(currentUserId, shelveset, defaultReviewersGroup)) {
-				String[] approverIds = getPropertyAsStringArray(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_ID);
-				Set<String> approverIdsSet = new HashSet<String>();
-				if (approverIds != null) {
-					for (String approverId : approverIds) {
-						approverIdsSet.add(approverId);
-					}
-				}
-				approverIdsSet.remove(currentUserId);
-				String newAppoverIdsStr = StringUtil.joinCollection(approverIdsSet, ",");
-				setShelvesetProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_ID, newAppoverIdsStr);
-				setShelvesetProperty(shelveset, ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVED_FLAG, newAppoverIdsStr);
+			if (isApprovedByUser(shelveset, currentUserId)) {
+				List<String[]> shelvesetProperties = new ArrayList<String[]>();
+				shelvesetProperties.add(new String[] { ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVER_ID, null });
+				shelvesetProperties.add(new String[] { ShelvesetPropertyConstants.SHELVESET_PROPERTY_APPROVED_FLAG, Boolean.toString(false) });
+				setShelvesetProperties(shelveset, shelvesetProperties);
 				addWorkItemApprovalComment(shelveset, revokeApprovalComment);
 			} else {
 				throw new ApproveException("Current User is not a reviewer of the shelveset");
@@ -620,7 +618,7 @@ public class ShelvesetUtil {
 
 	public static Boolean canUnapprove(Shelveset shelveset) {
 		String currentUserId = IdentityUtil.getCurrentUserName();
-		return !isShelvesetInactive(shelveset) && isUserReviewer(currentUserId, shelveset, null) && isApprovedByUser(shelveset, currentUserId)
+		return !isShelvesetInactive(shelveset) && isApprovedByUser(shelveset, currentUserId)
 				&& !IdentityUtil.userNamesSame(currentUserId, shelveset.getOwnerName());
 
 	}
